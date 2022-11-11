@@ -50,6 +50,14 @@ module Span =
         | true -> Some(createWithStop start stop)
         | false -> None
 
+    let union a b =
+        let start = if a.Start < b.Start then a.Start else b.Start
+        let stopA = stop a
+        let stopB = stop b
+        let stop = if stopA < stopB then stopA else stopB
+
+        createWithStop start stop
+
     type SpanType with
 
         member this.Stop = stop this

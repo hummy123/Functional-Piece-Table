@@ -32,20 +32,30 @@ module TextTable =
 
     let insert (str: string) index (table: TextTableType) =
         let rec insertAtMiddle (curIndex: int) (listPos: int) (insPiece: PieceType) (accList: List<PieceType>) =
-            let curPiece = table.Pieces[listPos]
-
-            if listPos = table.Pieces.Length + 1 then
-                accList
-            elif curIndex = curPiece.Span.Start then
-                accList @ [ insPiece ] @ table.Pieces[listPos..]
-            elif curIndex = Span.stop curPiece.Span then
-                accList @ [ curPiece ] @ [ insPiece ] @ table.Pieces[listPos + 1 ..]
-            (* In range: split piece. *)
-            elif curIndex >= curPiece.Span.Start && curIndex <= Span.stop curPiece.Span then
-                (* To do: split logic. *)
+            if listPos = table.Pieces.Length then
                 accList
             else
-                insertAtMiddle (curIndex + curPiece.Span.Length) (listPos + 1) insPiece (accList @ [ curPiece ])
+                let curPiece = table.Pieces[listPos]
+
+                if curIndex = curPiece.Span.Start then
+                    accList @ [ insPiece ] @ table.Pieces[listPos..]
+                elif curIndex = Span.stop curPiece.Span then
+                    accList @ [ curPiece ] @ [ insPiece ] @ table.Pieces[listPos + 1 ..]
+                (* In range: split piece. *)
+                elif curIndex >= curPiece.Span.Start && curIndex <= Span.stop curPiece.Span then
+                    let splitData = Piece.split curPiece insPiece
+
+                    let pieces =
+                        match splitData with
+                        | Piece.Merge p -> [ p ]
+                        | Piece.Split (f, s, t) -> [ f; s; t ]
+
+                    if listPos = table.Pieces.Length - 1 then
+                        accList @ pieces
+                    else
+                        accList @ pieces @ table.Pieces[listPos + 1 ..]
+                else
+                    insertAtMiddle (curIndex + curPiece.Span.Length) (listPos + 1) insPiece (accList @ [ curPiece ])
 
         let newLength = table.DocumentLength + str.Length
         let appendBuffer = table.AddBuffer.Append(str)

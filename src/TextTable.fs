@@ -41,13 +41,14 @@ module TextTable =
                 accList
             else
                 let curPiece = table.Pieces[listPos]
+                let pieceEnd = curIndex + curPiece.Span.Length
 
                 if index = curIndex then
                     accList @ [ insPiece ] @ table.Pieces[listPos..]
-                elif curIndex = Span.stop curPiece.Span then
+                elif index = pieceEnd then
                     accList @ [ curPiece ] @ [ insPiece ] @ table.Pieces[listPos + 1 ..]
                 (* In range: split piece. *)
-                elif curIndex >= curPiece.Span.Start && curIndex <= Span.stop curPiece.Span then
+                elif index >= curIndex && index <= pieceEnd then
                     let splitData = Piece.split curPiece insPiece
 
                     let pieces =

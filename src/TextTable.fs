@@ -42,7 +42,7 @@ module TextTable =
             else
                 let curPiece = table.Pieces[listPos]
 
-                if curIndex = curPiece.Span.Start then
+                if index = curIndex then
                     accList @ [ insPiece ] @ table.Pieces[listPos..]
                 elif curIndex = Span.stop curPiece.Span then
                     accList @ [ curPiece ] @ [ insPiece ] @ table.Pieces[listPos + 1 ..]
@@ -64,7 +64,7 @@ module TextTable =
 
         let newLength = table.DocumentLength + str.Length
         let appendBuffer = table.AddBuffer.Append(str)
-        let piece = Piece.create false index str.Length
+        let piece = Piece.create false (appendBuffer.Length - str.Length) str.Length
 
         if index = table.DocumentLength then
             let pieceList = table.Pieces @ [ piece ]

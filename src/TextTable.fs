@@ -12,11 +12,16 @@ module TextTable =
 
     let text (table: TextTableType) =
         let rec buildText index (acc: StringBuilder) =
-            if index = acc.Length then
-                acc
-            else
-                let piece = table.Pieces[index]
+            let piece = table.Pieces[index]
 
+            if index = table.Pieces.Length - 1 then
+                match piece.IsOriginal with
+                (* Get text from original buffer. *)
+                | true -> acc.Append(table.OriginalBuffer.Substring(piece.Span.Start, piece.Span.Length))
+                (* Get text from add buffer. *)
+                | false -> acc.Append(table.AddBuffer.ToString(piece.Span.Start, piece.Span.Length))
+
+            else
                 match piece.IsOriginal with
                 (* Get text from original buffer. *)
                 | true ->
@@ -59,7 +64,7 @@ module TextTable =
 
         let newLength = table.DocumentLength + str.Length
         let appendBuffer = table.AddBuffer.Append(str)
-        let piece = Piece.create false index (str.Length - 1)
+        let piece = Piece.create false index str.Length
 
         if index = table.DocumentLength then
             let pieceList = table.Pieces @ [ piece ]

@@ -1,6 +1,7 @@
 namespace PieceTable
 
 open Types
+open Piece
 open System.Text
 
 module TextTable =
@@ -97,8 +98,18 @@ module TextTable =
             elif curIndex < span.Start then
                 let curPiece = table.Pieces[listPos]
                 deleteWithinRange (curIndex + curPiece.Span.Length) (listPos + 1) (accList @ [ curPiece ])
+            (* Within range. *)
             else
-                (* Within range. *)
+                let curPiece = table.Pieces[listPos]
+                let nextLength = curIndex + curPiece.Span.Length
+                let nextPos = listPos + 1
+
+                let deleteData = Piece.delete span curPiece
+
+                match deleteData with
+                | Empty -> deleteWithinRange nextLength nextPos accList
+                | CutOne p -> deleteWithinRange nextLength nextPos (accList @ [ p ])
+                | CutTwo (p1, p2) -> deleteWithinRange nextLength nextPos (accList @ [ p1; p2 ])
 
 
         match Span.isEmpty span with

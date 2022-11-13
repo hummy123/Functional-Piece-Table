@@ -120,3 +120,13 @@ module TextTable =
             { table with
                 DocumentLength = table.DocumentLength - span.Length
                 Pieces = pieceList }
+
+    (* Alternative OOP API. *)
+    type TextTableType with
+
+        member this.Insert(index, str) = insert index str this
+        member this.Text() = text this
+
+        member this.Delete(start, length) =
+            let span = Span.createWithLength start length
+            delete span this

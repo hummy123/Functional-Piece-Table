@@ -2,7 +2,7 @@ namespace PieceTable
 
 open Types
 
-module Piece =
+module internal Piece =
     let create isOriginal start length =
         { IsOriginal = isOriginal
           Span = Span.createWithLength start length }

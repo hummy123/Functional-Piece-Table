@@ -2,7 +2,7 @@ namespace PieceTable
 
 open Types
 
-module Span =
+module internal Span =
     let createWithLength start length = { Start = start; Length = length }
 
     let createWithStop start stop =

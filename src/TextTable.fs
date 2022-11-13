@@ -89,3 +89,23 @@ module TextTable =
                 DocumentLength = newLength
                 AddBuffer = appendBuffer
                 Pieces = pieceList }
+
+    let delete span (table: TextTableType) =
+        let rec deleteWithinRange curIndex listPos accList : List<PieceType> =
+            if curIndex > Span.stop span then
+                accList @ table.Pieces[listPos..]
+            elif curIndex < span.Start then
+                let curPiece = table.Pieces[listPos]
+                deleteWithinRange (curIndex + curPiece.Span.Length) (listPos + 1) (accList @ [ curPiece ])
+            else
+                (* Within range. *)
+
+
+        match Span.isEmpty span with
+        | true -> table
+        | false ->
+            let pieceList = deleteWithinRange 0 0 []
+
+            { table with
+                DocumentLength = table.DocumentLength - span.Length
+                Pieces = pieceList }

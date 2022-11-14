@@ -30,13 +30,13 @@ let ``Can insert into the start of an empty table`` () =
     Assert.Equal(insText, table.Text())
 
 [<Fact>]
-let ``Can insert into the start of a non-empty table`` () =
+let ``Can insert into the start of a table's OriginalBuffer`` () =
     let table = initialTable.Insert(0, insText)
     Assert.Equal(insText.Length + text.Length, table.DocumentLength)
     Assert.Equal(insText + text, table.Text())
 
 [<Fact>]
-let ``Can insert into the middle of a table that has an empty AddBuffer and non-empty OriginalBuffer`` () =
+let ``Can insert into the middle of a table's OriginalBuffer`` () =
     (* Test 1: Does the table have the expected length? *)
     let table = initialTable.Insert(3, insText)
     Assert.Equal(insText.Length + text.Length, table.DocumentLength)
@@ -48,7 +48,7 @@ let ``Can insert into the middle of a table that has an empty AddBuffer and non-
     Assert.Equal(str, table.Text())
 
 [<Fact>]
-let ``Can insert into the end of a non-empty table`` () =
+let ``Can insert into the end of a table's OriginalBuffer`` () =
     (* Test 1: Does the table have the expected length? *)
     let table = initialTable.Insert(initialTable.DocumentLength, insText)
     Assert.Equal(insText.Length + text.Length, table.DocumentLength)
@@ -58,7 +58,15 @@ let ``Can insert into the end of a non-empty table`` () =
     Assert.Equal(str, table.Text())
 
 [<Fact>]
-let ``Can insert into the middle of a table that has a non-empty AddBuffer and an empty OriginalBuffer`` () =
+let ``Can insert into the start of a table's AddBuffer`` () =
+    let table = TextTable.create ""
+    let table = table.Insert(0, text)
+    let table = table.Insert(0, insText)
+    Assert.Equal(text.Length + insText.Length, table.DocumentLength)
+    Assert.Equal(insText + text, table.Text())
+
+[<Fact>]
+let ``Can insert into the middle of a table's AddBuffer`` () =
     (* Test 1: Does the table have the expected length? *)
     let table = TextTable.create ""
     let table = table.Insert(0, text)
@@ -70,3 +78,11 @@ let ``Can insert into the middle of a table that has a non-empty AddBuffer and a
     let thirdStr = text.Substring(3)
     let str = firstStr + insText + thirdStr
     Assert.Equal(str, table.Text())
+
+[<Fact>]
+let ``Can insert into the end of a table's AddBuffer`` () =
+    let table = TextTable.create ""
+    let table = table.Insert(0, text)
+    let table = table.Insert(text.Length, insText)
+    Assert.Equal(text.Length + insText.Length, table.DocumentLength)
+    Assert.Equal(text + insText, table.Text())

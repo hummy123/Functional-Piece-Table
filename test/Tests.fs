@@ -36,7 +36,7 @@ let ``Can insert into the start of a non-empty table`` () =
     Assert.Equal(insText + text, table.Text())
 
 [<Fact>]
-let ``Can insert into the middle of a non-empty table`` () =
+let ``Can insert into the middle of a table that has an empty AddBuffer and non-empty OriginalBuffer`` () =
     (* Test 1: Does the table have the expected length? *)
     let table = initialTable.Insert(3, insText)
     Assert.Equal(insText.Length + text.Length, table.DocumentLength)
@@ -45,7 +45,6 @@ let ``Can insert into the middle of a non-empty table`` () =
     let firstStr = text.Substring(0,3)
     let thirdStr = text.Substring(3)
     let str = firstStr + insText + thirdStr
-    printfn "%A" (table.Text())
     Assert.Equal(str, table.Text())
 
 [<Fact>]
@@ -56,4 +55,18 @@ let ``Can insert into the end of a non-empty table`` () =
 
     (* Test 2: Does the table return the expected string? *)
     let str = text + insText
+    Assert.Equal(str, table.Text())
+
+[<Fact>]
+let ``Can insert into the middle of a table that has a non-empty AddBuffer and an empty OriginalBuffer`` () =
+    (* Test 1: Does the table have the expected length? *)
+    let table = TextTable.create ""
+    let table = table.Insert(0, text)
+    let table = table.Insert(3, insText)
+    Assert.Equal(insText.Length + text.Length, table.DocumentLength)
+
+    (* Test 2: Does the table return the expected string? *)
+    let firstStr = text.Substring(0,3)
+    let thirdStr = text.Substring(3)
+    let str = firstStr + insText + thirdStr
     Assert.Equal(str, table.Text())

@@ -51,17 +51,12 @@ module TextTable =
                 (* In range: split piece. *)
                 elif index >= curIndex && index <= pieceEnd then
                     let difference = index - curIndex
-                    let splitData = Piece.split curPiece insPiece difference
-
-                    let pieces =
-                        match splitData with
-                        | Piece.Merge p -> [ p ]
-                        | Piece.Split (f, s, t) -> [ f; s; t ]
+                    let (p1, p2, p3) = Piece.split curPiece insPiece difference
 
                     if listPos = table.Pieces.Length - 1 then
-                        accList @ pieces
+                        accList @ [p1;p2;p3]
                     else
-                        accList @ pieces @ table.Pieces[listPos + 1 ..]
+                        accList @ [p1;p2;p3] @ table.Pieces[listPos + 1 ..]
                 else
                     insertAtMiddle (curIndex + curPiece.Span.Length) (listPos + 1) insPiece (accList @ [ curPiece ])
 

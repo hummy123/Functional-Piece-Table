@@ -10,26 +10,14 @@ module internal Piece =
     let createWithSpan isOriginal span =
         { IsOriginal = isOriginal; Span = span }
 
-
-    type SplitPieces =
-        | Merge of PieceType
-        | Split of PieceType * PieceType * PieceType
-
     let split (a: PieceType) (b: PieceType) (difference: int) =
-        match a.IsOriginal = b.IsOriginal with
-        (* Just merge the two pieces into one. *)
-        | true ->
-            let p = createWithSpan a.IsOriginal (Span.union a.Span b.Span)
-            Merge(p)
-        (* Split into three pieces. *)
-        | false ->
-            let p1Length = a.Span.Start + difference
-            let p1Span = Span.createWithLength a.Span.Start p1Length
-            let p1 = createWithSpan a.IsOriginal p1Span
+        let p1Length = a.Span.Start + difference
+        let p1Span = Span.createWithLength a.Span.Start p1Length
+        let p1 = createWithSpan a.IsOriginal p1Span
 
-            let span3 = Span.createWithStop p1Length (Span.stop a.Span)
-            let p3 = createWithSpan a.IsOriginal span3
-            Split(p1, b, p3)
+        let span3 = Span.createWithStop p1Length (Span.stop a.Span)
+        let p3 = createWithSpan a.IsOriginal span3
+        (p1, b, p3)
 
     type DeletedPiece =
         | Empty

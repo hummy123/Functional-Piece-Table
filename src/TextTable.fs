@@ -36,7 +36,7 @@ module TextTable =
         let sb = buildText 0 (StringBuilder())
         sb.ToString()
 
-    let insert (str: string) index (table: TextTableType) =
+    let insert index (str: string) (table: TextTableType) =
         let rec insertAtMiddle (curIndex: int) (listPos: int) (insPiece: PieceType) (accList: List<PieceType>) =
             if listPos = table.Pieces.Length then
                 accList
@@ -50,7 +50,8 @@ module TextTable =
                     accList @ [ curPiece ] @ [ insPiece ] @ table.Pieces[listPos + 1 ..]
                 (* In range: split piece. *)
                 elif index >= curIndex && index <= pieceEnd then
-                    let splitData = Piece.split curPiece insPiece
+                    let difference = index - curIndex
+                    let splitData = Piece.split curPiece insPiece difference
 
                     let pieces =
                         match splitData with

@@ -15,7 +15,7 @@ module internal Piece =
         | Merge of PieceType
         | Split of PieceType * PieceType * PieceType
 
-    let split (a: PieceType) (b: PieceType) =
+    let split (a: PieceType) (b: PieceType) (difference: int) =
         match a.IsOriginal = b.IsOriginal with
         (* Just merge the two pieces into one. *)
         | true ->
@@ -23,11 +23,11 @@ module internal Piece =
             Merge(p)
         (* Split into three pieces. *)
         | false ->
-            let p1 = create a.IsOriginal a.Span.Start (b.Span.Start - a.Span.Start)
-            let stopA = Span.stop a.Span
-            let stopB = Span.stop b.Span
-            let stop3 = if stopA > stopB then stopA else stopB
-            let span3 = Span.createWithStop ((Span.stop b.Span) + 1) stop3
+            let p1Length = a.Span.Start + difference
+            let p1Span = Span.createWithLength a.Span.Start p1Length
+            let p1 = createWithSpan a.IsOriginal p1Span
+
+            let span3 = Span.createWithStop p1Length (Span.stop a.Span)
             let p3 = createWithSpan a.IsOriginal span3
             Split(p1, b, p3)
 

@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <Compile Include="Types.fs" />
-    <Compile Include="InputBuffer.fs" />
     <Compile Include="Span.fs" />
     <Compile Include="Piece.fs" />
     <Compile Include="TextTable.fs" />

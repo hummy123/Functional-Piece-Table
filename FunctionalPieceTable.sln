@@ -3,12 +3,29 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "PieceTableTests", "test\PieceTableTests.fsproj", "{2F85F516-F754-445D-A664-00A058BB93C4}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "PieceTable", "src\PieceTable.fsproj", "{8E6A3221-081F-4BE0-934B-AC95FDF0EB8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2F85F516-F754-445D-A664-00A058BB93C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F85F516-F754-445D-A664-00A058BB93C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F85F516-F754-445D-A664-00A058BB93C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F85F516-F754-445D-A664-00A058BB93C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E6A3221-081F-4BE0-934B-AC95FDF0EB8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E6A3221-081F-4BE0-934B-AC95FDF0EB8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E6A3221-081F-4BE0-934B-AC95FDF0EB8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E6A3221-081F-4BE0-934B-AC95FDF0EB8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EE5B5596-5551-4F88-A696-03CD5FF3A8AB}
 	EndGlobalSection
 EndGlobal

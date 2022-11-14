@@ -54,9 +54,9 @@ module TextTable =
                     let (p1, p2, p3) = Piece.split curPiece insPiece difference
 
                     if listPos = table.Pieces.Length - 1 then
-                        accList @ [p1;p2;p3]
+                        accList @ [ p1; p2; p3 ]
                     else
-                        accList @ [p1;p2;p3] @ table.Pieces[listPos + 1 ..]
+                        accList @ [ p1; p2; p3 ] @ table.Pieces[listPos + 1 ..]
                 else
                     insertAtMiddle (curIndex + curPiece.Span.Length) (listPos + 1) insPiece (accList @ [ curPiece ])
 
@@ -89,24 +89,30 @@ module TextTable =
 
     let delete span (table: TextTableType) =
         let rec deleteWithinRange curIndex listPos accList : List<PieceType> =
-            if curIndex > Span.stop span then
-                accList @ table.Pieces[listPos..]
-            elif curIndex < span.Start then
+            match listPos = table.Pieces.Length with
+            | true -> accList
+            | false ->
                 let curPiece = table.Pieces[listPos]
-                deleteWithinRange (curIndex + curPiece.Span.Length) (listPos + 1) (accList @ [ curPiece ])
-            (* Within range. *)
-            else
-                let curPiece = table.Pieces[listPos]
-                let nextLength = curIndex + curPiece.Span.Length
-                let nextPos = listPos + 1
+                let curSpan = curPiece.Span
+                let curSpanStop = Span.stop curSpan
 
-                let deleteData = Piece.delete span curPiece
+                if curIndex >= curSpan.Start && curIndex <= curSpanStop then
+                    (* Deletion range includes piece.. *)
+                    let nextLength = curIndex + curPiece.Span.Length
+                    let nextPos = listPos + 1
 
-                match deleteData with
-                | Empty -> deleteWithinRange nextLength nextPos accList
-                | CutOne p -> deleteWithinRange nextLength nextPos (accList @ [ p ])
-                | CutTwo (p1, p2) -> deleteWithinRange nextLength nextPos (accList @ [ p1; p2 ])
+                    let deleteData = Piece.delete span curPiece
 
+                    match deleteData with
+                    | Empty -> deleteWithinRange nextLength nextPos accList
+                    | CutOne p -> deleteWithinRange nextLength nextPos (accList @ [ p ])
+                    | CutTwo (p1, p2) -> deleteWithinRange nextLength nextPos (accList @ [ p1; p2 ])
+                elif curIndex > curSpanStop then
+                    (* Deletion range is after piece. *)
+                    accList @ table.Pieces[listPos..]
+                else
+                    (* Deletion range is before piece. *)
+                    deleteWithinRange (curIndex + curPiece.Span.Length) (listPos + 1) (accList @ [ curPiece ])
 
         match Span.isEmpty span with
         | true -> table

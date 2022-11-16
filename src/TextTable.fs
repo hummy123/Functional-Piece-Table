@@ -2,15 +2,17 @@ namespace PieceTable
 
 open Types
 open Piece
-open System.Text
 
 module TextTable =
+    /// Create a TextTableType given a string,
     let create str =
         { OriginalBuffer = str
           AddBuffer = ""
           DocumentLength = str.Length
           Pieces = if str = "" then [] else [ Piece.create true 0 str.Length ] }
 
+    /// Retrieve the string contained within a TextTableType. Building this string takes O(n).
+    /// Note that .NET has a size limit of 2 GB on objects and thus you cannot retrieve a string longer than that.
     let text (table: TextTableType) =
         let rec buildText index (acc: string) =
             let piece = table.Pieces[index]
@@ -35,6 +37,7 @@ module TextTable =
 
         buildText 0 ""
 
+    /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
         let rec insertAtMiddle (curIndex: int) (listPos: int) (insPiece: PieceType) (accList: List<PieceType>) =
             if listPos = table.Pieces.Length then
@@ -86,6 +89,7 @@ module TextTable =
                 AddBuffer = addBuffer
                 Pieces = pieceList }
 
+    /// Returns a table without the text in the specified span.
     let delete span (table: TextTableType) =
         let rec deleteWithinRange curIndex listPos accList : List<PieceType> =
             match listPos = table.Pieces.Length with

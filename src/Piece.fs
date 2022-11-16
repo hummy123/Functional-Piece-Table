@@ -3,13 +3,17 @@ namespace PieceTable
 open Types
 
 module internal Piece =
+    /// Creates a Piece specifying the buffer it belongs to, the index of the buffer it should read from and how many characters it should read.
     let create isOriginal start length =
         { IsOriginal = isOriginal
           Span = Span.createWithLength start length }
 
+    /// Creates a Piece specifying which buffer it belongs to and its span.
     let createWithSpan isOriginal span =
         { IsOriginal = isOriginal; Span = span }
 
+    /// Split operation that returns three pieces.
+    /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
     let split (a: PieceType) (b: PieceType) (difference: int) =
         let p1Length = a.Span.Start + difference
         let p1Span = Span.createWithLength a.Span.Start p1Length
@@ -19,11 +23,17 @@ module internal Piece =
         let p3 = createWithSpan a.IsOriginal span3
         (p1, b, p3)
 
+    /// Specifies how we should handle a Piece given to the delete method.
+    /// Empty: We can simply remove this Piece from the list.
+    /// CutOne: We can replace the Piece with the newly returned one.
+    /// CutTwo: We can replace the Piece given in the parameter with the two pieces returned, where the first is before the second.
     type DeletedPiece =
         | Empty
         | CutOne of PieceType
         | CutTwo of PieceType * PieceType
 
+    /// Deletes either a part of a piece or a full piece itself.
+    /// See the documentation for the DeletedPiece type on how to use this method's return value.
     let delete (span: SpanType) (piece: PieceType) =
         let spanStop = Span.stop span
         (* This piece is fully within the deletion span's range. *)

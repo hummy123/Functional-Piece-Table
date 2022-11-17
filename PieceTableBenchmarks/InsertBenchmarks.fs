@@ -9,6 +9,7 @@ open PieceTable.TextTable
 module InsertData = 
     let empty = TextTable.create ""
     let mutable table = TextTable.create ""
+    let mutable tableLength = 0
 
 [<MemoryDiagnoser; HtmlExporter>]
 type Insert() =
@@ -18,12 +19,14 @@ type Insert() =
     [<IterationSetup>]
     member this.createWithPieces() =
         InsertData.table <- TextTable.create ""
+        InsertData.tableLength <- 0
         for i in [0..this.size] do
-            InsertData.table <- InsertData.table.Insert(InsertData.table.DocumentLength, "hello")
+            InsertData.tableLength <- InsertData.tableLength + 5
+            InsertData.table <- InsertData.table.Insert(0, "hello")
 
     [<Benchmark>]
     member this.InsertNearEndOfTable() =
-        InsertData.table <- InsertData.table.Insert(InsertData.table.DocumentLength - 3, "A")
+        InsertData.table <- InsertData.table.Insert(InsertData.tableLength - 3, "A")
 
     [<Benchmark>]
     member this.InsertNearStartOfTable() = 
@@ -31,7 +34,7 @@ type Insert() =
 
     [<Benchmark>]
     member this.InsertAtMiddleOfTable() =
-        let middle = InsertData.table.DocumentLength / 2
+        let middle = InsertData.tableLength / 2
         InsertData.table <- InsertData.table.Insert(middle, "A")
 
 module Main = 

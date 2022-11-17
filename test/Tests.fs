@@ -15,10 +15,6 @@ let insText = "TEST!"
 let initialTable = TextTable.create text
 
 [<Fact>]
-let ``Initial table contains size of text`` () =
-    Assert.Equal(initialTable.DocumentLength, text.Length)
-
-[<Fact>]
 let ``Initial table's text returns input text`` () =
     Assert.Equal(text, TextTable.text initialTable)
 
@@ -43,7 +39,7 @@ let ``Can insert into the middle of a table's OriginalBuffer`` () =
 
 [<Fact>]
 let ``Can insert into the end of a table's OriginalBuffer`` () =
-    let table = initialTable.Insert(initialTable.DocumentLength, insText)
+    let table = initialTable.Insert(text.Length, insText)
     let str = text + insText
     Assert.Equal(str, table.Text())
 

@@ -52,7 +52,6 @@ let ``Can insert into the start of a table's AddBuffer`` () =
 
 [<Fact>]
 let ``Can insert into the middle of a table's AddBuffer`` () =
-    (* Test 1: Does the table have the expected length? *)
     let table = TextTable.create ""
     let table = table.Insert(0, text)
     let table = table.Insert(3, insText)
@@ -68,11 +67,9 @@ let ``Can insert into the end of a table's AddBuffer`` () =
     let table = table.Insert(text.Length, insText)
     Assert.Equal(text + insText, table.Text())
 
-(*
 [<Fact>]
 let ``Can delete from the start of a table's OriginalBuffer`` () =
     let table = initialTable.Delete(0, 2)
-    Assert.Equal(text.Length - 2, table.DocumentLength)
     Assert.Equal(text.Substring(2), table.Text())
 
 [<Fact>]
@@ -80,28 +77,24 @@ let ``Can delete from the start of a table's AddBuffer`` () =
     let table = TextTable.create ""
     let table = table.Insert(0, text)
     let table = table.Delete(0, 2)
-    Assert.Equal(text.Length - 2, table.DocumentLength)
     Assert.Equal(text.Substring(2), table.Text())
 
 [<Fact>]
 let ``Can delete from the end of a table's OriginalBuffer`` () = 
-    let table = initialTable.Delete(initialTable.DocumentLength - 5, 5)
-    Assert.Equal(text.Length - 5, table.DocumentLength)
+    let table = initialTable.Delete(text.Length - 5, 5)
     Assert.Equal(text.Substring(0, text.Length - 5), table.Text())
 
 [<Fact>]
 let ``Can delete from the end of a table's AddBuffer`` () =
     let table = TextTable.create ""
     let table = table.Insert(0, text)
-    let table = table.Delete(initialTable.DocumentLength - 5, 5)
-    Assert.Equal(text.Length - 5, table.DocumentLength)
+    let table = table.Delete(text.Length - 5, 5)
     Assert.Equal(text.Substring(0, text.Length - 5), table.Text())
 
 [<Fact>]
 let ``Can delete from the middle of a table's OriginalBuffer`` () = 
     let table = initialTable.Delete(1, 1)
     let expectedStr = text[0].ToString() + text.Substring(2)
-    Assert.Equal(text.Length - 1, table.DocumentLength)
     Assert.Equal(expectedStr, table.Text())
 
 [<Fact>]
@@ -109,13 +102,10 @@ let ``Can delete from the middle of a table's AddBuffer`` () =
     let table = TextTable.create ""
     let table = initialTable.Delete(1, 1)
     let expectedStr = text[0].ToString() + text.Substring(2)
-    Assert.Equal(text.Length - 1, table.DocumentLength)
     Assert.Equal(expectedStr, table.Text())
 
 let ``Can delete when deletion range incldes multiple pieces in a table.`` () =
     let table = initialTable.Insert(0, insText)
     let table = table.Delete(0,10)
     let expectedStr = (insText + text).Substring(10)
-    Assert.Equal(text.Length + insText.Length - 10, table.DocumentLength)
     Assert.Equal(expectedStr, table.Text())
-*)

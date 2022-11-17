@@ -51,51 +51,12 @@ module TextTable =
             Pieces = pieces
             AddBuffer = addBuffer }
 
-    (*    /// Returns a table without the text in the specified span.
-    let delete span (table: TextTableType) =
-        let rec deleteWithinRange curIndex listPos accList : List<PieceType> =
-            match listPos = table.Pieces.Length with
-            | true -> accList
-            | false ->
-                let curPiece = table.Pieces[listPos]
-                let curSpan = curPiece.Span
-                let curSpanStop = Span.stop curSpan
-
-                if curIndex >= curSpan.Start && curIndex <= curSpanStop then
-                    (* Deletion range includes piece.. *)
-                    let nextLength = curIndex + curPiece.Span.Length
-                    let nextPos = listPos + 1
-
-                    let deleteData = Piece.delete span curPiece
-
-                    match deleteData with
-                    | Empty -> deleteWithinRange nextLength nextPos accList
-                    | CutOne p -> deleteWithinRange nextLength nextPos (accList @ [ p ])
-                    | CutTwo (p1, p2) -> deleteWithinRange nextLength nextPos (accList @ [ p1; p2 ])
-                elif curIndex > curSpanStop then
-                    (* Deletion range is after piece. *)
-                    accList @ table.Pieces[listPos..]
-                else
-                    (* Deletion range is before piece. *)
-                    deleteWithinRange (curIndex + curPiece.Span.Length) (listPos + 1) (accList @ [ curPiece ])
-
-        match Span.isEmpty span with
-        | true -> table
-        | false ->
-            let pieceList = deleteWithinRange 0 0 []
-
-            { table with
-                DocumentLength = table.DocumentLength - span.Length
-                Pieces = pieceList }
-            *)
-
     (* Alternative OOP API. *)
     type TextTableType with
 
         member this.Insert(index, str) = insert index str this
         member this.Text() = text this
-(*
+
         member this.Delete(start, length) =
             let span = Span.createWithLength start length
-            delete span this
-            *)
+            ListZipper.delete span this

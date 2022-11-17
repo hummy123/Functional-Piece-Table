@@ -6,8 +6,12 @@ module Types =
 
     type PieceType = { IsOriginal: bool; Span: SpanType }
 
+    type ListZipperType =
+        { Focus: PieceType list
+          Path: PieceType list
+          Index: int }
+
     type TextTableType =
         { OriginalBuffer: string
           AddBuffer: string
-          DocumentLength: int
-          Pieces: List<PieceType> }
+          Pieces: ListZipperType }

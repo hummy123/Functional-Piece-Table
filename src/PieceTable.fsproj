@@ -9,6 +9,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Span.fs" />
     <Compile Include="Piece.fs" />
+    <Compile Include="ListZipper.fs" />
     <Compile Include="TextTable.fs" />
   </ItemGroup>
 

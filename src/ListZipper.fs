@@ -67,58 +67,77 @@ module ListZipper =
             failwith "Bad ListZipper.insert caller case: Insertion index is less than 0."
         | _, _, _ -> failwith "unexpected ListZipper.insert case"
 
-    let private deletePiece dSpan p =
-        match Piece.delete dSpan p with
-        | Empty -> ([], 0)
-        | CutOne(p,d) -> ([ p ], d)
-        | CutTwo (p1, p2, d) -> ([ p1; p2 ], d)
+    type ItemsToRemove = int
+    type ZipperIndex = int
+    type internal ListDeleteData = 
+        | PartialDelete of DeletedPiece * ItemsToRemove * ZipperIndex
+        | FullDelete of ItemsToRemove * ZipperIndex
 
-    let rec private deleteLeft deleteSpan zipper =
+    let rec private deleteLeftAcc deleteSpan zipper listPos =
         match zipper.Path, deleteSpan, zipper.Index with
-        (* When we have an empty list, just return an empty list back. *)
-        | [], _, _ -> ([], 0)
-        (* When we have exactly one element in the path and need to delete at least a part of it. *)
-        | [ p ], dSpan, curIndex when dSpan.Start < curIndex + p.Span.Length -> 
-            let (deleteList, deletedChars) = deletePiece dSpan p
-            (deleteList, deletedChars)
-        (* When we have exactly one element and don't need to do anything with it. *)
-        | [ p ], _, _ -> ([ p ], 0)
-        (* When we have at least two elements and need to delete at least a part. *)
-        | p :: _, dSpan, curIndex when dSpan.Start < curIndex + p.Span.Length ->
-            let (deleteList, deletedChars) = deletePiece dSpan p
-            let (newList, newlyDeletedChars) = (deleteLeft deleteSpan (prev zipper))
-            (newList @ deleteList, deletedChars + newlyDeletedChars)
-        (* When we have at least two elements but do not need to do anything with them. *)
-        | pl, _, _ -> (pl, 0)
+        | [], _, _-> FullDelete(listPos, 0)
+        | [p], dSpan, curIndex ->
+            if dSpan.Start <= curIndex + p.Span.Length then
+                let deleteData = Piece.delete dSpan p
+                PartialDelete(deleteData, listPos, curIndex)
+            else
+                FullDelete(listPos, curIndex)
+        | p::_, dSpan, curIndex ->
+            if dSpan.Start <= curIndex then
+                deleteLeftAcc dSpan (prev zipper) (listPos + 1)
+            else
+                let deleteData = Piece.delete dSpan p
+                PartialDelete(deleteData, listPos, curIndex)
 
-    let rec private deleteRight deleteSpan zipper =
-        let deleteEnd = Span.stop deleteSpan
+    let rec private deleteRightAcc deleteSpan zipper listPos =
+        let deleteStop = Span.stop deleteSpan
 
-        match zipper.Focus, deleteEnd, zipper.Index with
-        | [], _, _ -> []
-        | [ p ], dEnd, curIndex when dEnd <= curIndex + p.Span.Length -> 
-            let (deleteList, _) = deletePiece deleteSpan p
-            deleteList
-        | [ p ], _, _ -> [ p ]
-        | p :: _, dEnd, curIndex when dEnd <= curIndex + p.Span.Length ->
-            let (deleteData, _) = deletePiece deleteSpan p
-            deleteData @ (deleteRight deleteSpan (next zipper))
-        | pl, _, _ -> pl
-
+        match zipper.Focus, deleteStop, zipper.Index with
+        | [], _, curIndex -> FullDelete(listPos + 1, curIndex)
+        | [p], dStop, curIndex ->
+            if dStop >= curIndex + p.Span.Length then
+                FullDelete(listPos, curIndex)
+            else
+                let deleteData = Piece.delete deleteSpan p
+                PartialDelete(deleteData, listPos, curIndex)
+        | p:: _, dStop, curIndex ->
+            if dStop >= curIndex + p.Span.Length then
+                deleteRightAcc deleteSpan (next zipper) (listPos+1)
+            else
+                let deleteData = Piece.delete deleteSpan p
+                PartialDelete(deleteData, listPos, curIndex)
 
     let delete deleteSpan (table: TextTableType) =
-        let (leftList, leftDeleted) = deleteLeft deleteSpan table.Pieces
-        let right = deleteRight deleteSpan table.Pieces
+        let (leftIndex, path) =
+            match deleteLeftAcc deleteSpan table.Pieces 0 with
+            | PartialDelete(partialPiece, removeNum, index) ->
+                match partialPiece with
+                | Empty -> failwith "unexpected ListZipper.delete case (left delete is Empty)"
+                | CutOne (piece, _) -> 
+                    let index = index + piece.Span.Length 
+                    (index, piece :: table.Pieces.Path[removeNum..])
+                | CutTwo (p1, p2, _) ->
+                    let index = p1.Span.Length + p2.Span.Length + index
+                    (index, p1::p2::table.Pieces.Path[removeNum..])
+            | FullDelete(removeNum, index) ->
+                (index, table.Pieces.Path[removeNum..])
 
-        (* Calculate the new index (the current index minus how many characters we deleted to the left. )*)
-        let newIndex = table.Pieces.Index - leftDeleted
+        let focus =
+            match deleteRightAcc deleteSpan table.Pieces 0 with
+            | PartialDelete(partialPiece, removeNum, _) ->
+                match partialPiece with
+                | Empty -> failwith "unexpected ListZipper.delete case (right delete is Empty)"
+                | CutOne(piece, _) ->
+                    piece::table.Pieces.Path[removeNum..]
+                | CutTwo (p1,p2, _) ->
+                    p1::p2::table.Pieces.Path[removeNum..]
+            | FullDelete(removeNum, _) ->
+                table.Pieces.Path[removeNum..]
 
-        let pieces =
-            { Focus = right
-              Path = leftList
-              Index = newIndex }
+        let pieces = 
+            {Path = path; Focus = focus; Index = leftIndex}
 
-        { table with Pieces = pieces }
+        {table with Pieces = pieces}
 
     let ofList zipper = zipper.Path @ zipper.Focus
 

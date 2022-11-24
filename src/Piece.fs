@@ -63,3 +63,25 @@ module internal Piece =
             let p2 = { piece with Span = Span.createWithStop spanStop p2Stop }
             let difference = piece.Span.Length - (p1.Span.Length + p2.Span.Length)
             CutTwo(p1, p2, difference)
+
+    let text piece table =
+        match piece.IsOriginal with
+        (* Get text from original buffer. *)
+        | true -> table.OriginalBuffer.Substring(piece.Span.Start, piece.Span.Length)
+        (* Get text from add buffer. *)
+        | false -> table.AddBuffer.Substring(piece.Span.Start, piece.Span.Length)
+
+    let textSlice startIndex length piece table =
+        let pieceText = text piece table        
+        let pieceLength = table.Pieces.Focus[0].Span.Length
+
+        match startIndex, length, table.Pieces.Index, pieceLength with
+        (* If Piece fits within range (start index + length). *)
+        | curStart, curLen, pieceStart, pieceLen when curStart = pieceStart && curLen >= pieceLen ->
+            pieceText
+        (* If Piece does not fit within range. *)
+        | curStart, curLen, pieceStart, pieceLen ->
+            let sliceStart = curStart - pieceStart
+            let remainingLength = pieceText.Length - sliceStart
+            let sliceStop = if remainingLength < curLen then remainingLength else curLen
+            pieceText.Substring(sliceStart, sliceStop)

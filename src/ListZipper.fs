@@ -106,7 +106,7 @@ module ListZipper =
         | pl, _, _ -> pl
 
 
-    let rec delete deleteSpan (table: TextTableType) =
+    let delete deleteSpan (table: TextTableType) =
         let (leftList, leftDeleted) = deleteLeft deleteSpan table.Pieces
         let right = deleteRight deleteSpan table.Pieces
 
@@ -121,3 +121,54 @@ module ListZipper =
         { table with Pieces = pieces }
 
     let ofList zipper = zipper.Path @ zipper.Focus
+
+    /// Retrieve the string contained within a TextTableType. Building this string takes O(n).
+    /// Note that .NET has a size limit of 2 GB on objects and thus you cannot retrieve a string longer than that.
+    let text (table: TextTableType) =
+        let pieces = ofList table.Pieces
+
+        let rec buildText listPos (acc: string) =
+            let piece = pieces[listPos]
+
+            if listPos = pieces.Length - 1 then
+                acc + (Piece.text piece table)
+            else
+                acc + (Piece.text piece table) |> buildText (listPos + 1)
+
+        buildText 0 ""
+
+    let rec private textSliceLeft textSpan table acc = 
+        let zipper = table.Pieces
+        match zipper.Path, textSpan, zipper.Index with
+        | [], _, _ -> (acc, table)
+        | [p], tSpan, curIndex when tSpan.Start < curIndex + p.Span.Length ->
+            let pieceText = Piece.textSlice curIndex tSpan.Length p table
+            (pieceText + acc, table)
+        | [_], _, _ -> (acc, table)
+        | p :: _, tSpan, curIndex when tSpan.Start < curIndex + p.Span.Length ->
+            let pieceText = Piece.textSlice curIndex tSpan.Length p table
+            let leftTable = {table with Pieces = prev zipper; }
+            textSliceLeft tSpan leftTable (pieceText + acc)
+        | _, _, _ -> (acc, table)
+
+    let rec private textSliceRight tSpan textStop table acc =
+        let zipper = table.Pieces
+        match zipper.Focus, textStop, zipper.Index with
+        | [], _, _ -> (acc, table)
+        | [p], tStop, curIndex when tStop <= curIndex + p.Span.Length ->
+            let pieceText = Piece.textSlice curIndex tSpan.Length p table
+            (acc + pieceText, table)
+        | [_], _, _ -> (acc, table)
+        | p:: _, tStop, curIndex when tStop <= curIndex + p.Span.Length ->
+            let pieceText = Piece.textSlice curIndex tSpan.Length p table
+            let rightTable = {table with Pieces = next zipper}
+            textSliceRight tSpan textStop rightTable (acc + pieceText)
+        | _, _, _ -> (acc, table)
+    
+    let textSlice textSpan (table: TextTableType) =
+        let (leftText, leftTable) = textSliceLeft textSpan table ""
+        let (fullText, rightTable) = textSliceRight textSpan (Span.stop textSpan) table leftText
+        if textSpan.Start <= table.Pieces.Index then
+            (fullText, leftTable)
+        else
+            (fullText, rightTable)

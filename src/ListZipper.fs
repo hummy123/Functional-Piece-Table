@@ -91,9 +91,7 @@ module ListZipper =
                 let deleteData = Piece.delete curIndex dSpan p
                 PartialDelete(deleteData, listPos + 1, curIndex)
 
-    let rec private deleteRightAcc deleteSpan zipper listPos =
-        let deleteStop = Span.stop deleteSpan
-
+    let rec private deleteRightAcc deleteSpan deleteStop zipper listPos =
         match zipper.Focus, deleteStop, zipper.Index with
         | [], _, curIndex -> FullDelete(listPos + 1, curIndex)
         | [p], dStop, curIndex ->
@@ -106,15 +104,14 @@ module ListZipper =
             if dStop > curIndex + p.Span.Length then
                 printfn "dStop >= curIndex"
                 printfn "dStop = %i" dStop
-                deleteRightAcc deleteSpan (next zipper) (listPos+1)
+                deleteRightAcc deleteSpan deleteStop (next zipper) (listPos+1)
             else
                 let deleteData = Piece.delete curIndex deleteSpan p
                 PartialDelete(deleteData, listPos + 1, curIndex)
 
     let delete deleteSpan (table: TextTableType) =
-        let deleteStop = Span.stop deleteSpan
         let (leftIndex, path) =
-            if table.Pieces.Index <= deleteStop then 
+            if table.Pieces.Index <= deleteSpan.Start then 
                 (table.Pieces.Index, table.Pieces.Path)
             else
                 match deleteLeftAcc deleteSpan table.Pieces 0 with
@@ -130,11 +127,12 @@ module ListZipper =
                 | FullDelete(removeNum, index) ->
                     (index, table.Pieces.Path[removeNum..])
 
+        let deleteStop = Span.stop deleteSpan
         let focus =
             if table.Pieces.Index > deleteStop then
                 table.Pieces.Focus
             else
-                match deleteRightAcc deleteSpan table.Pieces 0 with
+                match deleteRightAcc deleteSpan deleteStop table.Pieces 0 with
                 | PartialDelete(partialPiece, removeNum, _) ->
                     match partialPiece with
                     | Empty -> table.Pieces.Focus[removeNum..]

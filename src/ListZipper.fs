@@ -1,4 +1,4 @@
-/// Inspiration from https://github.com/fsprojects/FSharpx.Collections/blob/master/src/FSharpx.Collections.Experimental/ListZipper.fs
+// Inspiration from https://github.com/fsprojects/FSharpx.Collections/blob/master/src/FSharpx.Collections.Experimental/ListZipper.fs
 namespace PieceTable
 
 open Types
@@ -69,47 +69,54 @@ module ListZipper =
 
     let private deletePiece dSpan p =
         match Piece.delete dSpan p with
-        | Empty -> []
-        | CutOne p -> [ p ]
-        | CutTwo (p1, p2) -> [ p1; p2 ]
+        | Empty -> ([], 0)
+        | CutOne(p,d) -> ([ p ], d)
+        | CutTwo (p1, p2, d) -> ([ p1; p2 ], d)
 
     let rec private deleteLeft deleteSpan zipper =
         match zipper.Path, deleteSpan, zipper.Index with
-        (* When we haev an empty list, just return an empty list back. *)
-        | [], _, _ -> []
+        (* When we have an empty list, just return an empty list back. *)
+        | [], _, _ -> ([], 0)
         (* When we have exactly one element in the path and need to delete at least a part of it. *)
-        | [ p ], dSpan, curIndex when dSpan.Start < curIndex + p.Span.Length -> deletePiece dSpan p
+        | [ p ], dSpan, curIndex when dSpan.Start < curIndex + p.Span.Length -> 
+            let (deleteList, deletedChars) = deletePiece dSpan p
+            (deleteList, deletedChars)
         (* When we have exactly one element and don't need to do anything with it. *)
-        | [ p ], _, _ -> [ p ]
+        | [ p ], _, _ -> ([ p ], 0)
         (* When we have at least two elements and need to delete at least a part. *)
         | p :: _, dSpan, curIndex when dSpan.Start < curIndex + p.Span.Length ->
-            let deleteData = deletePiece dSpan p
-            (deleteLeft deleteSpan (prev zipper)) @ deleteData
+            let (deleteList, deletedChars) = deletePiece dSpan p
+            let (newList, newlyDeletedChars) = (deleteLeft deleteSpan (prev zipper))
+            (newList @ deleteList, deletedChars + newlyDeletedChars)
         (* When we have at least two elements but do not need to do anything with them. *)
-        | pl, _, _ -> pl
+        | pl, _, _ -> (pl, 0)
 
     let rec private deleteRight deleteSpan zipper =
         let deleteEnd = Span.stop deleteSpan
 
         match zipper.Focus, deleteEnd, zipper.Index with
         | [], _, _ -> []
-        | [ p ], dEnd, curIndex when dEnd <= curIndex + p.Span.Length -> deletePiece deleteSpan p
+        | [ p ], dEnd, curIndex when dEnd <= curIndex + p.Span.Length -> 
+            let (deleteList, _) = deletePiece deleteSpan p
+            deleteList
         | [ p ], _, _ -> [ p ]
         | p :: _, dEnd, curIndex when dEnd <= curIndex + p.Span.Length ->
-            let deleteData = deletePiece deleteSpan p
+            let (deleteData, _) = deletePiece deleteSpan p
             deleteData @ (deleteRight deleteSpan (next zipper))
         | pl, _, _ -> pl
 
 
     let rec delete deleteSpan (table: TextTableType) =
-        let left = deleteLeft deleteSpan table.Pieces
+        let (leftList, leftDeleted) = deleteLeft deleteSpan table.Pieces
         let right = deleteRight deleteSpan table.Pieces
 
-        (* We put the whole list at the focus because that's easier and this list zipper is only temporary. *)
+        (* Calculate the new index (the current index minus how many characters we deleted to the left. )*)
+        let newIndex = table.Pieces.Index - leftDeleted
+
         let pieces =
-            { Focus = left @ right
-              Path = []
-              Index = 0 }
+            { Focus = right
+              Path = leftList
+              Index = newIndex }
 
         { table with Pieces = pieces }
 

@@ -29,8 +29,8 @@ module internal Piece =
     /// CutTwo: We can replace the Piece given in the parameter with the two pieces returned, where the first is before the second.
     type DeletedPiece =
         | Empty
-        | CutOne of PieceType
-        | CutTwo of PieceType * PieceType
+        | CutOne of PieceType * int
+        | CutTwo of PieceType * PieceType * int
 
     /// Deletes either a part of a piece or a full piece itself.
     /// See the documentation for the DeletedPiece type on how to use this method's return value.
@@ -45,13 +45,15 @@ module internal Piece =
         elif span.Start <= piece.Span.Start then
             let newPieceStart = Span.stop span
             let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
-            CutOne({ piece with Span = newPieceSpan })
+            let difference = piece.Span.Length - newPieceSpan.Length
+            CutOne({ piece with Span = newPieceSpan }, difference)
         (* Some part after the piece's start is within the deletion span's range. *)
         (* Example: abcd|ef|. *)
         elif spanStop >= Span.stop piece.Span then
             let newPieceStop = span.Start
             let newPieceSpan = Span.createWithStop piece.Span.Start newPieceStop
-            CutOne({ piece with Span = newPieceSpan })
+            let difference = piece.Span.Length - newPieceSpan.Length
+            CutOne({ piece with Span = newPieceSpan }, difference)
         (* The deletion span specifies a part within the piece but not its full range.*)
         (* Example: a|bc|def. *)
         else
@@ -59,4 +61,5 @@ module internal Piece =
             let p1 = { piece with Span = Span.createWithStop piece.Span.Start p1Stop }
             let p2Stop = Span.stop piece.Span
             let p2 = { piece with Span = Span.createWithStop spanStop p2Stop }
-            CutTwo(p1, p2)
+            let difference = piece.Span.Length - (p1.Span.Length + p2.Span.Length)
+            CutTwo(p1, p2, difference)

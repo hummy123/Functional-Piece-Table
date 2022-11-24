@@ -105,7 +105,7 @@ module ListZipper =
                 deleteRightAcc deleteSpan (next zipper) (listPos+1)
             else
                 let deleteData = Piece.delete deleteSpan p
-                PartialDelete(deleteData, listPos+1, curIndex)
+                PartialDelete(deleteData, listPos + 1, curIndex)
 
     let delete deleteSpan (table: TextTableType) =
         let (leftIndex, path) =
@@ -128,11 +128,11 @@ module ListZipper =
                 match partialPiece with
                 | Empty -> failwith "unexpected ListZipper.delete case (right delete is Empty)"
                 | CutOne(piece, _) ->
-                    piece::table.Pieces.Path[..removeNum]
+                    piece::table.Pieces.Focus[removeNum..]
                 | CutTwo (p1,p2, _) ->
-                    p1::p2::table.Pieces.Path[..removeNum]
+                    p1::p2::table.Pieces.Focus[removeNum..]
             | FullDelete(removeNum, _) ->
-                table.Pieces.Path[..removeNum]
+                table.Pieces.Focus[removeNum..]
 
         let pieces = 
             {Path = path; Focus = focus; Index = leftIndex}

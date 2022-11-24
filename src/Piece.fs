@@ -43,8 +43,7 @@ module internal Piece =
         (* The start of this piece is within the deletion span's range but some part at the end isn't. *)
         (* Example: |ab|cdef. *)
         elif span.Start <= curIndex then
-            printfn "error here"
-            let newPieceStart = (Span.stop span) - curIndex
+            let newPieceStart = if spanStop < curIndex then spanStop else spanStop - curIndex
             let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
             let difference = piece.Span.Length - newPieceSpan.Length
             CutOne({ piece with Span = newPieceSpan }, difference)

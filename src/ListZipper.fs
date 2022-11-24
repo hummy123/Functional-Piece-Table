@@ -112,31 +112,38 @@ module ListZipper =
                 PartialDelete(deleteData, listPos + 1, curIndex)
 
     let delete deleteSpan (table: TextTableType) =
+        let deleteStop = Span.stop deleteSpan
         let (leftIndex, path) =
-            match deleteLeftAcc deleteSpan table.Pieces 0 with
-            | PartialDelete(partialPiece, removeNum, index) ->
-                match partialPiece with
-                | Empty -> failwith "unexpected ListZipper.delete case (left delete is Empty)"
-                | CutOne (piece, _) -> 
-                    let index = index + piece.Span.Length 
-                    (index, piece :: table.Pieces.Path[removeNum..])
-                | CutTwo (p1, p2, _) ->
-                    let index = p1.Span.Length + p2.Span.Length + index
-                    (index, p1::p2::table.Pieces.Path[removeNum..])
-            | FullDelete(removeNum, index) ->
-                (index, table.Pieces.Path[removeNum..])
+            if table.Pieces.Index <= deleteStop then 
+                (table.Pieces.Index, table.Pieces.Path)
+            else
+                match deleteLeftAcc deleteSpan table.Pieces 0 with
+                | PartialDelete(partialPiece, removeNum, index) ->
+                    match partialPiece with
+                    | Empty -> failwith "unexpected ListZipper.delete case (left delete is Empty)"
+                    | CutOne (piece, _) -> 
+                        let index = index - piece.Span.Length 
+                        (index, piece :: table.Pieces.Path[removeNum..])
+                    | CutTwo (p1, p2, _) ->
+                        let index = p1.Span.Length + p2.Span.Length + index
+                        (index, p1::p2::table.Pieces.Path[removeNum..])
+                | FullDelete(removeNum, index) ->
+                    (index, table.Pieces.Path[removeNum..])
 
         let focus =
-            match deleteRightAcc deleteSpan table.Pieces 0 with
-            | PartialDelete(partialPiece, removeNum, _) ->
-                match partialPiece with
-                | Empty -> table.Pieces.Focus[removeNum..]
-                | CutOne(piece, _) ->
-                    piece::table.Pieces.Focus[removeNum..]
-                | CutTwo (p1,p2, _) ->
-                    p1::p2::table.Pieces.Focus[removeNum..]
-            | FullDelete(removeNum, _) ->
-                table.Pieces.Focus[removeNum..]
+            if table.Pieces.Index > deleteStop then
+                table.Pieces.Focus
+            else
+                match deleteRightAcc deleteSpan table.Pieces 0 with
+                | PartialDelete(partialPiece, removeNum, _) ->
+                    match partialPiece with
+                    | Empty -> table.Pieces.Focus[removeNum..]
+                    | CutOne(piece, _) ->
+                        piece::table.Pieces.Focus[removeNum..]
+                    | CutTwo (p1,p2, _) ->
+                        p1::p2::table.Pieces.Focus[removeNum..]
+                | FullDelete(removeNum, _) ->
+                    table.Pieces.Focus[removeNum..]
 
         let pieces = 
             {Path = path; Focus = focus; Index = leftIndex}

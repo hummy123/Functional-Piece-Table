@@ -105,8 +105,15 @@ let ``Can delete from the middle of a table's AddBuffer`` () =
     Assert.Equal(expectedStr, table.Text())
 
 [<Fact>]
-let ``Can delete when deletion range incldes multiple pieces in a table.`` () =
+let ``Can delete when zipper is at start and deletion range incldes multiple pieces in a table.`` () =
     let table = initialTable.Insert(0, insText)
     let table = table.Delete(0,10)
     let expectedStr = (insText + text).Substring(10)
+    Assert.Equal(expectedStr, table.Text())
+
+[<Fact>]
+let ``Can delete from start when zipper is at end`` () =
+    let table = initialTable.Insert(text.Length, insText)
+    let table = table.Delete(0,10)
+    let expectedStr = text.Substring(10) + insText
     Assert.Equal(expectedStr, table.Text())

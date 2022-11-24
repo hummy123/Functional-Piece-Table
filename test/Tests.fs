@@ -117,3 +117,10 @@ let ``Can delete from start when zipper is at end`` () =
     let table = table.Delete(0,10)
     let expectedStr = text.Substring(10) + insText
     Assert.Equal(expectedStr, table.Text())
+
+[<Fact>]
+let ``Can delete in between when zipper is at end`` () =
+    let table = initialTable.Insert(text.Length, insText)
+    let table = table.Delete(1, 1)
+    let expectedStr = text[0].ToString() + text.Substring(2) + insText
+    Assert.Equal(expectedStr, table.Text())

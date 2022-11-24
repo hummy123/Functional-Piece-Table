@@ -107,6 +107,6 @@ let ``Can delete from the middle of a table's AddBuffer`` () =
 [<Fact>]
 let ``Can delete when deletion range incldes multiple pieces in a table.`` () =
     let table = initialTable.Insert(0, insText)
-    let table = table.Delete(0,4)
+    let table = table.Delete(0,10)
     let expectedStr = (insText + text).Substring(10)
     Assert.Equal(expectedStr, table.Text())

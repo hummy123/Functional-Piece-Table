@@ -34,24 +34,24 @@ module internal Piece =
 
     /// Deletes either a part of a piece or a full piece itself.
     /// See the documentation for the DeletedPiece type on how to use this method's return value.
-    let delete (span: SpanType) (piece: PieceType) =
+    let delete curIndex (span: SpanType) (piece: PieceType) =
         let spanStop = Span.stop span
         (* This piece is fully within the deletion span's range. *)
         (* Example: |abcdef|. *)
-        if span.Start <= piece.Span.Start && spanStop >= Span.stop piece.Span then
+        if span.Start <= curIndex && spanStop >= curIndex + piece.Span.Length then
             DeletedPiece.Empty
         (* The start of this piece is within the deletion span's range but some part at the end isn't. *)
         (* Example: |ab|cdef. *)
-        elif span.Start <= piece.Span.Start then
-            let newPieceStart = Span.stop span
+        elif span.Start <= curIndex then
+            printfn "error here"
+            let newPieceStart = (Span.stop span) - curIndex
             let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
             let difference = piece.Span.Length - newPieceSpan.Length
             CutOne({ piece with Span = newPieceSpan }, difference)
         (* Some part after the piece's start is within the deletion span's range. *)
         (* Example: abcd|ef|. *)
-        elif spanStop >= Span.stop piece.Span then
-            let newPieceStop = span.Start
-            let newPieceSpan = Span.createWithStop piece.Span.Start newPieceStop
+        elif spanStop >= curIndex + piece.Span.Length then
+            let newPieceSpan = Span.createWithStop piece.Span.Start span.Start
             let difference = piece.Span.Length - newPieceSpan.Length
             CutOne({ piece with Span = newPieceSpan }, difference)
         (* The deletion span specifies a part within the piece but not its full range.*)

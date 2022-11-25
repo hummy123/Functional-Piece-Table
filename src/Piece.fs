@@ -32,19 +32,21 @@ module internal Piece =
         | CutOne of PieceType * int
         | CutTwo of PieceType * PieceType * int
 
+    let private deleteInRange curIndex span spanStop piece =
+        let p1Stop = span.Start - piece.Span.Start
+        let p1 = { piece with Span = Span.createWithStop piece.Span.Start p1Stop }
+        let p2Start = if curIndex < spanStop then spanStop - curIndex else spanStop
+        let p2Stop = Span.stop piece.Span
+        // the problem is spanStop. How to fix?
+        let p2 = { piece with Span = Span.createWithStop p2Start p2Stop }
+        let difference = piece.Span.Length - (p1.Span.Length + p2.Span.Length)
+        CutTwo(p1, p2, difference)
+
     let private deleteAtStart curIndex spanStop piece =
         let newPieceStart = if spanStop < curIndex then spanStop else spanStop - curIndex
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
-
-    let private deleteInRange curIndex span spanStop piece =
-        let p1Stop = span.Start - piece.Span.Start
-        let p1 = { piece with Span = Span.createWithStop piece.Span.Start p1Stop }
-        let p2Stop = Span.stop piece.Span
-        let p2 = { piece with Span = Span.createWithStop spanStop p2Stop }
-        let difference = piece.Span.Length - (p1.Span.Length + p2.Span.Length)
-        CutTwo(p1, p2, difference)
 
     let private deleteAtEnd span piece =
         let newPieceSpan = Span.createWithStop piece.Span.Start span.Start
@@ -56,25 +58,24 @@ module internal Piece =
     let delete curIndex (span: SpanType) (piece: PieceType) =
         let spanStop = Span.stop span
         let pieceStop = curIndex + piece.Span.Length
+        printfn "curIndex: %i" curIndex
+        printfn "span start: %i; length: %i; stop: %i" span.Start span.Length spanStop
         
         if span.Start <= curIndex && spanStop >= pieceStop then
             (* This piece is fully within the deletion span's range. *)
             (* Example: |abcdef|. *)
             DeletedPiece.Empty
-        elif span.Start <= curIndex && spanStop <= pieceStop then
-            (* The deletion span specifies a part within the piece but not its full range.*)
-            (* Example: a|bc|def. *)
-            deleteInRange curIndex span spanStop piece
-        elif span.Start <= curIndex then
+        elif span.Start <= curIndex && pieceStop <= spanStop then
             (* The start of this piece is within the deletion span's range but some part at the end isn't. *)
             (* Example: |ab|cdef. *)
             deleteAtStart curIndex spanStop piece
-        elif spanStop >= pieceStop then
+        elif spanStop >= pieceStop && span.Start > curIndex then
             (* Some part after the piece's start is within the deletion span's range. *)
             (* Example: abcd|ef|. *)
             deleteAtEnd span piece
         else
-            (* Fall-through case for deleting in range. *)
+            (* The deletion span specifies a part within the piece but not its full range.*)
+            (* Example: a|bc|def. *)
             deleteInRange curIndex span spanStop piece
 
     let text piece table =

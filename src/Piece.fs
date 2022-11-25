@@ -37,7 +37,6 @@ module internal Piece =
         let p1 = { piece with Span = Span.createWithStop piece.Span.Start p1Stop }
         let p2Start = if curIndex < spanStop then spanStop - curIndex else spanStop
         let p2Stop = Span.stop piece.Span
-        // the problem is spanStop. How to fix?
         let p2 = { piece with Span = Span.createWithStop p2Start p2Stop }
         let difference = piece.Span.Length - (p1.Span.Length + p2.Span.Length)
         CutTwo(p1, p2, difference)

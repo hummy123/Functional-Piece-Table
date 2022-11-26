@@ -124,3 +124,38 @@ let ``Can delete in between when zipper is at end`` () =
     let table = table.Delete(1, 1)
     let expectedStr = text[0].ToString() + text.Substring(2) + insText
     Assert.Equal(expectedStr, table.Text())
+
+[<Fact>]
+let ``Can delete at end when zipper is at end`` () =
+    let table = initialTable.Insert(text.Length, insText)
+    let table = table.Delete(text.Length, insText.Length)
+    let expectedStr = text
+    Assert.Equal(expectedStr, table.Text())
+
+[<Fact>]
+let ``Can delete at start when zipper is in middle`` () =
+    let table = initialTable.Insert(text.Length/2, insText)
+    let table = table.Delete(0,5)
+    let expectedStr = text.Substring(5, (text.Length/2) - insText.Length) + insText + text.Substring(text.Length/2)
+    Assert.Equal(expectedStr, table.Text())
+
+[<Fact>]
+let ``Can delete middle piece when zipper is in middle`` () =
+    let table = initialTable.Insert(text.Length/2, insText)
+    let table = table.Delete(text.Length/2, insText.Length)
+    let expectedStr = text
+    Assert.Equal(expectedStr, table.Text())
+
+[<Fact>]
+let ``Can delete around (from 1 character before to 1 character after) middle piece when zipper is in middle`` () =
+    let table = initialTable.Insert(text.Length/2, insText)
+    let table = table.Delete((text.Length/2) - 1, insText.Length + 1)
+    let expectedStr = text.Substring(0, (text.Length/2) - 1) + text.Substring((text.Length/2) + 1)
+    Assert.Equal(expectedStr, table.Text())
+
+[<Fact>]
+let ``Can delete at end when zipper is in middle`` () =
+    let table = initialTable.Insert(text.Length/2, insText)
+    let table = table.Delete(text.Length, insText.Length)
+    let expectedStr = text.Substring(0,text.Length/2) + insText + text.Substring(text.Length/2, (text.Length/2) - insText.Length)
+    Assert.Equal(expectedStr, table.Text())

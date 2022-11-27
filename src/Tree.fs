@@ -51,10 +51,9 @@ module Tree =
         (* Force root node too be black. *)
         | T(_,sizeL, l, x, sizeR, r) -> T(B, sizeL, l, x, sizeR, r)
 
-    let rec print (table: TextTableType) = function
-        | E -> ()
+    let rec print (table: TextTableType) tree (acc: string) =
+        match tree with
+        | E -> acc
         | T(c, _, l, x, _, r) ->
-            print table r
-            printfn "%s" <| Piece.text x table
-            print table l
-    
+            (print table l acc) + (Piece.text x table) 
+            |> print table r

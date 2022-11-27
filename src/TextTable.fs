@@ -21,8 +21,8 @@ module TextTable =
         }
 
     let text table = 
-        Tree.print table table.Tree
-        ListZipper.text table
+        Tree.print table table.Tree ""
+        //ListZipper.text table
 
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =

@@ -13,5 +13,6 @@ module Program =
     [<EntryPoint>]
     let main _ = 
         let table = initialTable.Insert(text.Length/2, insText)
+        let table = table.Insert(text.Length/4, insText)
         table.Text() |> ignore
         0

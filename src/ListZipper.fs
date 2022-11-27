@@ -111,7 +111,7 @@ module ListZipper =
 
     let delete deleteSpan (table: TextTableType) =
         let (leftIndex, path) =
-            if table.Pieces.Index < deleteSpan.Start then 
+            if table.Pieces.Index <= deleteSpan.Start then 
                 (table.Pieces.Index, table.Pieces.Path)
             else
                 match deleteLeftAcc deleteSpan table.Pieces 0 with

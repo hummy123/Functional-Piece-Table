@@ -95,21 +95,32 @@ module ListZipper =
         match zipper.Focus, deleteStop, zipper.Index with
         | [], _, curIndex -> FullDelete(listPos + 1, curIndex)
         | [p], dStop, curIndex ->
+            printfn "[p]"
+            printfn "%A" zipper.Focus
             if dStop > curIndex + p.Span.Length then
+                printfn "c1"
                 FullDelete(listPos+1, curIndex)
             else
+                printfn "c2"
+                // there seems to be a problem with Piece.delete
                 let deleteData = Piece.delete curIndex deleteSpan p
+                printfn "%A" deleteData
                 PartialDelete(deleteData, listPos+1, curIndex)
         | p:: _, dStop, curIndex ->
-            if dStop > curIndex + p.Span.Length then
-                printfn "dStop >= curIndex"
-                printfn "dStop = %i" dStop
+            if deleteSpan.Start > curIndex then
+                printfn "d1"
+                deleteRightAcc deleteSpan deleteStop (next zipper) (listPos+1)
+            elif dStop > curIndex + p.Span.Length && deleteSpan.Start <= curIndex then
+                printfn "d2"
                 deleteRightAcc deleteSpan deleteStop (next zipper) (listPos+1)
             else
+                printfn "d3"
                 let deleteData = Piece.delete curIndex deleteSpan p
                 PartialDelete(deleteData, listPos + 1, curIndex)
 
     let delete deleteSpan (table: TextTableType) =
+        // I think in left/right case, I should move the zipper to the in-range position first and then delete.
+        // Maybe? Because I don't want to delete intermediary positions.
         let (leftIndex, path) =
             if table.Pieces.Index <= deleteSpan.Start then 
                 (table.Pieces.Index, table.Pieces.Path)

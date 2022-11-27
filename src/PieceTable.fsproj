@@ -10,7 +10,8 @@
     <Compile Include="Span.fs" />
     <Compile Include="Piece.fs" />
     <Compile Include="ListZipper.fs" />
-    <Compile Include="TextTable.fs" />
+	<Compile Include="SplayTree.fs" />
+	<Compile Include="TextTable.fs" />
   </ItemGroup>
 
 </Project>

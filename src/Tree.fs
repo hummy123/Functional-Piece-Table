@@ -35,13 +35,22 @@ module Tree =
                 T(R, size left, left, y, size right, right)
         | c, l, x, r -> T(c, size l, l, x, size r, r)
 
-    let insert item tree = 
-        let rec ins = function
+    let insert insIndex item tree = 
+        let rec ins curIndex = function
             | E -> T(R, 0, E, item, 0, E)
             | T(c, _, a, y, _, b) as node ->
-                if item = y then node
-                elif item < y then balance(c, ins a, y, b)
-                else balance(c, a, y, ins b)
+                (* If we are at the start of the node we want to insert at. *)
+                if insIndex = curIndex then 
+                    balance(R, a, item, b)
+                (* If we are in range of node we want to insert at. *)
+                elif insIndex >= curIndex && insIndex <= curIndex + y.Span.Length then
+                    let (p1, p2, p3) = Piece.split y item (insIndex - curIndex)
+                    balance(R, (make a p1 E), p2, (make E p3 b))
+                (* If we are after the index we want to insert into. *)
+                elif insIndex < curIndex 
+                then balance(c, ins (curIndex - y.Span.Length) a, y, b)
+                (* If we are before the index we want to insert into. *)
+                else balance(c, a, y, ins (curIndex + y.Span.Length) b)
 
         match ins tree with
         | E -> failwith "should never return empty node from an insert"

@@ -23,11 +23,13 @@ let ``Can insert into the start of an empty table`` () =
     let table = TextTable.create ""
     let table = table.Insert(0, insText)
     Assert.Equal(insText, table.Text())
+    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can insert into the start of a table's OriginalBuffer`` () =
     let table = initialTable.Insert(0, insText)
     Assert.Equal(insText + text, table.Text())
+    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can insert into the middle of a table's OriginalBuffer`` () =
@@ -36,12 +38,14 @@ let ``Can insert into the middle of a table's OriginalBuffer`` () =
     let thirdStr = text.Substring(3)
     let str = firstStr + insText + thirdStr
     Assert.Equal(str, table.Text())
+    Assert.Equal(3, table.Pieces.Index)
 
 [<Fact>]
 let ``Can insert into the end of a table's OriginalBuffer`` () =
     let table = initialTable.Insert(text.Length, insText)
     let str = text + insText
     Assert.Equal(str, table.Text())
+    Assert.Equal(text.Length, table.Pieces.Index)
 
 [<Fact>]
 let ``Can insert into the start of a table's AddBuffer`` () =
@@ -49,6 +53,7 @@ let ``Can insert into the start of a table's AddBuffer`` () =
     let table = table.Insert(0, text)
     let table = table.Insert(0, insText)
     Assert.Equal(insText + text, table.Text())
+    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can insert into the middle of a table's AddBuffer`` () =
@@ -59,6 +64,7 @@ let ``Can insert into the middle of a table's AddBuffer`` () =
     let thirdStr = text.Substring(3)
     let str = firstStr + insText + thirdStr
     Assert.Equal(str, table.Text())
+    Assert.Equal(3, table.Pieces.Index)
 
 [<Fact>]
 let ``Can insert into the end of a table's AddBuffer`` () =
@@ -66,6 +72,8 @@ let ``Can insert into the end of a table's AddBuffer`` () =
     let table = table.Insert(0, text)
     let table = table.Insert(text.Length, insText)
     Assert.Equal(text + insText, table.Text())
+    // Assert the zipper's index is at the buffer's end
+    Assert.Equal(text.Length + insText.Length, table.Text().Length)
 
 [<Fact>]
 let ``Can delete from the start of a table's OriginalBuffer`` () =

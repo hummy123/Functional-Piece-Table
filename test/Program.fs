@@ -13,8 +13,6 @@ module Program =
     [<EntryPoint>]
     let main _ = 
         let table = initialTable.Insert(text.Length/2, insText)
-        let table = table.Delete((text.Length/2) + 1, 1)
-        let expectedStr = text
-        printfn "\ntable str: \n%s" (table.Text())
-        printfn "\nexpected str: \n%s" expectedStr
+       // let table = table.Delete(text.Length/2, insText.Length)
+        printfn "%A" <| table.Pieces.Index
         0

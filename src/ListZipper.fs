@@ -48,13 +48,13 @@ module ListZipper =
         | _, _, curIndex when curIndex = insIndex -> { zipper with Focus = piece :: zipper.Focus }
         (* When we want to insert, after the current index  but before the next one in the focus (in range). *)
         (* Sub condition 1: The focus only has 1 element. *)
-        | _, [ f ], curIndex when (insIndex > curIndex) && (insIndex < nextIndex zipper) ->
+        | p, [ f ], curIndex when (insIndex > curIndex) && (insIndex < nextIndex zipper) ->
             let (p1, p2, p3) = Piece.split f piece (insIndex - curIndex)
-            { zipper with Focus = [ p1; p2; p3 ] }
+            { zipper with Focus = [ p2; p3 ]; Path = p1::p; Index = curIndex + p1.Span.Length }
         (* Sub condition 2: The focus has more than one element. *)
-        | _, f :: fs, curIndex when insIndex > curIndex && insIndex < nextIndex zipper ->
+        | p, f :: fs, curIndex when insIndex > curIndex && insIndex < nextIndex zipper ->
             let (p1, p2, p3) = Piece.split f piece (insIndex - curIndex)
-            { zipper with Focus = [ p1; p2; p3 ] @ fs }
+            { zipper with Focus = [ p2; p3 ] @ fs ; Path = p1::p; Index = curIndex + p1.Span.Length }
         (* When we are before the index we want to insert at. *)
         | _, f, curIndex when curIndex < insIndex && f.Length > 0 -> insert insIndex piece (next zipper)
         (* When we are after the index we want to insert at. *)

@@ -13,8 +13,5 @@ module Program =
     [<EntryPoint>]
     let main _ = 
         let table = initialTable.Insert(text.Length/2, insText)
-        let table = table.Delete(text.Length, insText.Length)
-        let expectedStr = text.Substring(0,text.Length/2) + insText + text.Substring(text.Length/2, (text.Length/2) - insText.Length)
-        printfn "actual:\n%A" <| table.Text()
-        printfn "expected:\n%A" expectedStr
+        table.Text() |> ignore
         0

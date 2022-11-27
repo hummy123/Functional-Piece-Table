@@ -3,21 +3,15 @@
 open Types
 
 module Tree =
-    type SizeLeft = int
-    type SizeRight = int
-    type Value = PieceType
-
-    type Colour = R | B
-
-    type Tree = 
-        | E 
-        | T of Colour * SizeLeft * Tree * Value * SizeRight * Tree
-
     let empty = E
 
-    let rec size = function
+    let size = function
         | E -> 0
         | T(_, sizeLeft,_,piece,sizeRight,_) -> sizeLeft + sizeRight + piece.Span.Length
+
+    let sizeLeft = function
+        | E -> 0
+        | T(_, sizeLeft, _, _, _, _) -> sizeLeft
 
     let make l v r =
         let sizeLeft = size l
@@ -35,7 +29,7 @@ module Tree =
                 T(R, size left, left, y, size right, right)
         | c, l, x, r -> T(c, size l, l, x, size r, r)
 
-    let insert insIndex item tree = 
+    let insert insIndex item (tree: Tree) = 
         let rec ins curIndex = function
             | E -> T(R, 0, E, item, 0, E)
             | T(c, _, a, y, _, b) as node ->
@@ -52,15 +46,15 @@ module Tree =
                 (* If we are before the index we want to insert into. *)
                 else balance(c, a, y, ins (curIndex + y.Span.Length) b)
 
-        match ins tree with
+        match ins (sizeLeft tree) tree with
         | E -> failwith "should never return empty node from an insert"
         (* Force root node too be black. *)
         | T(_,sizeL, l, x, sizeR, r) -> T(B, sizeL, l, x, sizeR, r)
 
-    let rec print (spaces : int) = function
+    let rec print (table: TextTableType) = function
         | E -> ()
         | T(c, _, l, x, _, r) ->
-            print (spaces + 4) r
-            printfn "%s %A%A" (new System.String(' ', spaces)) c x
-            print (spaces + 4) l
+            print table r
+            printfn "%s" <| Piece.text x table
+            print table l
     

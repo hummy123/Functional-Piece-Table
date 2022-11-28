@@ -35,7 +35,8 @@ module Tree =
             | T(c, _, a, y, _, b) as node ->
                 (* If we are at the start of the node we want to insert at. *)
                 if insIndex = curIndex then 
-                    balance(R, a, item, b)
+                    let newRight = balance(R, E, y, b)
+                    balance(R, a, item, newRight)
                 (* If we are in range of node we want to insert at. *)
                 elif insIndex >= curIndex && insIndex <= curIndex + y.Span.Length then
                     let (p1, p2, p3) = Piece.split y item (insIndex - curIndex)

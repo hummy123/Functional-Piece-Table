@@ -12,7 +12,6 @@ let initialTable = TextTable.create text
 module Program =
     [<EntryPoint>]
     let main _ = 
-        let table = initialTable.Insert(text.Length/2, insText)
-        let table = table.Insert(text.Length/4, insText)
-        table.Text() |> ignore
+        let table = initialTable.Insert(0, insText)
+        table.Text() |> printfn "%s"
         0

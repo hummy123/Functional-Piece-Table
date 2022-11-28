@@ -21,7 +21,7 @@ module TextTable =
         }
 
     let text table = 
-        Tree.print table table.Tree ""
+        Tree.text table table.Tree ""
         //ListZipper.text table
 
     /// Returns a new table with the string inserted.

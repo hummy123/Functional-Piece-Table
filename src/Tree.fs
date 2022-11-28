@@ -5,56 +5,43 @@ open Types
 module Tree =
     let empty = E
 
+    let length = function
+        | E -> 0
+        |T(_, _, _, _, _, length) -> length
+
     let size = function
         | E -> 0
-        | T(_, sizeLeft,_,piece,sizeRight,_) -> sizeLeft + sizeRight + piece.Span.Length
+        | T(sizeLeft,_,piece,sizeRight,_, _) -> sizeLeft + sizeRight + piece.Span.Length
 
     let sizeLeft = function
         | E -> 0
-        | T(_, sizeLeft, _, _, _, _) -> sizeLeft
+        | T(sizeLeft, _, _, _, _, _) -> sizeLeft
 
-    let make l v r =
-        let sizeLeft = size l
-        let sizeRight = size r
-        T(B, sizeLeft, l, v, sizeRight, r)
+    let isEmpty = function
+        | E -> true
+        | T(_,_,_,_,_,_) -> false
 
-    let balance = function                              (* Red nodes in relation to black root *)
-        | B, T(R, _, T(R, _, a, x, _, b), y, _, c), z, d            (* Left, left *)
-        | B, T(R, _, a, x, _, T(R, _, b, y, _, c)), z, d            (* Left, right *)
-        | B, a, x, T(R, _, T(R, _, b, y, _, c), z, _, d)            (* Right, left *)
-        | B, a, x, T(R, _, b, y, _, T(R, _, c, z, _, d))            (* Right, right *)
-            ->
-                let left = make a x b
-                let right = make c z d
-                T(R, size left, left, y, size right, right)
-        | c, l, x, r -> T(c, size l, l, x, size r, r)
+    let findCtxm insIndex tree =
+        let rec loop (curIndex: int) (ctx: Ctx) this =
+            match this with
+            | E -> ctx, this
+            | T(sizeL, left, p, sizeR, right,_) ->
+                (* If in range *)
+                if insIndex >= curIndex && insIndex <= curIndex + p.Span.Length then
+                    ctx, this
+                (* If after *)
+                elif insIndex < curIndex then
+                    loop (curIndex - p.Span.Length) (Fst(ctx, sizeL, p, right)) left
+                (* If before *)
+                else
+                    loop (curIndex + p.Span.Length) (Snd(left, p, sizeR, ctx)) right
 
-    let insert insIndex item (tree: Tree) = 
-        let rec ins curIndex = function
-            | E -> T(R, 0, E, item, 0, E)
-            | T(c, _, a, y, _, b) as node ->
-                (* If we are at the start of the node we want to insert at. *)
-                if insIndex = curIndex then 
-                    let newRight = balance(R, E, y, b)
-                    balance(R, a, item, newRight)
-                (* If we are in range of node we want to insert at. *)
-                elif insIndex >= curIndex && insIndex <= curIndex + y.Span.Length then
-                    let (p1, p2, p3) = Piece.split y item (insIndex - curIndex)
-                    balance(R, (make a p1 E), p2, (make E p3 b))
-                (* If we are after the index we want to insert into. *)
-                elif insIndex < curIndex 
-                then balance(c, ins (curIndex - y.Span.Length) a, y, b)
-                (* If we are before the index we want to insert into. *)
-                else balance(c, a, y, ins (curIndex + y.Span.Length) b)
+        loop (sizeLeft tree) Top tree
 
-        match ins (sizeLeft tree) tree with
-        | E -> failwith "should never return empty node from an insert"
-        (* Force root node too be black. *)
-        | T(_,sizeL, l, x, sizeR, r) -> T(B, sizeL, l, x, sizeR, r)
 
-    let rec print (table: TextTableType) tree (acc: string) =
+    let rec text (table: TextTableType) tree (acc: string) =
         match tree with
         | E -> acc
-        | T(c, _, l, x, _, r) ->
-            (print table l acc) + (Piece.text x table) 
-            |> print table r
+        | T(_, l, x, _, r, _) ->
+            (text table l acc) + (Piece.text x table) 
+            |> text table r

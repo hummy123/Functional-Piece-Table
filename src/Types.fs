@@ -15,12 +15,17 @@ module Types =
     type SizeLeft = int
     type SizeRight = int
     type Value = PieceType
-
-    type Colour = R | B
+    type Length = int
+    type InsIndex = int
 
     type Tree = 
         | E 
-        | T of Colour * SizeLeft * Tree * Value * SizeRight * Tree
+        | T of SizeLeft * Tree * Value * SizeRight * Tree * Length
+
+    type Ctx =
+      | Top
+      | Fst of Ctx * SizeLeft * Value * Tree
+      | Snd of Tree * Value * SizeRight * Ctx
     (* ...Tree definitions. *)
 
     type TextTableType =

@@ -28,9 +28,9 @@ module internal Piece =
     /// and a piece, returns a DU telling us where we are.
     let compareWithIndex searchIndex curIndex curPiece =
         if searchIndex = curIndex then
-            Equal
+            EqualTo
         elif searchIndex >= curIndex && searchIndex <= curIndex + curPiece.Span.Length then
-            InRange
+            InRangeOf
         elif searchIndex < curIndex then
             LessThan
         else

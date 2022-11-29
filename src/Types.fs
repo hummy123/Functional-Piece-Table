@@ -7,8 +7,8 @@ module Types =
     type PieceType = { IsOriginal: bool; Span: SpanType }
 
     type Compare = 
-        | Equal
-        | InRange
+        | EqualTo
+        | InRangeOf
         | LessThan
         | GreaterThan
 

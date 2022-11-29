@@ -30,7 +30,7 @@ module ListZipper =
             { Focus = fs
               Path = f :: zipper.Path
               Index = nextIndex zipper }
-        | _ -> failwith "unexpected ListZipper.forward result."
+        | _ -> failwith "Tried to move zipper forwards when we are already at end."
 
     let prev zipper =
         match zipper.Path with
@@ -38,7 +38,7 @@ module ListZipper =
             { Focus = b :: zipper.Focus
               Path = bs
               Index = prevIndex zipper }
-        | _ -> failwith "unexpected ListZipper.back result."
+        | _ -> failwith "Tried to move zipper backwards when we are already at start."
 
     let rec insert insIndex piece zipper =
         if zipper.Path.IsEmpty && zipper.Focus.IsEmpty then
@@ -46,15 +46,23 @@ module ListZipper =
         else
             let curPos = Piece.compareWithIndex insIndex zipper.Index zipper.Focus[0]
             match curPos, zipper.Path, zipper.Focus with
-            | Equal, _, f -> {zipper with Focus = piece::f}
-            | InRange, p, [f] -> 
+            | EqualTo, _, f -> {zipper with Focus = piece::f}
+            | InRangeOf, p, [f] -> 
                 let (p1, p2, p3) = Piece.split f piece (insIndex - zipper.Index)
                 { zipper with Focus = [ p2; p3 ]; Path = p1::p; Index = zipper.Index + p1.Span.Length }
-            | InRange, p, fHead::fList -> 
+            | InRangeOf, p, fHead::fList -> 
                 let (p1, p2, p3) = Piece.split fHead piece (insIndex - zipper.Index)
                 { zipper with Focus = [ p2; p3 ] @ fList ; Path = p1::p; Index = zipper.Index + p1.Span.Length }
-            | LessThan, _, _ -> insert insIndex piece (next zipper)
-            | GreaterThan, _, _ -> insert insIndex piece (prev zipper)
+            | LessThan, _, f -> 
+                if f.IsEmpty then
+                    failwith "Bad ListZipper.insert caller case: Insertion index is less than 0."
+                else
+                    insert insIndex piece (next zipper)
+            | GreaterThan, p, _ -> 
+                if p.IsEmpty then
+                    failwith "Bad ListZipper.insert caller case: Insertion index is less than 0."
+                else
+                    insert insIndex piece (prev zipper)
             | _, _, _ -> failwith "unexpected ListZipper.insert case"
 
     type ItemsToRemove = int

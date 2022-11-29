@@ -113,7 +113,7 @@ module internal Piece =
         let newPieceStart = 
             if spanStop < curIndex then spanStop 
             elif spanStop = curIndex then span.Start
-            else spanStop - curIndex
+            else piece.Span.Start + (spanStop - curIndex)
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)

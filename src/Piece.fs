@@ -82,7 +82,7 @@ module internal Piece =
             SpanWithinPiece
         elif span.Start <= curIndex && spanStop < pieceStop then
             StartOfPieceInSpan
-        elif span.Start > curIndex && spanStop >= pieceStop && curIndex <= pieceStop then
+        elif span.Start > curIndex && spanStop >= pieceStop && span.Start <= pieceStop then
             EndOfPieceInSpan
         elif spanStop > pieceStop then
             GreaterThanSpan
@@ -110,12 +110,14 @@ module internal Piece =
 
     let private deleteAtStart curIndex span piece =
         let spanStop = Span.stop span
-        let newPieceStart =  piece.Span.Start + (spanStop - curIndex)
+        let newPieceStart = piece.Span.Start + (spanStop - curIndex)
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
 
-    let private deleteAtEnd span piece =
+    let private deleteAtEnd curIndex span piece =
+        // error here?
+        let newPieceStop = 0
         let newPieceSpan = Span.createWithLength piece.Span.Start span.Start
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
@@ -127,7 +129,7 @@ module internal Piece =
         | PieceFullyInSpan -> DeletedPiece.Empty
         | SpanWithinPiece -> deleteInRange curIndex span piece
         | StartOfPieceInSpan -> deleteAtStart curIndex span piece
-        | EndOfPieceInSpan -> deleteAtEnd span piece
+        | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
         | _ -> failwith "Piece.delete error"
 
     let text piece table =

@@ -13,7 +13,7 @@ module Program =
     [<EntryPoint>]
     let main _ = 
         let table = initialTable.Insert(text.Length/2, insText)
-        let table = table.Delete((text.Length/2) - 1, insText.Length + 1)
+        let table = table.Delete(text.Length, insText.Length)
         printfn "%A" <| table.Pieces.Index
         printfn "%A" <| table.Text()
         0

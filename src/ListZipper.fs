@@ -24,21 +24,28 @@ module ListZipper =
         | p :: _ -> zipper.Index - p.Span.Length
         | _ -> failwith "unexpected ListZipper.prevIndex result"
 
-    let next zipper =
+    let rec next zipper =
         match zipper.Focus with
+        (* Removes empty pieces from zipper when we traverse over them. *)
+        | f :: fs when f.Span.Length <= 0 -> 
+            next {zipper with Focus = fs}
         | f :: fs ->
             { Focus = fs
               Path = f :: zipper.Path
               Index = nextIndex zipper }
-        | _ -> failwith "Tried to move zipper forwards when we are already at end."
+        | [] ->
+            zipper
 
-    let prev zipper =
+    let rec prev zipper =
         match zipper.Path with
+        | b :: bs when b.Span.Length <= 0 ->
+            prev {zipper with Path = bs}
         | b :: bs ->
             { Focus = b :: zipper.Focus
               Path = bs
               Index = prevIndex zipper }
-        | _ -> failwith "Tried to move zipper backwards when we are already at start."
+        | [] -> 
+            zipper
 
     let rec insert insIndex piece zipper =
         if zipper.Path.IsEmpty && zipper.Focus.IsEmpty then

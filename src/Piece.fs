@@ -12,6 +12,9 @@ module internal Piece =
     let createWithSpan isOriginal span =
         { IsOriginal = isOriginal; Span = span }
 
+    /// Checks if two Pieces are consecutive (from the same buffer
+    /// and one stopping where the other starts).
+    /// Can be used to merge pieces for memory efficiency.
     let isConsecutive a b =
         if a.IsOriginal = b.IsOriginal then
             let aStop = Span.stop a.Span
@@ -23,6 +26,27 @@ module internal Piece =
             else false
         else
             false
+
+    /// Merges two consecutive pieces into one.
+    /// If Piece.isConsecutive returns false with these two pieces, this method throws an error.
+    let merge a b =
+        match isConsecutive a b with
+        | false -> failwith "Piece.merge caller error: Tried to merge non-consecutive pieces."
+        | true ->
+            let mergedStart = 
+                if a.Span.Start < b.Span.Start 
+                then a.Span.Start
+                else b.Span.Start
+
+            let fStop = Span.stop a.Span
+            let pStop = Span.stop b.Span
+            let mergeStop =
+                if pStop > fStop
+                then pStop
+                else fStop
+
+            let mergeSpan = Span.createWithStop mergedStart mergeStop
+            createWithSpan a.IsOriginal mergeSpan
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.

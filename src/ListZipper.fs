@@ -16,37 +16,41 @@ module ListZipper =
         match zipper.Focus with
         | [ f ] -> zipper.Index + f.Span.Length
         | f :: _ -> zipper.Index + f.Span.Length
-        | _ -> failwith "unexpected ListZipper.nextIndex result"
+        | _ -> zipper.Index
 
     let private prevIndex zipper =
         match zipper.Path with
         | [ p ] -> zipper.Index - p.Span.Length
         | p :: _ -> zipper.Index - p.Span.Length
-        | _ -> failwith "unexpected ListZipper.prevIndex result"
+        | _ -> zipper.Index
 
     let rec next zipper =
-        match zipper.Focus with
+        match zipper.Focus, zipper.Path with
         (* Removes empty pieces from zipper when we traverse over them. *)
-        (* It's also a good idea to later merge consecutive pieces into one 
-         * if they have the same IsOriginal value, but this can have side-effects. *)
-        | f :: fs when f.Span.Length <= 0 -> 
+        | f :: fs, _ when f.Span.Length <= 0 -> 
             next {zipper with Focus = fs}
-        | f :: fs ->
+         | f :: fs, p :: ps when isConsecutive f p ->
+            let mergePiece = Piece.merge f p
+            { Focus = fs; Path = mergePiece::ps; Index = nextIndex zipper}
+        | f :: fs, _ ->
             { Focus = fs
               Path = f :: zipper.Path
               Index = nextIndex zipper }
-        | [] ->
+        | [], _ ->
             zipper
 
     let rec prev zipper =
-        match zipper.Path with
-        | b :: bs when b.Span.Length <= 0 ->
+        match zipper.Focus, zipper.Path with
+        | _, b :: bs when b.Span.Length <= 0 ->
             prev {zipper with Path = bs}
-        | b :: bs ->
+        | f :: fs, b :: bs when isConsecutive f p ->
+            let mergePiece = Piece.merge f b
+            { Focus = mergePiece::fs; Path = bs; Index = prevIndex zipper}
+        | _, b :: bs ->
             { Focus = b :: zipper.Focus
               Path = bs
               Index = prevIndex zipper }
-        | [] -> 
+        | _, [] -> 
             zipper
 
     let rec insert insIndex piece zipper =

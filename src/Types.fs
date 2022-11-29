@@ -6,6 +6,12 @@ module Types =
 
     type PieceType = { IsOriginal: bool; Span: SpanType }
 
+    type Compare = 
+        | Equal
+        | InRange
+        | LessThan
+        | GreaterThan
+
     type ListZipperType =
         { Focus: PieceType list
           Path: PieceType list
@@ -18,19 +24,16 @@ module Types =
     type Length = int
     type InsIndex = int
 
+    type Colour = R | B
     type Tree = 
         | E 
-        | T of SizeLeft * Tree * Value * SizeRight * Tree * Length
-
-    type Ctx =
-      | Top
-      | Fst of Ctx * SizeLeft * Value * Tree
-      | Snd of Tree * Value * SizeRight * Ctx
+        | T of Colour * SizeLeft * Tree * Value * SizeRight * Tree
+        
+    type Set = int * Tree
     (* ...Tree definitions. *)
 
     type TextTableType =
         { OriginalBuffer: string
           AddBuffer: string
           Pieces: ListZipperType
-          Tree: Tree
         }

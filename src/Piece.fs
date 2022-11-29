@@ -23,6 +23,19 @@ module internal Piece =
         let p3 = createWithSpan a.IsOriginal span3
         (p1, b, p3)
 
+    /// Given a search index (for example the index we want to insert at), 
+    /// a current index (keeping track of current index in a loop) 
+    /// and a piece, returns a DU telling us where we are.
+    let compareWithIndex searchIndex curIndex piece =
+        if searchIndex = curIndex then
+            Equal
+        elif searchIndex >= curIndex && searchIndex <= curIndex + piece.Span.Length then
+            InRange
+        elif searchIndex < curIndex then
+            LessThan
+        else
+            GreaterThan
+
     /// Specifies how we should handle a Piece given to the delete method.
     /// Empty: We can simply remove this Piece from the list.
     /// CutOne: We can replace the Piece with the newly returned one.

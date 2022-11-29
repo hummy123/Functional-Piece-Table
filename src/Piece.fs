@@ -32,9 +32,22 @@ module internal Piece =
         elif searchIndex >= curIndex && searchIndex <= curIndex + curPiece.Span.Length then
             InRangeOf
         elif searchIndex < curIndex then
-            LessThan
+            LessThanIndex
         else
-            GreaterThan
+            GreaterThanIndex
+
+    let compareWithSpan (span: SpanType) curIndex curPiece =
+        let spanStop = Span.stop span
+        let pieceStop = curIndex + curPiece.Span.Length
+
+        if span.Start > curIndex then
+            LessThanSpan
+        elif spanStop > pieceStop then
+            GreaterThanSpan
+        elif span.Start <= curIndex && spanStop >= pieceStop then
+            InFullRange
+        else
+            InPartialRange
 
     /// Specifies how we should handle a Piece given to the delete method.
     /// Empty: We can simply remove this Piece from the list.

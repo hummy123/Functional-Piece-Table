@@ -6,11 +6,17 @@ module Types =
 
     type PieceType = { IsOriginal: bool; Span: SpanType }
 
-    type Compare = 
+    type CompareIndex = 
         | EqualTo
         | InRangeOf
-        | LessThan
-        | GreaterThan
+        | LessThanIndex
+        | GreaterThanIndex
+
+    type CompareSpan =
+        | InPartialRange
+        | InFullRange
+        | LessThanSpan
+        | GreaterThanSpan
 
     type ListZipperType =
         { Focus: PieceType list

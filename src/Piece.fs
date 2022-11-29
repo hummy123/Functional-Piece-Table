@@ -26,10 +26,10 @@ module internal Piece =
     /// Given a search index (for example the index we want to insert at), 
     /// a current index (keeping track of current index in a loop) 
     /// and a piece, returns a DU telling us where we are.
-    let compareWithIndex searchIndex curIndex piece =
+    let compareWithIndex searchIndex curIndex curPiece =
         if searchIndex = curIndex then
             Equal
-        elif searchIndex >= curIndex && searchIndex <= curIndex + piece.Span.Length then
+        elif searchIndex >= curIndex && searchIndex <= curIndex + curPiece.Span.Length then
             InRange
         elif searchIndex < curIndex then
             LessThan

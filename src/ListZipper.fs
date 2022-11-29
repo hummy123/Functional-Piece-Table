@@ -41,31 +41,21 @@ module ListZipper =
         | _ -> failwith "unexpected ListZipper.back result."
 
     let rec insert insIndex piece zipper =
-        match zipper.Path, zipper.Focus, zipper.Index with
-        (* When the zipper is empty. *)
-        | [], [], _ -> createWithPiece piece
-        (* When we are at the index we want to insert at. *)
-        | _, _, curIndex when curIndex = insIndex -> { zipper with Focus = piece :: zipper.Focus }
-        (* When we want to insert, after the current index  but before the next one in the focus (in range). *)
-        (* Sub condition 1: The focus only has 1 element. *)
-        | p, [ f ], curIndex when (insIndex > curIndex) && (insIndex < nextIndex zipper) ->
-            let (p1, p2, p3) = Piece.split f piece (insIndex - curIndex)
-            { zipper with Focus = [ p2; p3 ]; Path = p1::p; Index = curIndex + p1.Span.Length }
-        (* Sub condition 2: The focus has more than one element. *)
-        | p, f :: fs, curIndex when insIndex > curIndex && insIndex < nextIndex zipper ->
-            let (p1, p2, p3) = Piece.split f piece (insIndex - curIndex)
-            { zipper with Focus = [ p2; p3 ] @ fs ; Path = p1::p; Index = curIndex + p1.Span.Length }
-        (* When we are before the index we want to insert at. *)
-        | _, f, curIndex when curIndex < insIndex && f.Length > 0 -> insert insIndex piece (next zipper)
-        (* When we are after the index we want to insert at. *)
-        | p, _, curIndex when curIndex > insIndex && p.Length > 0 -> insert insIndex piece (prev zipper)
-        (* The two cases below throw an error when a caller tries to use the method incorrectly,
-         * such as when they try inserting at index 6 when the table contains "12345" or try inserting at an index less than zero.*)
-        | _, [], curIndex when curIndex < insIndex ->
-            failwith "Bad ListZipper.insert caller case: Insertion index is greater than the whole document."
-        | [], _, curIndex when curIndex > insIndex ->
-            failwith "Bad ListZipper.insert caller case: Insertion index is less than 0."
-        | _, _, _ -> failwith "unexpected ListZipper.insert case"
+        if zipper.Path.IsEmpty && zipper.Focus.IsEmpty then
+            createWithPiece piece
+        else
+            let curPos = Piece.compareWithIndex insIndex zipper.Index zipper.Focus[0]
+            match curPos, zipper.Path, zipper.Focus with
+            | Equal, _, f -> {zipper with Focus = piece::f}
+            | InRange, p, [f] -> 
+                let (p1, p2, p3) = Piece.split f piece (insIndex - zipper.Index)
+                { zipper with Focus = [ p2; p3 ]; Path = p1::p; Index = zipper.Index + p1.Span.Length }
+            | InRange, p, fHead::fList -> 
+                let (p1, p2, p3) = Piece.split fHead piece (insIndex - zipper.Index)
+                { zipper with Focus = [ p2; p3 ] @ fList ; Path = p1::p; Index = zipper.Index + p1.Span.Length }
+            | LessThan, _, _ -> insert insIndex piece (next zipper)
+            | GreaterThan, _, _ -> insert insIndex piece (prev zipper)
+            | _, _, _ -> failwith "unexpected ListZipper.insert case"
 
     type ItemsToRemove = int
     type ZipperIndex = int

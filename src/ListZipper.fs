@@ -103,10 +103,6 @@ module ListZipper =
             table
         else
             let (newPath, dLength) = deletePath deleteSpan table.Pieces [] 0 table
-            printfn "\nstart printing deleteLeft"
-            for i in newPath do
-                Piece.text i table |> printfn "%s"
-            printfn "stop printing deleteLeft\n"
             let pieces = {table.Pieces with Path = newPath; Index = table.Pieces.Index - dLength}
             {table with Pieces = pieces }
 

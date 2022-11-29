@@ -40,14 +40,16 @@ module internal Piece =
         let spanStop = Span.stop span
         let pieceStop = curIndex + curPiece.Span.Length
 
-        if span.Start > curIndex then
-            LessThanSpan
+        if span.Start <= curIndex && spanStop >= pieceStop then
+            InFullRange
+        elif span.Start <= curIndex && spanStop <= pieceStop then
+            InPartialRange
+        elif span.Start >= curIndex && spanStop >= pieceStop then
+            InPartialRange
         elif spanStop > pieceStop then
             GreaterThanSpan
-        elif span.Start <= curIndex && spanStop >= pieceStop then
-            InFullRange
         else
-            InPartialRange
+            LessThanSpan
 
     /// Specifies how we should handle a Piece given to the delete method.
     /// Empty: We can simply remove this Piece from the list.

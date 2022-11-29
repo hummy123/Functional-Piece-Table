@@ -12,7 +12,7 @@ let initialTable = TextTable.create text
 module Program =
     [<EntryPoint>]
     let main _ = 
-        let table = initialTable.Insert(text.Length, insText)
-        let table = table.Delete(0,10)
+        let table = initialTable.Insert(text.Length/2, insText)
+        let table = table.Delete(text.Length/2, insText.Length)
         printfn "%A" <| table.Text()
         0

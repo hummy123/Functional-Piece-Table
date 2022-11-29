@@ -71,8 +71,11 @@ module internal Piece =
         let difference = piece.Span.Length - (p1.Span.Length + p2.Span.Length)
         CutTwo(p1, p2, difference)
 
-    let private deleteAtStart curIndex spanStop piece =
-        let newPieceStart = if spanStop < curIndex then spanStop else spanStop - curIndex
+    let private deleteAtStart curIndex span spanStop piece =
+        let newPieceStart = 
+            if spanStop < curIndex then spanStop 
+            elif spanStop = curIndex then span.Start
+            else spanStop - curIndex
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
@@ -90,7 +93,7 @@ module internal Piece =
         match compareWithSpan span curIndex piece with
         | PieceFullyInSpan -> DeletedPiece.Empty
         | SpanWithinPiece -> deleteInRange curIndex span spanStop piece
-        | StartOfPieceInSpan -> deleteAtStart curIndex spanStop piece
+        | StartOfPieceInSpan -> deleteAtStart curIndex span spanStop piece
         | EndOfPieceInSpan -> deleteAtEnd span piece
         | _ -> failwith "Piece.delete error"
 

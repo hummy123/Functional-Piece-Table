@@ -41,11 +41,13 @@ module internal Piece =
         let pieceStop = curIndex + curPiece.Span.Length
 
         if span.Start <= curIndex && spanStop >= pieceStop then
-            InFullRange
-        elif span.Start <= curIndex && spanStop <= pieceStop then
-            InPartialRange
-        elif span.Start >= curIndex && spanStop >= pieceStop then
-            InPartialRange
+            PieceFullyInSpan
+        elif span.Start >= curIndex && spanStop <= pieceStop then
+            SpanWithinPiece
+        elif span.Start <= curIndex && spanStop < pieceStop then
+            StartOfPieceInSpan
+        elif span.Start > curIndex && spanStop >= pieceStop then
+            EndOfPieceInSpan
         elif spanStop > pieceStop then
             GreaterThanSpan
         else
@@ -84,26 +86,13 @@ module internal Piece =
     /// See the documentation for the DeletedPiece type on how to use this method's return value.
     let delete curIndex (span: SpanType) (piece: PieceType) =
         let spanStop = Span.stop span
-        let pieceStop = curIndex + piece.Span.Length
-        printfn "curIndex: %i" curIndex
-        printfn "span start: %i; length: %i; stop: %i" span.Start span.Length spanStop
         
-        if span.Start <= curIndex && spanStop >= pieceStop then
-            (* This piece is fully within the deletion span's range. *)
-            (* Example: |abcdef|. *)
-            DeletedPiece.Empty
-        elif span.Start <= curIndex && pieceStop <= spanStop then
-            (* The start of this piece is within the deletion span's range but some part at the end isn't. *)
-            (* Example: |ab|cdef. *)
-            deleteAtStart curIndex spanStop piece
-        elif spanStop >= pieceStop && span.Start > curIndex then
-            (* Some part after the piece's start is within the deletion span's range. *)
-            (* Example: abcd|ef|. *)
-            deleteAtEnd span piece
-        else
-            (* The deletion span specifies a part within the piece but not its full range.*)
-            (* Example: a|bc|def. *)
-            deleteInRange curIndex span spanStop piece
+        match compareWithSpan span curIndex piece with
+        | PieceFullyInSpan -> DeletedPiece.Empty
+        | SpanWithinPiece -> deleteInRange curIndex span spanStop piece
+        | StartOfPieceInSpan -> deleteAtStart curIndex spanStop piece
+        | EndOfPieceInSpan -> deleteAtEnd span piece
+        | _ -> failwith "Piece.delete error"
 
     let text piece table =
         match piece.IsOriginal with

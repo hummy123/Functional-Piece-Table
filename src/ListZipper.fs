@@ -77,26 +77,36 @@ module ListZipper =
         | CutOne(p,c) -> [p], c
         | CutTwo(p1,p2,c) -> [p1;p2], c
 
-    let rec private deletePath dSpan zipper (pathAcc: PieceType list) dLength =
+    let rec private deletePath dSpan zipper (pathAcc: PieceType list) dLength table =
         if zipper.Path.IsEmpty then
             pathAcc, dLength
         else
             let pos = Piece.compareWithSpan dSpan zipper.Index zipper.Path[0]
             match pos, zipper.Path with
-            | InFullRange, p -> 
-                deletePath dSpan (prev zipper) pathAcc (p[0].Span.Length + dLength)
-            | InPartialRange, p ->
+            | StartOfPieceInSpan, p ->
                 let (dList, dNum) = deleteList zipper.Index dSpan p[0]
-                deletePath dSpan (prev zipper) (dList @ pathAcc) (dLength + dNum)
-            | LessThanSpan, p -> 
-                pathAcc @ p, dLength
-            | GreaterThanSpan, _ -> deletePath dSpan (prev zipper) pathAcc dLength
+                dList @ pathAcc, dLength + dNum
+            | EndOfPieceInSpan, p ->
+                let (dList, dNum) = deleteList zipper.Index dSpan p[0]
+                deletePath dSpan (prev zipper) (dList @ pathAcc) (dLength + dNum) table
+            | PieceFullyInSpan, p -> 
+                deletePath dSpan (prev zipper) pathAcc (p[0].Span.Length + dLength) table
+            | SpanWithinPiece, p ->
+                let (dList, dNum) = deleteList zipper.Index dSpan p[0]
+                dList @ pathAcc, dLength + dNum
+            | LessThanSpan, _ -> 
+                pathAcc, dLength
+            | GreaterThanSpan, _ -> deletePath dSpan (prev zipper) pathAcc dLength table
 
     let private deleteLeft deleteSpan table =
         if table.Pieces.Index <= deleteSpan.Start then 
             table
         else
-            let (newPath, dLength) = deletePath deleteSpan table.Pieces [] 0
+            let (newPath, dLength) = deletePath deleteSpan table.Pieces [] 0 table
+            printfn "\nstart printing deleteLeft"
+            for i in newPath do
+                Piece.text i table |> printfn "%s"
+            printfn "stop printing deleteLeft\n"
             let pieces = {table.Pieces with Path = newPath; Index = table.Pieces.Index - dLength}
             {table with Pieces = pieces }
 
@@ -106,10 +116,16 @@ module ListZipper =
         else
             let pos = Piece.compareWithSpan dSpan zipper.Index zipper.Focus[0]
             match pos, zipper.Focus with
-            | InFullRange, _ -> deleteFocus dSpan (next zipper) focusAcc
-            | InPartialRange, f ->
+            | StartOfPieceInSpan, f ->
+                let (dList, _) = deleteList zipper.Index dSpan f[0]
+                dList @ focusAcc
+            | EndOfPieceInSpan, f ->
                 let (dList, _) = deleteList zipper.Index dSpan f[0]
                 deleteFocus dSpan (next zipper) (dList @ focusAcc)
+            | PieceFullyInSpan, _ -> deleteFocus dSpan (next zipper) focusAcc
+            | SpanWithinPiece, f ->
+                let (dList, _) = deleteList zipper.Index dSpan f[0]
+                dList @ focusAcc
             | GreaterThanSpan, f -> focusAcc @ f
             | LessThanSpan, _ -> deleteFocus dSpan (next zipper) focusAcc
 

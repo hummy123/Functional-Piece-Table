@@ -13,8 +13,10 @@ module Types =
         | GreaterThanIndex
 
     type CompareSpan =
-        | InPartialRange
-        | InFullRange
+        | StartOfPieceInSpan
+        | EndOfPieceInSpan
+        | PieceFullyInSpan
+        | SpanWithinPiece
         | LessThanSpan
         | GreaterThanSpan
 

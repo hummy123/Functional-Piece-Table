@@ -80,8 +80,9 @@ module internal Piece =
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
 
-    let private deleteAtEnd span piece =
-        let newPieceSpan = Span.createWithStop piece.Span.Start span.Start
+    let private deleteAtEnd curIndex span piece =
+        let newPieceStop = 5
+        let newPieceSpan = Span.createWithLength piece.Span.Start span.Start
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
 
@@ -94,7 +95,7 @@ module internal Piece =
         | PieceFullyInSpan -> DeletedPiece.Empty
         | SpanWithinPiece -> deleteInRange curIndex span spanStop piece
         | StartOfPieceInSpan -> deleteAtStart curIndex span spanStop piece
-        | EndOfPieceInSpan -> deleteAtEnd span piece
+        | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
         | _ -> failwith "Piece.delete error"
 
     let text piece table =

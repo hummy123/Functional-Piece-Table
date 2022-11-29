@@ -44,7 +44,7 @@ module internal Piece =
             PieceFullyInSpan
         elif span.Start >= curIndex && spanStop <= pieceStop then
             SpanWithinPiece
-        elif span.Start <= curIndex && spanStop < pieceStop && spanStop >= curIndex then
+        elif span.Start <= curIndex && spanStop < pieceStop then
             StartOfPieceInSpan
         elif span.Start > curIndex && spanStop >= pieceStop && curIndex <= pieceStop then
             EndOfPieceInSpan

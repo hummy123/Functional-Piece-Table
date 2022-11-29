@@ -81,18 +81,21 @@ module ListZipper =
         if zipper.Path.IsEmpty then
             pathAcc, dLength
         else
+            (* The zipper.Index value contains the index after all the pieces in the zipper,
+             *  but the Piece.delete method we want to use asks for the start of a piece's index. *)
+            let pieceIndex = zipper.Index - zipper.Path[0].Span.Length
             let pos = Piece.compareWithSpan dSpan zipper.Index zipper.Path[0]
             match pos, zipper.Path with
             | StartOfPieceInSpan, p ->
-                let (dList, dNum) = deleteList zipper.Index dSpan p[0]
+                let (dList, dNum) = deleteList pieceIndex dSpan p[0]
                 dList @ pathAcc, dLength + dNum
             | EndOfPieceInSpan, p ->
-                let (dList, dNum) = deleteList zipper.Index dSpan p[0]
+                let (dList, dNum) = deleteList pieceIndex dSpan p[0]
                 deletePath dSpan (prev zipper) (dList @ pathAcc) (dLength + dNum) table
             | PieceFullyInSpan, p -> 
                 deletePath dSpan (prev zipper) pathAcc (p[0].Span.Length + dLength) table
             | SpanWithinPiece, p ->
-                let (dList, dNum) = deleteList zipper.Index dSpan p[0]
+                let (dList, dNum) = deleteList pieceIndex dSpan p[0]
                 dList @ pathAcc, dLength + dNum
             | LessThanSpan, _ -> 
                 pathAcc, dLength

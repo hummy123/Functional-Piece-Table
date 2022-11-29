@@ -12,6 +12,18 @@ module internal Piece =
     let createWithSpan isOriginal span =
         { IsOriginal = isOriginal; Span = span }
 
+    let isConsecutive a b =
+        if a.IsOriginal = b.IsOriginal then
+            let aStop = Span.stop a.Span
+            let bStop = Span.stop b.Span
+            if aStop + 1 <= b.Span.Start 
+            then true
+            elif bStop + 1 <= a.Span.Start 
+            then true
+            else false
+        else
+            false
+
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
     let split (a: PieceType) (b: PieceType) (difference: int) =
@@ -82,8 +94,7 @@ module internal Piece =
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
 
-    let private deleteAtEnd curIndex span piece =
-        let newPieceStop = 5
+    let private deleteAtEnd span piece =
         let newPieceSpan = Span.createWithLength piece.Span.Start span.Start
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
@@ -95,7 +106,7 @@ module internal Piece =
         | PieceFullyInSpan -> DeletedPiece.Empty
         | SpanWithinPiece -> deleteInRange curIndex span piece
         | StartOfPieceInSpan -> deleteAtStart curIndex span piece
-        | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
+        | EndOfPieceInSpan -> deleteAtEnd span piece
         | _ -> failwith "Piece.delete error"
 
     let text piece table =

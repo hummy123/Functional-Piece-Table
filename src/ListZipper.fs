@@ -43,7 +43,7 @@ module ListZipper =
         match zipper.Focus, zipper.Path with
         | _, b :: bs when b.Span.Length <= 0 ->
             prev {zipper with Path = bs}
-        | f :: fs, b :: bs when isConsecutive f p ->
+        | f :: fs, b :: bs when isConsecutive f b ->
             let mergePiece = Piece.merge f b
             { Focus = mergePiece::fs; Path = bs; Index = prevIndex zipper}
         | _, b :: bs ->

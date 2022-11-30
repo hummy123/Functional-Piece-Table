@@ -102,10 +102,11 @@ module internal Piece =
         let spanStop = Span.stop span 
 
         let p1Start = piece.Span.Start
-        let p1Length = span.Start - curIndex - 1
+        let p1Length = span.Start - curIndex
         let p1 = {piece with Span = Span.createWithLength p1Start p1Length}
 
         let p2Start = spanStop - curIndex + piece.Span.Start
+        
         let p2Stop = Span.stop piece.Span
         let p2 = {piece with Span = Span.createWithStop p2Start p2Stop}
         CutTwo(p1, p2, span.Length)

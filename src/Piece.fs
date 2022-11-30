@@ -17,10 +17,13 @@ module internal Piece =
     let isConsecutive a b =
         let aStop = Span.stop a.Span
         let bStop = Span.stop b.Span
-        if aStop + 1 <= b.Span.Start 
-        then true
-        elif bStop + 1 <= a.Span.Start 
-        then true
+        if aStop > bStop then
+            if aStop + 1 <= bStop then
+                true
+            else 
+                false
+        elif bStop + 1 <= aStop then
+            true
         else false
 
     /// Merges two consecutive pieces into one.
@@ -114,10 +117,11 @@ module internal Piece =
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
 
-    let private deleteAtEnd span piece =
+    let private deleteAtEnd curIndex span piece =
         let newSpan =
             if piece.Span.Length > span.Length
             then Span.createWithLength piece.Span.Start (piece.Span.Length - span.Length)
+            (* There is an error in the else case below. Need to figure it out. *)
             else Span.createWithStop piece.Span.Start span.Start
         let difference = piece.Span.Length - newSpan.Length
         CutOne({ piece with Span = newSpan }, difference)
@@ -129,7 +133,7 @@ module internal Piece =
         | PieceFullyInSpan -> DeletedPiece.Empty
         | SpanWithinPiece -> deleteInRange curIndex span piece
         | StartOfPieceInSpan -> deleteAtStart curIndex span piece
-        | EndOfPieceInSpan -> deleteAtEnd span piece
+        | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
         | _ -> failwith "Piece.delete error"
 
     let text piece table =

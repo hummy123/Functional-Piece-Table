@@ -14,6 +14,8 @@ module Program =
     let main _ = 
         let table = initialTable.Insert(text.Length/2, insText)
         let table = table.Delete(text.Length, insText.Length)
-        printfn "%A" <| table.Pieces.Index
-        printfn "%A" <| table.Text()
+        let expectedStr = text.Substring(0,text.Length/2) + insText + text.Substring(text.Length/2, (text.Length/2) - insText.Length)
+        printfn "%i" <| text.Length
+        printfn "%s" <| table.Text()
+        printfn "%s"<| expectedStr
         0

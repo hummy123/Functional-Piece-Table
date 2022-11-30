@@ -78,13 +78,13 @@ module internal Piece =
 
         if span.Start <= curIndex && spanStop >= pieceStop then
             PieceFullyInSpan
-        elif span.Start >= curIndex && spanStop <= pieceStop then
-            SpanWithinPiece
         elif span.Start <= curIndex && spanStop < pieceStop then
             StartOfPieceInSpan
         elif span.Start > curIndex && spanStop >= pieceStop && span.Start <= pieceStop then
             EndOfPieceInSpan
-        elif spanStop > pieceStop then
+        elif span.Start >= curIndex && spanStop <= pieceStop then
+            SpanWithinPiece
+        elif curIndex > span.Start then
             GreaterThanSpan
         else
             LessThanSpan
@@ -99,14 +99,16 @@ module internal Piece =
         | CutTwo of PieceType * PieceType * int
 
     let private deleteInRange curIndex span piece =
-        let spanStop = Span.stop span
-        let p1Stop = span.Start - piece.Span.Start
-        let p1 = { piece with Span = Span.createWithStop piece.Span.Start p1Stop }
-        let p2Start = if curIndex < spanStop then spanStop - curIndex else spanStop
+        let spanStop = Span.stop span 
+
+        let p1Start = piece.Span.Start
+        let p1Length = span.Start - curIndex - 1
+        let p1 = {piece with Span = Span.createWithLength p1Start p1Length}
+
+        let p2Start = spanStop - curIndex + piece.Span.Start
         let p2Stop = Span.stop piece.Span
-        let p2 = { piece with Span = Span.createWithStop p2Start p2Stop }
-        let difference = piece.Span.Length - (p1.Span.Length + p2.Span.Length)
-        CutTwo(p1, p2, difference)
+        let p2 = {piece with Span = Span.createWithStop p2Start p2Stop}
+        CutTwo(p1, p2, span.Length)
 
     let private deleteAtStart curIndex span piece =
         let spanStop = Span.stop span
@@ -115,12 +117,13 @@ module internal Piece =
         let difference = piece.Span.Length - newPieceSpan.Length
         CutOne({ piece with Span = newPieceSpan }, difference)
 
-    let private deleteAtEnd curIndex span piece =
-        // error here?
-        let newPieceStop = 0
-        let newPieceSpan = Span.createWithLength piece.Span.Start span.Start
-        let difference = piece.Span.Length - newPieceSpan.Length
-        CutOne({ piece with Span = newPieceSpan }, difference)
+    let private deleteAtEnd span piece =
+        let newSpan =
+            if piece.Span.Length > span.Length
+            then Span.createWithLength piece.Span.Start (piece.Span.Length - span.Length)
+            else Span.createWithStop piece.Span.Start span.Start
+        let difference = piece.Span.Length - newSpan.Length
+        CutOne({ piece with Span = newSpan }, difference)
 
     /// Deletes either a part of a piece or a full piece itself.
     /// See the documentation for the DeletedPiece type on how to use this method's return value.
@@ -129,7 +132,7 @@ module internal Piece =
         | PieceFullyInSpan -> DeletedPiece.Empty
         | SpanWithinPiece -> deleteInRange curIndex span piece
         | StartOfPieceInSpan -> deleteAtStart curIndex span piece
-        | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
+        | EndOfPieceInSpan -> deleteAtEnd span piece
         | _ -> failwith "Piece.delete error"
 
     let text piece table =

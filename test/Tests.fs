@@ -183,6 +183,6 @@ let ``Can delete around (from 1 character before to 1 character after) middle pi
 [<Fact>]
 let ``Can delete at end when zipper is in middle`` () =
     let table = initialTable.Insert(text.Length/2, insText)
-    let table = table.Delete(text.Length, insText.Length)
+    let table = table.Delete(text.Length, insText.Length + 1)
     let expectedStr = text.Substring(0,text.Length/2) + insText + text.Substring(text.Length/2, (text.Length/2) - insText.Length)
     Assert.Equal(expectedStr, table.Text())

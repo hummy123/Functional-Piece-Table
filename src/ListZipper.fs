@@ -78,12 +78,6 @@ module ListZipper =
                     insert insIndex piece (prev zipper)
             | _, _, _ -> failwith "unexpected ListZipper.insert case"
 
-    type ItemsToRemove = int
-    type ZipperIndex = int
-    type internal ListDeleteData = 
-        | PartialDelete of DeletedPiece * ItemsToRemove * ZipperIndex
-        | FullDelete of ItemsToRemove * ZipperIndex
-
     let private deleteList pos curIndex dSpan dPiece =
         match Piece.delete pos curIndex dSpan dPiece with
         | Empty -> [], 0
@@ -122,30 +116,35 @@ module ListZipper =
             let pieces = {table.Pieces with Path = newPath; Index = table.Pieces.Index - dLength}
             {table with Pieces = pieces }
 
-    let rec private deleteFocus dSpan zipper (focusAcc: PieceType list) =
+    let rec private deleteFocus dSpan zipper (focusAcc: PieceType list) table =
         if zipper.Focus.IsEmpty then
             focusAcc
         else
+            printfn "sLoop"
+            printfn "%s" <| Piece.text zipper.Focus[0] table
+            printfn "eLoop"
             let pos = Piece.compareWithSpan dSpan zipper.Index zipper.Focus[0]
             match pos, zipper.Focus with
             | StartOfPieceInSpan, f ->
                 let (dList, _) = deleteList pos zipper.Index dSpan f[0]
-                dList @ focusAcc
+                focusAcc @ dList
             | EndOfPieceInSpan, f ->
                 let (dList, _) = deleteList pos zipper.Index dSpan f[0]
-                deleteFocus dSpan (next zipper) (dList @ focusAcc)
-            | PieceFullyInSpan, _ -> deleteFocus dSpan (next zipper) focusAcc
-            | SpanWithinPiece, f ->
-                let (dList, _) = deleteList pos zipper.Index dSpan f[0]
-                dList @ focusAcc
-            | GreaterThanSpan, f -> focusAcc @ f
-            | LessThanSpan, _ -> deleteFocus dSpan (next zipper) focusAcc
+                deleteFocus dSpan (next zipper) (focusAcc @ dList) table
+            | PieceFullyInSpan, _ -> deleteFocus dSpan (next zipper) focusAcc table
+            | SpanWithinPiece, fHead::fList ->
+                let (dList, _) = deleteList pos zipper.Index dSpan fHead
+                focusAcc @ dList @ fList
+            | GreaterThanSpan, _ -> focusAcc
+            | LessThanSpan, fHead::_-> deleteFocus dSpan (next zipper) (fHead :: focusAcc) table
+            | SpanWithinPiece, _ -> failwith "logically impossible case"
+            | LessThanSpan, _ -> failwith "Reached end of zipper in deleteFocus"
 
     let private deleteRight dSpan table =
         if table.Pieces.Index > Span.stop dSpan then
             table
         else
-            let focus = deleteFocus dSpan table.Pieces []
+            let focus = deleteFocus dSpan table.Pieces [] table
             let pieces = {table.Pieces with Focus = focus}
             { table with Pieces = pieces }
 
@@ -164,13 +163,8 @@ module ListZipper =
             let piece = pieces[listPos]
 
             if listPos = pieces.Length - 1 then
-                let text = Piece.text piece table
-                printfn "%s" text
                 acc + (Piece.text piece table)
             else
-                let text = Piece.text piece table
-                printfn "%s" text
-
                 acc + (Piece.text piece table) |> buildText (listPos + 1)
 
         buildText 0 ""

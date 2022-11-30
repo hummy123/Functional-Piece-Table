@@ -2,16 +2,20 @@
 
 
 module Types =
+    [<Struct>]
     type SpanType = { Start: int; Length: int }
 
+    [<Struct>]
     type PieceType = { IsOriginal: bool; Span: SpanType }
 
+    [<Struct>]
     type CompareIndex = 
         | EqualTo
         | InRangeOf
         | LessThanIndex
         | GreaterThanIndex
 
+    [<Struct>]
     type CompareSpan =
         | StartOfPieceInSpan
         | EndOfPieceInSpan

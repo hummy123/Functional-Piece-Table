@@ -68,12 +68,12 @@ module ListZipper =
                 { zipper with Focus = [ p2; p3 ] @ fList ; Path = p1::p; Index = zipper.Index + p1.Span.Length }
             | LessThanIndex, _, f -> 
                 if f.IsEmpty then
-                    failwith "Bad ListZipper.insert caller case: Insertion index is less than 0."
+                    {zipper with Focus = f @ [piece];}
                 else
                     insert insIndex piece (next zipper)
-            | GreaterThanIndex, p, _ -> 
+            | GreaterThanIndex, p, f -> 
                 if p.IsEmpty then
-                    failwith "Bad ListZipper.insert caller case: Insertion index is less than 0."
+                    {zipper with Focus = piece::f; Index = 0}
                 else
                     insert insIndex piece (prev zipper)
             | _, _, _ -> failwith "unexpected ListZipper.insert case"
@@ -161,7 +161,9 @@ module ListZipper =
 
         let rec buildText listPos (acc: string) =
             let piece = pieces[listPos]
-
+            printfn "\n\nbuildText loop"
+            printfn "\npiece:\n%A" piece
+            printfn "%s" <| Piece.text piece table
             if listPos = pieces.Length - 1 then
                 acc + (Piece.text piece table)
             else

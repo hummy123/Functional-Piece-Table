@@ -7,27 +7,11 @@ For more information about the Piece Table data structure, [this repository](htt
 
 This branch contains a Piece Table with the Pieces stored in a linked list with a zipper which, like a splay tree, moves us to the node where the last operation was performed. This lets us reach nodes local to the previous one and perform operations on them more efficiently.
 
+After [benchmarking number-insert operations on a zipper and a balanced binary tree](https://github.com/hummy123/FunctionStructureComparison), I began to be be less impressed with the constant time operations zippers can potentially have and saw the good (close to a zipper's best in all cases) performance of a red black tree as a reason to switch.
+
 ## Insert Benchmarks
 
-### Analysis
-
-#### From standard linked list to linked list with zipper
-
-There is overall a significant reduction in the time and allocated memory with the zipper. When we have a size (initial number of pieces) of 100 in the table, inserting at the start is about a 60% time reduction, 75% for inserting at the middle and 89% for inserting at the end.
-
-When we have a size of 1000, inserting near the start of the table actually takes about 18% (3 μs) more time. This is likely because of the iteration setup we use to fill the table with pieces in the first place. We set up by inserting pieces at the end of the table repeatedly (up until the size parameter is reached), which means our zipper is naturally close to the end of the table by the time set setup is finished. However, it is a curious fact - and possibly an indicator of volatile speed - that inserting near the start in the other cases results in a speed up.
-
-There are 72% (insertion at middle) and 91% (insertion at end) speed improvements for a size of 1000 as well. When our table has 10,000 pieces, insertion at start has a 28% improvement, insertion at the middle 73% and insertion at the end 90%.
-
-This is overall an improvement over the standard linked list implementation. The performance of a zipper depends on where the node we want to edit is and the zipper's current focus, so edits further away from the zipper's current focus (uncommon in text editors) take longer while edits close to the zipper's current focus (the usual case in text editors) are faster.
-
-There is also less garbage produced and thus less need for the garbage collector to step in and collect it with my zipper implementation, but this is almost certainly due to the way I implemented the plain linked list version. For that plain linked list version, we iterate (through recursion) over each piece in the list and use an accumulator to rebuild the list with the pieces at the desired location, and it is this rebuilding that taxes the GC more in that implementation. 
-
-This could have been avoided by iterating over the list to see which list index (as opposed to string/character index) we want to insert at and then using the List.insert method provided by F#, although this may have a higher time complexity (iterating to the same position twice, once for the search and one for the insertion). I believe the splitting logic (when we want to insert "cd" into the string "abef" to form "abcdef") is also simpler in the implementation I provided. 
-
-### Raw data
-
-#### Piece Table with ListZipper
+### Piece Table with ListZipper
 
 |                 Method | size |       Mean |     Error |    StdDev |     Median | Allocated |
 |----------------------- |----- |-----------:|----------:|----------:|-----------:|----------:|

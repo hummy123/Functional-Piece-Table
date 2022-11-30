@@ -30,23 +30,6 @@ module Types =
           Path: PieceType list
           Index: int }
 
-    (* Tree defintions... *)
-    type SizeLeft = int
-    type SizeRight = int
-    type Value = PieceType
-    type Length = int
-    type InsIndex = int
-
-    [<Struct>]
-    type Colour = R | B
-
-    type Tree = 
-        | E 
-        | T of Colour * SizeLeft * Tree * Value * SizeRight * Tree
-        
-    type Set = int * Tree
-    (* ...Tree definitions. *)
-
     type TextTableType =
         { Buffer: string
           Pieces: ListZipperType

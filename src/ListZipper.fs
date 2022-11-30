@@ -158,9 +158,6 @@ module ListZipper =
 
         let rec buildText listPos (acc: string) =
             let piece = pieces[listPos]
-            printfn "\n\nbuildText loop"
-            printfn "\npiece:\n%A" piece
-            printfn "%s" <| Piece.text piece table
             if listPos = pieces.Length - 1 then
                 acc + (Piece.text piece table)
             else

@@ -84,7 +84,7 @@ module ListZipper =
         | CutOne(p,c) -> [p], c
         | CutTwo(p1,p2,c) -> [p1;p2], c
 
-    let rec private deletePath dSpan zipper (pathAcc: PieceType list) dLength table =
+    let rec private deletePath dSpan zipper (pathAcc: PieceType list) dLength =
         if zipper.Path.IsEmpty then
             pathAcc, dLength
         else
@@ -98,21 +98,21 @@ module ListZipper =
                 dList @ pathAcc, dLength + dNum
             | EndOfPieceInSpan, p ->
                 let (dList, dNum) = deleteList pos pieceIndex dSpan p[0]
-                deletePath dSpan (prev zipper) (dList @ pathAcc) (dLength + dNum) table
+                deletePath dSpan (prev zipper) (dList @ pathAcc) (dLength + dNum)
             | PieceFullyInSpan, p -> 
-                deletePath dSpan (prev zipper) pathAcc (p[0].Span.Length + dLength) table
+                deletePath dSpan (prev zipper) pathAcc (p[0].Span.Length + dLength)
             | SpanWithinPiece, p ->
                 let (dList, dNum) = deleteList pos pieceIndex dSpan p[0]
                 dList @ pathAcc, dLength + dNum
             | LessThanSpan, _ -> 
                 pathAcc, dLength
-            | GreaterThanSpan, _ -> deletePath dSpan (prev zipper) pathAcc dLength table
+            | GreaterThanSpan, _ -> deletePath dSpan (prev zipper) pathAcc dLength
 
     let private deleteLeft deleteSpan table =
         if table.Pieces.Index <= deleteSpan.Start then 
             table
         else
-            let (newPath, dLength) = deletePath deleteSpan table.Pieces [] 0 table
+            let (newPath, dLength) = deletePath deleteSpan table.Pieces [] 0
             let pieces = {table.Pieces with Path = newPath; Index = table.Pieces.Index - dLength}
             {table with Pieces = pieces }
 

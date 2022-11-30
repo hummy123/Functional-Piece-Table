@@ -118,11 +118,8 @@ module internal Piece =
         CutOne({ piece with Span = newPieceSpan }, difference)
 
     let private deleteAtEnd curIndex span piece =
-        let newSpan =
-            if piece.Span.Length > span.Length
-            then Span.createWithLength piece.Span.Start (piece.Span.Length - span.Length)
-            (* There is an error in the else case below. Need to figure it out. *)
-            else Span.createWithStop piece.Span.Start span.Start
+        let newLength = span.Start - curIndex
+        let newSpan = Span.createWithLength piece.Span.Start newLength
         let difference = piece.Span.Length - newSpan.Length
         CutOne({ piece with Span = newSpan }, difference)
 

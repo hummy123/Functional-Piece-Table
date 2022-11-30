@@ -1,12 +1,13 @@
 ﻿namespace PieceTable
 
-
+(* My benchmarks showed that using structs for small types,
+ * and for discriminated unions where applicable was slightly faster. *)
 module Types =
     [<Struct>]
     type SpanType = { Start: int; Length: int }
 
     [<Struct>]
-    type PieceType = { IsOriginal: bool; Span: SpanType }
+    type PieceType = { Span: SpanType }
 
     [<Struct>]
     type CompareIndex = 
@@ -36,7 +37,9 @@ module Types =
     type Length = int
     type InsIndex = int
 
+    [<Struct>]
     type Colour = R | B
+
     type Tree = 
         | E 
         | T of Colour * SizeLeft * Tree * Value * SizeRight * Tree
@@ -45,7 +48,6 @@ module Types =
     (* ...Tree definitions. *)
 
     type TextTableType =
-        { OriginalBuffer: string
-          AddBuffer: string
+        { Buffer: string
           Pieces: ListZipperType
         }

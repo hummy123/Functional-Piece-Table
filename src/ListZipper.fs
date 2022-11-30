@@ -120,9 +120,6 @@ module ListZipper =
         if zipper.Focus.IsEmpty then
             focusAcc
         else
-            printfn "sLoop"
-            printfn "%s" <| Piece.text zipper.Focus[0] table
-            printfn "eLoop"
             let pos = Piece.compareWithSpan dSpan zipper.Index zipper.Focus[0]
             match pos, zipper.Focus with
             | StartOfPieceInSpan, f ->

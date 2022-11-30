@@ -3,29 +3,25 @@ namespace PieceTable
 open Types
 
 module internal Piece =
-    /// Creates a Piece specifying the buffer it belongs to, the index of the buffer it should read from and how many characters it should read.
+    /// Creates a Piece specifying the span's start and length instead of the span itself.
     let create isOriginal start length =
-        { IsOriginal = isOriginal
-          Span = Span.createWithLength start length }
+        { Span = Span.createWithLength start length }
 
-    /// Creates a Piece specifying which buffer it belongs to and its span.
-    let createWithSpan isOriginal span =
-        { IsOriginal = isOriginal; Span = span }
+    /// Creates a Piece specifying its span.
+    let createWithSpan span =
+        { Span = span }
 
     /// Checks if two Pieces are consecutive (from the same buffer
     /// and one stopping where the other starts).
     /// Can be used to merge pieces for memory efficiency.
     let isConsecutive a b =
-        if a.IsOriginal = b.IsOriginal then
-            let aStop = Span.stop a.Span
-            let bStop = Span.stop b.Span
-            if aStop + 1 <= b.Span.Start 
-            then true
-            elif bStop + 1 <= a.Span.Start 
-            then true
-            else false
-        else
-            false
+        let aStop = Span.stop a.Span
+        let bStop = Span.stop b.Span
+        if aStop + 1 <= b.Span.Start 
+        then true
+        elif bStop + 1 <= a.Span.Start 
+        then true
+        else false
 
     /// Merges two consecutive pieces into one.
     /// If Piece.isConsecutive returns false with these two pieces, this method throws an error.
@@ -46,17 +42,17 @@ module internal Piece =
                 else fStop
 
             let mergeSpan = Span.createWithStop mergedStart mergeStop
-            createWithSpan a.IsOriginal mergeSpan
+            createWithSpan mergeSpan
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
     let split (a: PieceType) (b: PieceType) (difference: int) =
         let p1Length = a.Span.Start + difference
         let p1Span = Span.createWithLength a.Span.Start p1Length
-        let p1 = createWithSpan a.IsOriginal p1Span
+        let p1 = createWithSpan p1Span
 
         let span3 = Span.createWithStop p1Length (Span.stop a.Span)
-        let p3 = createWithSpan a.IsOriginal span3
+        let p3 = createWithSpan span3
         (p1, b, p3)
 
     /// Given a search index (for example the index we want to insert at), 
@@ -137,11 +133,7 @@ module internal Piece =
         | _ -> failwith "Piece.delete error"
 
     let text piece table =
-        match piece.IsOriginal with
-        (* Get text from original buffer. *)
-        | true -> table.OriginalBuffer.Substring(piece.Span.Start, piece.Span.Length)
-        (* Get text from add buffer. *)
-        | false -> table.AddBuffer.Substring(piece.Span.Start, piece.Span.Length)
+        table.Buffer.Substring(piece.Span.Start, piece.Span.Length)
 
     let textSlice startIndex length piece table =
         let pieceText = text piece table        

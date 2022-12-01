@@ -108,10 +108,19 @@ module Buffer =
 
     /// For testing/debugging purposes. 
     /// Performs an in-order travesal of the buffer's tree and adds each node's length to a list.
-    let bufferLengthAsList buffer =
+    /// Returns a list of ints representing the length of each buffer chronologically.
+    let lengthAsList buffer =
         let rec traverse tree (accList: int list) =
             match tree with
             | E -> accList
             | T(_,l,_,v,r) ->
                 (traverse l accList) @ [v.Length] |> traverse r
         traverse buffer []
+
+    let text buffer =
+        let rec traverse tree accText =
+            match tree with
+            | E -> accText
+            | T(_,l,_,v,r) ->
+                (traverse l accText) + v |> traverse r
+        traverse buffer ""

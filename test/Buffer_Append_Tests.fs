@@ -5,6 +5,8 @@ open System.Collections
 open Xunit
 open PieceTable
 
+let rnd = Random()
+
 [<Fact>]
 let ``New buffer with short string contains expected text and length`` () =
     let text = "short string"
@@ -67,3 +69,33 @@ let ``Adding a string to a buffer with one almost-full node will return a buffer
     let bufferList: IEnumerable = Buffer.lengthAsList buffer
     Assert.Equal(expectedText, bufferText)
     Assert.Equal(expectedList, bufferList)
+
+[<Fact>]
+let ``Random test inserting small strings`` () =
+    let mutable runningStr = ""
+    let mutable buffer = Buffer.empty
+
+    for i in [0..1000] do
+        let str = rnd.Next(1, 1_000_000_000).ToString()
+        runningStr <- runningStr + str
+        buffer <- Buffer.append str buffer
+
+        let bufferText = Buffer.text buffer
+        let bufferList: IEnumerable = Buffer.lengthAsList buffer
+        let expectedList: IEnumerable = [bufferText.Length]
+
+        Assert.Equal(runningStr, bufferText)
+        Assert.Equal(expectedList, bufferList)
+
+[<Fact>]
+let ``Random test inserting large strings`` () =
+    let mutable runningStr = ""
+    let mutable buffer = Buffer.empty
+
+    for i in [0..1000] do
+        let str = String.replicate 8 (rnd.Next(1, 1_000_000_000).ToString())
+        runningStr <- runningStr + str
+        buffer <- Buffer.append str buffer
+        let bufferText = Buffer.text buffer
+
+        Assert.Equal(runningStr, bufferText)

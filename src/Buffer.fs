@@ -132,4 +132,15 @@ module Buffer =
                 (traverse l accText) + v |> traverse r
         traverse buffer ""
 
-    let textInSpan (span: SpanType) buffer
+    let print buffer =
+        let rec traverse tree =
+            match tree with
+            | E -> ()
+            | T(_,l,_,v,r) ->
+                traverse l
+                printfn "%s" v
+                traverse r
+        traverse buffer
+
+    /// Gets text in a buffer at a specific span.
+    let textInSpan (span: SpanType) buffer = 0

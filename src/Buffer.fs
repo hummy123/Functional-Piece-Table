@@ -46,7 +46,7 @@ module Buffer =
             then newTree
             else
                 let nextKey = curKey + 1
-                let nextTree = insert nextKey str[start..MaxBufferLength] newTree
+                let nextTree = insert nextKey str[start..MaxBufferLength - 1] newTree
                 let nextStart = start + MaxBufferLength + 1
                 loop nextKey nextStart nextTree
         loop maxKeyInTree 0 tree

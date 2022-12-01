@@ -28,7 +28,6 @@ let ``New buffer will store text with length of 65535 chars in one node`` () =
     Assert.Equal(text, bufferText)
     Assert.Equal(expectedList, bufferList)
 
-// Below test fails, figure out why.
 [<Fact>]
 let ``New buffer will store text with length of 65540 chars in two nodes`` () =
     let baseText = "12345"

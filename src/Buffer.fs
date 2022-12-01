@@ -1,6 +1,7 @@
 ﻿namespace PieceTable
 
-(* Inspired by Chris Okasaki's Red Black Tree design and F# implementation at https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
+(* Inspired by Chris Okasaki's Red Black Tree design and F# implementation at 
+ * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
 
 module Buffer =
     [<Struct>]
@@ -35,6 +36,25 @@ module Buffer =
             | E -> failwith "Should never return empty from an insert"
             | T(_, l, k, v, r) -> T(B, l, k, v, r)
 
+    /// Inserts a long string (greater than the max buffer length) into a tree,
+    /// by splitting the string and adding it to multiple buffer nodes.
+    /// Asumes that the largest buffer in the tree is already filled to max buffer length.
+    /// There is also no harm using this if the string is less than the max buffer length.
+    let private insertLongString (str: string) maxKeyInTree tree =
+        let rec loop curKey start newTree =
+            if start > str.Length 
+            then newTree
+            else
+                let nextKey = curKey + 1
+                let nextTree = insert nextKey str[start..MaxBufferLength] newTree
+                let nextStart = start + MaxBufferLength + 1
+                loop nextKey nextStart nextTree
+        loop maxKeyInTree 0 tree
+
+    type private AppendType =
+        | AppendedToNode of Tree
+        | AddedNewNode of Tree
+        | Partial of Tree * Key * Value
 
     // Keep traversing to right.
     // For the last Tree (not empty) case, check:
@@ -48,18 +68,41 @@ module Buffer =
                 match right with
                 | E -> 
                     if value.Length + str.Length <= MaxBufferLength
-                    then T(col, left, key, value + str, right)
-                    elif value.Length < MaxBufferLength
-                    then E (* Split string and add part to this buffer, part to another buffer. *)
-                    elif str.Length >= MaxBufferLength
-                    then E (* Insert 65535 length string chunks into the tree, splitting the current string. *)
-                    else insert (key + 1) value tree
-                | T(_,_,_,_,_) as nestedNode -> loop nestedNode
+                    then 
+                        let lastNode = T(col, left, key, value + str, right)
+                        AppendedToNode(lastNode)
+                    elif value.Length = MaxBufferLength
+                    then 
+                        let tree = insertLongString str key tree
+                        AddedNewNode(tree)
+                    elif value.Length < MaxBufferLength && value.Length + str.Length > MaxBufferLength
+                    then 
+                        let remainingBufferLength = MaxBufferLength - value.Length
+                        let startStr = str[0..remainingBufferLength - 1]
+                        let lastNode = T(col, left, key, value + startStr, right)
+                        let endStr = str[remainingBufferLength..]
+                        Partial(lastNode, key, endStr)
+                    else 
+                        let tree = insertLongString str key tree
+                        AddedNewNode(tree)
+                | T(c,l,k,v,_) as nestedNode -> 
+                    match loop nestedNode with
+                    | AppendedToNode r ->
+                        AppendedToNode(T(c, l, k, v, r))
+                    | AddedNewNode t -> AddedNewNode(t)
+                    | Partial(r, lastKey, remainingStr) ->
+                        let withAppended = T(c,l,k,v,r)
+                        Partial(withAppended, lastKey, remainingStr)
+            (* The below empty case should only ever match if the tree root is empty. *)
             | E -> 
-                if str.Length > MaxBufferLength
-                then E (* Split string into multiple pieces and insert. *)
-                else insert 0 str tree
-        loop tree
+                let newTree = insertLongString str 0 tree
+                AddedNewNode(newTree)
+
+        match loop tree with
+        | AppendedToNode t -> t
+        | AddedNewNode t -> t
+        | Partial(t, key, remainString) ->
+            insertLongString remainString
 
     // Create function should come after insert as we would otherwise need to code same logic twice
    (* let create str: Tree =

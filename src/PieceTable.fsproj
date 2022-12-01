@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <Compile Include="Types.fs" />
+	  <Compile Include="Buffer.fs" />
     <Compile Include="Span.fs" />
     <Compile Include="Piece.fs" />
     <Compile Include="ListZipper.fs" />

@@ -1,4 +1,4 @@
-﻿module BufferTests
+﻿module BufferAppendTests
 
 open System
 open System.Collections

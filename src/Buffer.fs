@@ -1,5 +1,7 @@
 ﻿namespace PieceTable
 
+open Types
+
 (* Inspired by Chris Okasaki's Red Black Tree design and F# implementation at 
  * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
 
@@ -119,6 +121,9 @@ module Buffer =
                 (traverse l accList) @ [v.Length] |> traverse r
         traverse buffer []
 
+    /// For testing/debugging purposes, returns all text in a buffer through an in-order traversal.
+    /// Highly recommended not to use this in an application as it takes O(n) time and is therefore slow.
+    /// Instead, use the Buffer.textInSpan method to get a section of text from the buffer.
     let text buffer =
         let rec traverse tree accText =
             match tree with
@@ -126,3 +131,5 @@ module Buffer =
             | T(_,l,_,v,r) ->
                 (traverse l accText) + v |> traverse r
         traverse buffer ""
+
+    let textInSpan (span: SpanType) buffer

@@ -37,7 +37,7 @@ let ``New buffer will store text with length of 65540 chars in two nodes`` () =
     let buffer = Buffer.createWithString text
     let bufferText = Buffer.text buffer
     let bufferList: IEnumerable = Buffer.lengthAsList buffer
-    //Assert.Equal(text, bufferText)
+    Assert.Equal(text, bufferText)
     Assert.Equal(expectedList, bufferList)
 
 [<Fact>]

@@ -41,15 +41,17 @@ module Buffer =
     /// Asumes that the largest buffer in the tree is already filled to max buffer length.
     /// There is also no harm using this if the string is less than the max buffer length.
     let private insertLongString (str: string) maxKeyInTree tree =
-        let rec loop curKey start newTree =
-            if start > str.Length 
+        let rec loop curKey loopNum start newTree =
+            if start >= str.Length 
             then newTree
             else
+                let subStr = str[start..(loopNum * MaxBufferLength) - 1]
                 let nextKey = curKey + 1
-                let nextTree = insert nextKey str[start..MaxBufferLength - 1] newTree
-                let nextStart = start + MaxBufferLength + 1
-                loop nextKey nextStart nextTree
-        loop maxKeyInTree 0 tree
+                let nextLoopNum = loopNum + 1
+                let nextTree = insert nextKey subStr newTree
+                let nextStart = start + MaxBufferLength
+                loop nextKey nextLoopNum nextStart nextTree
+        loop maxKeyInTree 1 0 tree
 
     type private AppendType =
         | AppendedToNode of Tree

@@ -1,15 +1,13 @@
 open PieceTable
 open PieceTable.TextTable
-
-[<Literal>]
-let text = "During the development of the .NET Framework, the class libraries were originally written using a managed code compiler system called \"Simple Managed C\" (SMC)."
-
-[<Literal>]
-let insText = "TEST!"
-
-let initialTable = TextTable.create text
+open System.Collections
 
 module Program =
     [<EntryPoint>]
     let main _ = 
+        let baseText = "12345"
+        let text = String.replicate 13_108 baseText
+        let buffer = Buffer.createWithString text
+        let bufferText = Buffer.text buffer
+        printfn "%A" text.Length
         0

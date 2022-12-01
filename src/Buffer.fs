@@ -59,7 +59,7 @@ module Buffer =
     // Keep traversing to right.
     // For the last Tree (not empty) case, check:
     // If buffer is equal to max length (insert new buffer or buffers if string is greater than max length).
-    // If buffer + str.Length is greater than ma length (same as above).
+    // If buffer + str.Length is greater than max length (same as above).
     // If none of the above, append str to buffer.
     let append (str: string) tree = 
         let rec loop node =
@@ -102,11 +102,16 @@ module Buffer =
         | AppendedToNode t -> t
         | AddedNewNode t -> t
         | Partial(t, key, remainString) ->
-            insertLongString remainString
+            insertLongString remainString key t
 
-    // Create function should come after insert as we would otherwise need to code same logic twice
-   (* let create str: Tree =
-        if str.Length <= MaxBufferLength then
-            T(B, E, 0, str, E)
-        else
-            *)
+    let createWithString str = insertLongString str -1 E
+
+    /// For testing/debugging purposes. 
+    /// Performs an in-order travesal of the buffer's tree and adds each node's length to a list.
+    let bufferLengthAsList buffer =
+        let rec traverse tree (accList: int list) =
+            match tree with
+            | E -> accList
+            | T(_,l,_,v,r) ->
+                (traverse l accList) @ [v.Length] |> traverse r
+        traverse buffer []

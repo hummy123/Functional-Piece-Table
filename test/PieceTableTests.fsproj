@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Tests.fs" />
+    <Compile Include="BufferTest.fs" />
+    <Compile Include="TextTable_Insert_Tests.fs" />
+    <Compile Include="TextTable_Delete_Tests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

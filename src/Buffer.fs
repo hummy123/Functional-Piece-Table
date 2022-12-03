@@ -34,7 +34,7 @@ module Buffer =
                 let strPart = str[strIndex..(strEnd - 1)]
 
                 if strRemainLength <= MaxBufferLength 
-                then T(R, E, loopKey, strPart, E)
+                then balance(R, E, loopKey, strPart, E)
                 else
                     let right = ins (loopKey + 1) strEnd E
                     balance(R, E, loopKey, strPart, right)
@@ -43,7 +43,7 @@ module Buffer =
                 | E ->
                     (* If insert value fits in this buffer. *)
                     if curVal.Length + str.Length <= MaxBufferLength
-                    then T(c, a, loopKey, curVal + str, b)
+                    then balance(c, a, loopKey, curVal + str, b)
                     (* If this buffer is full. *)
                     elif curVal.Length = MaxBufferLength
                     then balance(c, a, curKey, curVal, ins loopKey strIndex b)
@@ -56,7 +56,7 @@ module Buffer =
                             balance(c, a, curKey, curVal + fitString, ins (curKey + 1) remainingBufferLength b)
                     else failwith "unexpected Buffer.insert case"
                 | T(_, _, nextKey, _, _) ->
-                    T(c, a, curKey, curVal, ins nextKey 0 b)
+                    balance(c, a, curKey, curVal, ins nextKey 0 b)
 
         (* Forcing root node to be black *)                
         match ins 0 0 tree with

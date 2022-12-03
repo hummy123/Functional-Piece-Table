@@ -45,12 +45,13 @@ module Buffer =
                     if curVal.Length + str.Length <= MaxBufferLength
                     then T(c, a, loopKey, curVal + str, b)
                     (* If this buffer is full. *)
-                    elif str.Length = MaxBufferLength
+                    elif curVal.Length = MaxBufferLength
                     then balance(c, a, curKey, curVal, ins loopKey strIndex b)
                     (* If part of the insert value fits in this buffer *)
-                    elif str.Length < MaxBufferLength && str.Length + str.Length > MaxBufferLength
-                        then 
-                            let remainingBufferLength = MaxBufferLength - str.Length
+                    elif curVal.Length < MaxBufferLength && curVal.Length + str.Length > MaxBufferLength
+                        then
+                            // there is an error to fix here
+                            let remainingBufferLength = MaxBufferLength - curVal.Length
                             let fitString = str[0..remainingBufferLength - 1]
                             balance(c, a, curKey, curVal + fitString, ins (curKey + 1) remainingBufferLength b)
                     else failwith "unexpected Buffer.insert case"

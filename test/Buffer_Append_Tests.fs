@@ -89,15 +89,32 @@ let ``Random test inserting small strings`` () =
 
 [<Fact>]
 let ``Random test inserting large strings`` () =
+    (* Arrange buffer's text content. *)
     let mutable runningStr = ""
-    let mutable buffer = Buffer.empty
 
-    for i in [0..1] do
-        (* THERE IS AN ERROR WHEN WE REPLICATE BY 6654 OR ABOVE THAT GOES AWAY
-         * WHEN WE DECREASE TO 6553 OR BELOW. FIND OUT WHY AND FIX. *)
-        let str = String.replicate 6554 (rnd.Next(1_000_000_000, 1_000_000_000).ToString())
+    (* Act, add strings to buffer repeatedly. *)
+    let mutable buffer = Buffer.empty
+    for i in [0..500] do
+        let str = String.replicate 100 (rnd.Next(1_000_000_000, 1_000_000_000).ToString())
         runningStr <- runningStr + str
         buffer <- Buffer.append str buffer
-        let bufferText = Buffer.text buffer
 
+        let bufferText = Buffer.text buffer
+        Assert.Equal(runningStr, bufferText)
         Assert.Equal(runningStr.Length, bufferText.Length)
+
+    (* Arrange buffer's expected "length as list" result, 
+     * based on running string's length. *)
+    let loopTimes = runningStr.Length / 65535 (* Max buffer length. *)
+    let reminChars = runningStr.Length % 65535
+    let expectedList = 
+        List.map (fun _ -> 65535) [0..(loopTimes - 1)]
+
+    let expectedList : IEnumerable = 
+        if reminChars = 0
+        then expectedList
+        else expectedList @ [reminChars]
+
+    let bufferList: IEnumerable = Buffer.lengthAsList buffer
+
+    Assert.Equal(expectedList, bufferList)

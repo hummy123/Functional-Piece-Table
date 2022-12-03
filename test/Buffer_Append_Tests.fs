@@ -101,7 +101,6 @@ let ``Random test inserting large strings`` () =
 
         let bufferText = Buffer.text buffer
         Assert.Equal(runningStr, bufferText)
-        Assert.Equal(runningStr.Length, bufferText.Length)
 
     (* Arrange buffer's expected "length as list" result, 
      * based on running string's length. *)

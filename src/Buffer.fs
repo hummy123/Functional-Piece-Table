@@ -6,21 +6,31 @@ open Types
  * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
 
 module Buffer =
+    (* Type abbreviations. *)
     type private InsertedLength = int
     type private Key = int (* The node's index (0, 1, 2, 3, etc.). *)
     type private Value = string
 
+    (* Tree type definition. *)
     [<Struct>]
     type Colour = R | B
     type Tree = E | T of Colour * Tree * Key * Value * Tree
 
-    [<Literal>]
+    (* Discriminated union for handling different append cases. *)
+    [<Struct>]
+    type private AppendResult =
+        | FullAppend of faTree:Tree
+        | PartialAppend of paTree:Tree * paKey:Key * insLength:InsertedLength
+        | BufferWasFull of bufFullKey:Key
+
     (* The maximum number of characters permitted in a buffer, before we create a new one. *)
+    [<Literal>]
     let private MaxBufferLength = 65535
 
+    /// An empty tree.
     let empty = E
 
-    let balance = function                                          (* Red nodes in relation to black root *)
+    let private balance = function                                  (* Red nodes in relation to black root *)
         | B, T(R, T(R, a, x, s1, b), y, s2, c), z, s3, d            (* Left, left *)
         | B, T(R, a, x, s1, T(R, b, y, s2, c)), z, s3, d            (* Left, right *)
         | B, a, x, s1, T(R, T(R, b, y, s2, c), z, s3, d)            (* Right, left *)
@@ -57,11 +67,7 @@ module Buffer =
                 loop nextKey nextLoopNum nextStart nextTree
         loop maxKeyInTree 1 0 tree
 
-    type AppendResult =
-        | FullAppend of Tree
-        | PartialAppend of Tree * Key * InsertedLength
-        | BufferWasFull of Key
-
+    /// Append a string to the buffer.
     let append (str: string) tree =
         let rec loop = function
             | E -> (* Only ever matched if whole tree is empty. *)
@@ -108,7 +114,12 @@ module Buffer =
             (* Insert the string into the tree. *)
             insertLongString str maxKey tree
 
+    /// Create a buffer with a string.
     let createWithString str = append str E
+
+    /// Gets text in a buffer at a specific span.
+    /// To do: Implement.
+    let textInSpan (span: SpanType) buffer = 0
 
     /// For testing/debugging purposes. 
     /// Performs an in-order travesal of the buffer's tree and adds each node's length to a list.
@@ -131,16 +142,3 @@ module Buffer =
             | T(_,l,_,v,r) ->
                 (traverse l accText) + v |> traverse r
         traverse buffer ""
-
-    let print buffer =
-        let rec traverse tree =
-            match tree with
-            | E -> ()
-            | T(_,l,_,v,r) ->
-                traverse l
-                printfn "%s" v
-                traverse r
-        traverse buffer
-
-    /// Gets text in a buffer at a specific span.
-    let textInSpan (span: SpanType) buffer = 0

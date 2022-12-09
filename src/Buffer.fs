@@ -11,16 +11,16 @@ module Buffer =
     type private Key = int (* The node's index (0, 1, 2, 3, etc.). *)
     type private Value = string
 
-    (* Tree type definition. *)
+    (* Buffer type definition as a red black tree. *)
     [<Struct>]
     type Colour = R | B
-    type Tree = E | T of Colour * Tree * Key * Value * Tree
+    type BufferType = E | T of Colour * BufferType * Key * Value * BufferType
 
     (* Discriminated union for handling different append cases. *)
     [<Struct>]
     type private AppendResult =
-        | FullAppend of faTree:Tree
-        | PartialAppend of paTree:Tree * paKey:Key * insLength:InsertedLength
+        | FullAppend of faTree:BufferType
+        | PartialAppend of paTree:BufferType * paKey:Key * insLength:InsertedLength
         | BufferWasFull of bufFullKey:Key
 
     (* The maximum number of characters permitted in a buffer, before we create a new one. *)
@@ -38,7 +38,7 @@ module Buffer =
             -> T(R, T(B, a, x, s1, b), y, s2, T(B, c, z, s3, d))
         | c, l, x, s1, r -> T(c, l, x, s1, r)
 
-    let private insert key value tree: Tree =
+    let private insert key value tree: BufferType =
         let rec ins = function
             | E -> T(R, E, key, value, E)
             | T(c, a, curKey, curVal, b) ->
@@ -140,8 +140,8 @@ module Buffer =
         let endKey = endPos / MaxBufferLength
         let endBufferIndex = 
             if endKey = 0 
-            then endPos
-            else endPos % MaxBufferLength
+            then endPos - 1
+            else (endPos % MaxBufferLength) - 1
         
         if startKey = endKey 
         then nodeSubstring startKey startBufferIndex endBufferIndex tree
@@ -179,3 +179,8 @@ module Buffer =
             | T(_,l,_,v,r) ->
                 (traverse l accText) + v |> traverse r
         traverse buffer ""
+
+    type BufferType with
+        member this.Substring(index, length) = 
+            let span = Span.createWithLength index length
+            substring span this

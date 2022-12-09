@@ -5,18 +5,22 @@ open Types
 module TextTable =
     /// Create a TextTableType given a string,
     let create str =
-        { Buffer = str
-          Pieces =
-            if str = "" then
-                ListZipper.empty
-            else
-                ListZipper.createWithPiece (Piece.create true 0 str.Length) }
+        let (buffer, pieces) =
+            if str = ""
+            then Buffer.empty, ListZipper.empty
+            else 
+                let buffer = Buffer.createWithString str
+                let pieces = ListZipper.createWithPiece (Piece.create true 0 str.Length)
+                (buffer, pieces)
+
+        { Buffer = buffer
+          Pieces = pieces }
 
     let text table = ListZipper.text table
 
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
-        let buffer = table.Buffer + str
+        let buffer = Buffer.append str table.Buffer
         let piece = Piece.create false (buffer.Length - str.Length) str.Length
         let pieces = ListZipper.insert index piece table.Pieces
 

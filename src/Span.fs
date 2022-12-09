@@ -14,7 +14,7 @@ module internal Span =
     let stop span = span.Start + span.Length
 
     /// Returns true if a span has a length of 0; otherwise, retrns false.
-    let isEmpty span = span.Length = 0
+    let isEmpty (span: SpanType) = span.Length = 0
 
     type SpanType with
 

@@ -4,7 +4,7 @@ open System
 open System.Collections
 open Xunit
 open PieceTable
-open PieceTable.Types
+open PieceTable.Buffer
 
 [<Fact>]
 let ``Can get different indices of a buffer with five characters`` () =

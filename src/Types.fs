@@ -25,12 +25,28 @@ module Types =
         | LessThanSpan
         | GreaterThanSpan
 
+    (* Start of type definitions for buffer, represented as red black tree... *)
+    (* Type abbreviations. *)
+    type BufferLength = int
+    type InsertedLength = int
+    type Key = int (* The node's index (0, 1, 2, 3, etc.). *)
+    type Value = string
+
+    (* Buffer collection as a red black tree. *)
+    [<Struct>]
+    type Colour = R | B
+    type BufferTree = Empty | Tree of Colour * BufferTree * Key * Value * BufferTree
+
+    (* Interface type to tree storing length in addition. *)
+    type BufferType = { Tree: BufferTree; Length: BufferLength }
+    (* ...end of type definitions for buffer. *)
+
     type ListZipperType =
         { Focus: PieceType list
           Path: PieceType list
           Index: int }
 
     type TextTableType =
-        { Buffer: string
+        { Buffer: BufferType
           Pieces: ListZipperType
         }

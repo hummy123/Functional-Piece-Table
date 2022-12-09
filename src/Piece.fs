@@ -134,7 +134,7 @@ module internal Piece =
         | _ -> failwith "Piece.delete error"
 
     let text piece table =
-        table.Buffer.Substring(piece.Span.Start, piece.Span.Length)
+        Buffer.substring piece.Span table.Buffer
 
     let textSlice startIndex length piece table =
         let pieceText = text piece table        

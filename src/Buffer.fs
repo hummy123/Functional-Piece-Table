@@ -6,10 +6,12 @@ open Types
  * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
 
 module Buffer =
-    [<Struct>]
-    type Colour = R | B
+    type private InsertedLength = int
     type private Key = int (* The node's index (0, 1, 2, 3, etc.). *)
     type private Value = string
+
+    [<Struct>]
+    type Colour = R | B
     type Tree = E | T of Colour * Tree * Key * Value * Tree
 
     [<Literal>]
@@ -26,45 +28,85 @@ module Buffer =
             -> T(R, T(B, a, x, s1, b), y, s2, T(B, c, z, s3, d))
         | c, l, x, s1, r -> T(c, l, x, s1, r)
 
-    let append (str: string) tree: Tree =
-        let rec ins (loopKey: int) strIndex = function
-            | E -> 
-                let strRemainLength = str.Length - strIndex
-                let strEnd = strIndex + MaxBufferLength
-                let strPart = str[strIndex..(strEnd - 1)]
-
-                if strRemainLength <= MaxBufferLength 
-                then balance(R, E, loopKey, strPart, E)
-                else
-                    let right = ins (loopKey + 1) strEnd E
-                    balance(R, E, loopKey, strPart, right)
+    let private insert key value tree: Tree =
+        let rec ins = function
+            | E -> T(R, E, key, value, E)
             | T(c, a, curKey, curVal, b) ->
-                match b with
-                | E ->
-                    (* If insert value fits in this buffer. *)
-                    if curVal.Length + str.Length <= MaxBufferLength
-                    then balance(c, a, loopKey, curVal + str, b)
-                    (* If this buffer is full. *)
-                    elif curVal.Length = MaxBufferLength
-                    then balance(c, a, curKey, curVal, ins loopKey strIndex b)
-                    (* If part of the insert value fits in this buffer *)
-                    elif curVal.Length < MaxBufferLength && curVal.Length + str.Length > MaxBufferLength
-                        then
-                            // there is an error to fix here
-                            let remainingBufferLength = MaxBufferLength - curVal.Length
-                            let fitString = str[0..remainingBufferLength - 1]
-                            balance(c, a, curKey, curVal + fitString, ins (curKey + 1) remainingBufferLength b)
-                    else failwith "unexpected Buffer.insert case"
-                | T(_, _, nextKey, _, _) ->
-                    balance(c, a, curKey, curVal, ins nextKey 0 b)
+                (* We only ever want to insert at the end of the buffer tree. *)
+                balance(c, a, curKey, curVal, ins b)
 
         (* Forcing root node to be black *)                
-        match ins 0 0 tree with
+        match ins tree with
             | E -> failwith "Should never return empty from an insert"
             | T(_, l, k, v, r) -> T(B, l, k, v, r)
 
-    (* Try to put the apend and insertLongString functions into ins/insert 
-     * for correctness and performance. *)
+    /// Inserts a long string (greater than the max buffer length) into a tree,
+    /// by splitting the string and adding it to multiple buffer nodes.
+    /// Asumes that the largest buffer in the tree is already filled to max buffer length.
+    /// There is also no harm using this if the string is less than the max buffer length.
+    let private insertLongString (str: string) maxKeyInTree tree =
+        let rec loop curKey loopNum start newTree =
+            if start >= str.Length 
+            then newTree
+            else
+                let subStr = str[start..(loopNum * MaxBufferLength) - 1]
+                let nextKey = curKey + 1
+                let nextLoopNum = loopNum + 1
+                let nextTree = insert nextKey subStr newTree
+                let nextStart = start + MaxBufferLength
+                loop nextKey nextLoopNum nextStart nextTree
+        loop maxKeyInTree 1 0 tree
+
+    type AppendResult =
+        | FullAppend of Tree
+        | PartialAppend of Tree * Key * InsertedLength
+        | BufferWasFull of Key
+
+    let append (str: string) tree =
+        let rec loop = function
+            | E -> (* Only ever matched if whole tree is empty. *)
+                if str.Length >= MaxBufferLength
+                then 
+                    let nextIndex = MaxBufferLength
+                    let tree = T(R, E, 0, str[..MaxBufferLength - 1], E)
+                    PartialAppend(tree, 0, nextIndex)
+                else 
+                    let tree = T(R, E, 0, str, E)
+                    FullAppend(tree)
+            | T(c, a, curKey, curVal, b) -> 
+                match b with
+                | E ->
+                    if curVal.Length + str.Length <= MaxBufferLength
+                    then 
+                        let tree = balance(c, a, curKey, curVal + str, b)
+                        FullAppend(tree)
+                    elif curVal.Length = MaxBufferLength
+                    then BufferWasFull(curKey)
+                    elif curVal.Length < MaxBufferLength && curVal.Length + str.Length > MaxBufferLength
+                    then 
+                        let remainingBufferLength = MaxBufferLength - curVal.Length
+                        let fitString = str[0..remainingBufferLength - 1]
+                        let tree = T(c, a, curKey, curVal + fitString, b)
+                        PartialAppend(tree, curKey, fitString.Length)
+                    else failwith "unexpected Buffer.tryAppend case"
+                | T(_, _, _, _, _) ->
+                    match loop b with
+                    | FullAppend newRight ->
+                        let reconstructTree = T(c, a, curKey, curVal, newRight)
+                        FullAppend(reconstructTree)
+                    | PartialAppend(newRight, maxKey, insLength) ->
+                        let reconstructTree = T(c, a, curKey, curVal, newRight)
+                        PartialAppend(reconstructTree, maxKey, insLength)
+                    | BufferWasFull key -> BufferWasFull key
+
+        match loop tree with
+        | FullAppend tree -> tree
+        | PartialAppend(partialTree, maxKey, insLength) ->
+            (* Insert the rest of the string into the tree. *)
+            insertLongString str[insLength..] maxKey partialTree 
+        | BufferWasFull maxKey ->
+            (* Insert the string into the tree. *)
+            insertLongString str maxKey tree
 
     let createWithString str = append str E
 

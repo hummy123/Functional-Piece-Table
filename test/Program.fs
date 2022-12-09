@@ -11,7 +11,7 @@ module Program =
 
         (* Act, add strings to buffer repeatedly. *)
         let mutable buffer = Buffer.empty
-        for i in [0..5] do
+        for i in [0..30] do
             let str = String.replicate 40000 "a"
             runningStr <- runningStr + str
             buffer <- Buffer.append str buffer

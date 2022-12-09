@@ -68,7 +68,7 @@ module Buffer =
         loop maxKeyInTree 1 0 tree
 
     /// Append a string to the buffer.
-    let append (str: string) tree =
+    let append (str: string) buffer =
         let rec loop = function
             | E -> (* Only ever matched if whole tree is empty. *)
                 if str.Length >= MaxBufferLength
@@ -105,21 +105,58 @@ module Buffer =
                         PartialAppend(reconstructTree, maxKey, insLength)
                     | BufferWasFull key -> BufferWasFull key
 
-        match loop tree with
+        match loop buffer with
         | FullAppend tree -> tree
         | PartialAppend(partialTree, maxKey, insLength) ->
             (* Insert the rest of the string into the tree. *)
             insertLongString str[insLength..] maxKey partialTree 
         | BufferWasFull maxKey ->
             (* Insert the string into the tree. *)
-            insertLongString str maxKey tree
+            insertLongString str maxKey buffer
 
     /// Create a buffer with a string.
     let createWithString str = append str E
 
+    /// Find the string associated with a particular key.
+    let rec private nodeSubstring key startPos endPos = function
+        | E -> ""
+        | T(_, l, curKey, value, r) ->
+            if key = curKey 
+            then value[startPos..endPos] (* Returns valid substring even if end is out of bounds. *)
+            elif key < curKey 
+            then nodeSubstring key startPos endPos l
+            else nodeSubstring key startPos endPos r
+
     /// Gets text in a buffer at a specific span.
-    /// To do: Implement.
-    let textInSpan (span: SpanType) buffer = 0
+    let substring (span: SpanType) tree = 
+        (* Calculate the buffer key we need to traverse to find the span's data. *)
+        let startKey = span.Start / MaxBufferLength
+        let startBufferIndex = 
+            if startKey = 0 
+            then span.Start
+            else span.Start % MaxBufferLength
+
+        let endPos = Span.stop span
+        let endKey = endPos / MaxBufferLength
+        let endBufferIndex = 
+            if endKey = 0 
+            then endPos
+            else endPos % MaxBufferLength
+        
+        if startKey = endKey 
+        then nodeSubstring startKey startBufferIndex endBufferIndex tree
+        elif startKey = endKey - 1
+        then
+            let startStr = nodeSubstring startKey startBufferIndex MaxBufferLength tree
+            let endStr = nodeSubstring endKey 0 endBufferIndex tree
+            startStr + endStr
+        else 
+            let startStr = nodeSubstring startKey startBufferIndex MaxBufferLength tree
+            let endStr = nodeSubstring endKey 0 endBufferIndex tree
+            
+            let midStrRange = [|startKey + 1..endKey - 1|]
+            let midStr = Array.fold (fun acc key -> acc + (nodeSubstring key 0 MaxBufferLength tree)) "" midStrRange
+            startStr + midStr + endStr
 
     /// For testing/debugging purposes. 
     /// Performs an in-order travesal of the buffer's tree and adds each node's length to a list.

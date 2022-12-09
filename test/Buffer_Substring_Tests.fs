@@ -26,3 +26,18 @@ let ``Can get different indices of a buffer with five characters`` () =
     Assert.Equal("2", buffer.Substring(1, 1))
     Assert.Equal("23", buffer.Substring(1, 2))
     Assert.Equal("234", buffer.Substring(1, 3))
+
+[<Fact>]
+let ``Can get different substrings there are three nodes in buffer`` () =
+    let str = (String.replicate 65535 "a") + (String.replicate 65535 "b") + (String.replicate 65535 "c")
+    let buffer = Buffer.createWithString str
+    
+    (* Can get substring including end of first node and start of second. *)
+    Assert.Equal("ab", buffer.Substring(65534, 2)) 
+
+    (* Can get substring including end of first node, whole of second, and start of third. *)
+    let expected = "a" + (String.replicate 65535 "b") + "c"
+    Assert.Equal(expected, buffer.Substring(65534, 65537))
+
+    (* Can get substring including all nodes. *)
+    Assert.Equal(str, buffer.Substring(0, (65535 * 3)))

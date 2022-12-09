@@ -180,6 +180,7 @@ module Buffer =
                 (traverse l accText) + v |> traverse r
         traverse buffer ""
 
+    /// OOP API for substring method for testing, as SpanType is internal to this assembly.
     type BufferType with
         member this.Substring(index, length) = 
             let span = Span.createWithLength index length

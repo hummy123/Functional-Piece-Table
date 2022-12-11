@@ -50,11 +50,6 @@ module Types =
         | T of int * SizeLeft * AaTree * PieceType * SizeRight * AaTree
     (* ...end of type definitions for piece tree. *)
 
-    type ListZipperType =
-        { Focus: PieceType list
-          Path: PieceType list
-          Index: int }
-
     type TextTableType =
         { Buffer: BufferType
-          Pieces: ListZipperType }
+          Pieces: AaTree }

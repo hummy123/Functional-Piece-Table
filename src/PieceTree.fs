@@ -20,6 +20,14 @@ module PieceTree =
             else lvt
         | _ -> failwith "unexpected nlvl case"
 
+    let private left = function
+        | E -> E
+        | T(_, _, l, _, _, _) -> l
+
+    let private right = function
+        | E -> E
+        | T(_, _, _, _, _, r) -> r
+
     let private size = function
         | E -> 0
         | T(_, sl, _, p, sr, _) -> sl + p.Span.Length + sr
@@ -104,6 +112,20 @@ module PieceTree =
             let x = f.Invoke(x,v)
             foldOpt f x r
 
+    let rec private bubbleLeft piece node =
+        match node with
+        | E -> T(1, 0, E, piece, 0, E)
+        | T(h, sl, l, v, sr, r) ->
+            let newLeft = bubbleLeft v l
+            split <| (skew <| T(h, size newLeft, newLeft, piece, sr, r))
+
+    let rec private bubbleRight piece node =
+        match node with
+        | E -> T(1, 0, E, piece, 0, E)
+        | T(h, sl, l, v, sr, r) ->
+            let newRight = bubbleRight v r
+            split <| (skew <| T(h, sl, l, piece, size newRight, newRight))
+
     /// Executes a function on each element in order (for example: 1, 2, 3 or a, b, c).
     let fold f x t = foldOpt (OptimizedClosures.FSharpFunc<_,_,_>.Adapt(f)) x t
 
@@ -131,12 +153,17 @@ module PieceTree =
                     T(h, newSl, ins nextIndex l, v, sr, r)
                 elif curIndex = insIndex then
                     // How do I move the current piece to the right in a balanced way?
-                    node
+                    let newLeft = bubbleLeft piece l
+                    split <| (skew <| T(h, size newLeft, newLeft, v, sr, r))
                 elif curIndex = nodeEndIndex then
                     // How do I move the insertion piece to the right in a balanced way?
-                    node
+                    let newRight = bubbleRight piece r
+                    split <| (skew <| T(h, sl, l, v, size newRight, newRight))
                 else
                     // We are in range: what now?
-                    node
+                    let (p1, p2, p3) = Piece.split v piece (insIndex - curIndex)
+                    let newLeft = bubbleLeft v l |> bubbleLeft p1
+                    let newRight = bubbleRight p3 r
+                    split <| (skew <| T(h, size newLeft, newLeft, p2, size newRight, newRight))
 
         ins (sizeLeft tree) tree

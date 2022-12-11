@@ -31,12 +31,25 @@ module PieceTree =
         | t -> t
 
     let private split = function
-        | T(lvx, sl1, a, kx, sr1, T(lvy, sl2, b, ky, sr2, T(lvz, sl3, c, kz, sr3, d))) 
+        | T(lvx, sizeA, a, kx, sr1, T(lvy, sizeB, b, ky, sr2, T(lvz, sizeC, c, kz, sizeD, d))) 
             when lvx = lvy && lvy = lvz -> 
-                let right = T(lvx, size c, c, kz, size d, d)
-                let left = T(lvx, size a, a, kx, size b, b)
+                let right = T(lvx, sizeC, c, kz, sizeD, d)
+                let left = T(lvx, sizeA, a, kx, sizeB, b)
                 T(lvx + 1, size left, left, ky, size right, right)
         | t -> t
+            
+    let rec private add item = function
+        | E -> T(1, 0, E, item, 0, E)
+        | T(h, sl, l, v, sr, r) as node ->
+            if item < v
+            then
+                let newLeft = add item l
+                split <| (skew <| T(h, size newLeft, newLeft, v, sr, r))
+            elif item > v
+            then 
+                let newRight = add item r
+                split <| (skew <| T(h, sl, l, v, size newRight, newRight))
+            else node
 
     let rec private dellrg = function
         | T(_, _, l, v, _, E) -> (l, v)
@@ -63,6 +76,32 @@ module PieceTree =
             let left = T(lvt-1, sizeLt, lt, kt, sizeC, c)
             T(lva + 1, size left, left,  ka, size right, right)
         | _ -> failwith "unexpected adjust case"
+
+    let rec delete item = function
+        | E -> E
+        | T(_, _, E, v, _, rt) when item = v -> rt
+        | T(_, _, lt, v, _, E) when item = v -> lt
+        | T(h, sl, l, v, sr, r) as node ->
+            if item < v then
+                let newLeft = delete item l
+                adjust <| T(h, size newLeft, newLeft, v, sr, r)
+            elif item > v then 
+                let newRight = delete item r
+                T(h, sl, l, v, size newRight, newRight)
+            else 
+                let (newLeft, newVal) = dellrg l
+                T(h, size newLeft, newLeft, newVal, sr, r)
+
+    let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
+        match t with
+        | E -> x
+        | T(_, _, l, v, _, r) ->
+            let x = foldOpt f x l
+            let x = f.Invoke(x,v)
+            foldOpt f x r
+
+    /// Executes a function on each element in order (for example: 1, 2, 3 or a, b, c).
+    let fold f x t = foldOpt (OptimizedClosures.FSharpFunc<_,_,_>.Adapt(f)) x t
 
     /// O(1): Returns a boolean if tree is empty.
     let isEmpty = function

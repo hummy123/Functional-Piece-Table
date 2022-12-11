@@ -18,6 +18,16 @@ module TextTable =
 
     let text table = ListZipper.text table
 
+    /// Consolidates a table into a buffer with only used characters and a single piece.
+    /// Recommended to call this in another thread: do not use it synchronously.
+    let consolidate table =
+        let oldPieces = ListZipper.ofList table.Pieces
+        let buffer = List.fold (fun acc piece -> Buffer.append (Piece.text piece table) acc ) Buffer.empty oldPieces
+        let path = Piece.create false 0 (table.Pieces.Index)
+        let focus = Piece.createWithSpan (Span.createWithStop table.Pieces.Index buffer.Length)
+        let zipper = {table.Pieces with Focus = [focus]; Path = [path] }
+        {Pieces = zipper; Buffer = buffer;}
+
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
         let buffer = Buffer.append str table.Buffer

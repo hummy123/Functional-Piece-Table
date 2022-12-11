@@ -135,18 +135,3 @@ module internal Piece =
 
     let text piece table =
         Buffer.substring piece.Span table.Buffer
-
-    let textSlice startIndex length piece table =
-        let pieceText = text piece table        
-        let pieceLength = table.Pieces.Focus[0].Span.Length
-
-        match startIndex, length, table.Pieces.Index, pieceLength with
-        (* If Piece fits within range (start index + length). *)
-        | curStart, curLen, pieceStart, pieceLen when curStart = pieceStart && curLen >= pieceLen ->
-            pieceText
-        (* If Piece does not fit within range. *)
-        | curStart, curLen, pieceStart, pieceLen ->
-            let sliceStart = curStart - pieceStart
-            let remainingLength = pieceText.Length - sliceStart
-            let sliceStop = if remainingLength < curLen then remainingLength else curLen
-            pieceText.Substring(sliceStart, sliceStop)

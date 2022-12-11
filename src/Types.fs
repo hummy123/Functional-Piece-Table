@@ -37,9 +37,18 @@ module Types =
     type Colour = R | B
     type BufferTree = Empty | Tree of Colour * BufferTree * Key * Value * BufferTree
 
-    (* Interface type to tree storing length in addition. *)
+    (* Interface type to tree storing length as well. *)
     type BufferType = { Tree: BufferTree; Length: BufferLength }
     (* ...end of type definitions for buffer. *)
+
+    (* Piece tree as an AA tree. *)
+    type SizeLeft = int
+    type SizeRight = int
+
+    type AaTree = 
+        | E
+        | T of int * SizeLeft * AaTree * PieceType * SizeRight * AaTree
+    (* ...end of type definitions for piece tree. *)
 
     type ListZipperType =
         { Focus: PieceType list
@@ -48,5 +57,4 @@ module Types =
 
     type TextTableType =
         { Buffer: BufferType
-          Pieces: ListZipperType
-        }
+          Pieces: ListZipperType }

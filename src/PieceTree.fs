@@ -24,6 +24,10 @@ module PieceTree =
         | E -> 0
         | T(_, sl, _, p, sr, _) -> sl + p.Span.Length + sr
 
+    let private sizeLeft = function
+        | E -> 0
+        | T(_, sl, _, _, _, _) -> sl
+ 
     let private skew = function
         | T(lvx, _, T(lvy, _, a, ky, _, b), kx, _, c) when lvx = lvy -> 
             let inner = T(lvy, size b, b, kx, size c, c)
@@ -77,16 +81,16 @@ module PieceTree =
             T(lva + 1, size left, left,  ka, size right, right)
         | _ -> failwith "unexpected adjust case"
 
-    let rec delete item = function
+    let rec remove item = function
         | E -> E
         | T(_, _, E, v, _, rt) when item = v -> rt
         | T(_, _, lt, v, _, E) when item = v -> lt
         | T(h, sl, l, v, sr, r) as node ->
             if item < v then
-                let newLeft = delete item l
+                let newLeft = remove item l
                 adjust <| T(h, size newLeft, newLeft, v, sr, r)
             elif item > v then 
-                let newRight = delete item r
+                let newRight = remove item r
                 T(h, sl, l, v, size newRight, newRight)
             else 
                 let (newLeft, newVal) = dellrg l
@@ -111,3 +115,28 @@ module PieceTree =
     /// O(1): Returns an empty AaTree.
     let empty = E
 
+    let rec insert insIndex piece tree =
+        let rec ins curIndex node =
+            match node with
+            | E -> T(1, 0, E, piece, 0, E)
+            | T(h, sl, l, v, sr, r) as node ->
+                let nodeEndIndex = curIndex + v.Span.Length
+                if curIndex < insIndex then 
+                    let newSr = sr + v.Span.Length
+                    let nextIndex = curIndex + v.Span.Length
+                    T(h, sl, l, v, newSr, ins nextIndex r)
+                elif curIndex > nodeEndIndex then
+                    let newSl = sl + v.Span.Length
+                    let nextIndex = curIndex - v.Span.Length
+                    T(h, newSl, ins nextIndex l, v, sr, r)
+                elif curIndex = insIndex then
+                    // How do I move the current piece to the right in a balanced way?
+                    node
+                elif curIndex = nodeEndIndex then
+                    // How do I move the insertion piece to the right in a balanced way?
+                    node
+                else
+                    // We are in range: what now?
+                    node
+
+        ins (sizeLeft tree) tree

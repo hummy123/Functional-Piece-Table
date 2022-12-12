@@ -167,3 +167,23 @@ module PieceTree =
                     split <| (skew <| T(h, size newLeft, newLeft, p2, size newRight, newRight))
 
         ins (sizeLeft tree) tree
+    
+    /// For debugging / balancing.
+    let print (tree) =
+        let subprint acc (v) level dir =
+            let str1 = String.replicate (4 * level) " "
+            let str2 = acc + " " + dir
+            let str3 = "str\n"
+            str1 + str2 + str3
+
+        let rec traverse (node) (level: int) (acc: string) dir =
+            match node with
+            | E -> acc
+            | T(_, _, l, v, _, r) ->
+                let acc = subprint acc node level dir
+                let acc = acc + (traverse l (level + 1) "" "<-")
+                acc + (traverse r (level + 1) "" "->")
+
+        let text = traverse tree 0 "" "--"
+        printfn "%s" text
+        text

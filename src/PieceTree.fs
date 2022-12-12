@@ -142,11 +142,11 @@ module PieceTree =
                 if insIndex > nodeEndIndex then 
                     let newSr = sr + v.Span.Length
                     let nextIndex = curIndex + v.Span.Length
-                    T(h, sl, l, v, newSr, ins nextIndex r)
+                    split <| (skew <| T(h, sl, l, v, newSr, ins nextIndex r))
                 elif insIndex < curIndex then
                     let newSl = sl + v.Span.Length
                     let nextIndex = curIndex - (pieceLength l)
-                    T(h, newSl, ins nextIndex l, v, sr, r)
+                    split <| (skew <| T(h, newSl, ins nextIndex l, v, sr, r))
                 elif curIndex = insIndex then
                     let newLeft = bubbleLeft piece l
                     split <| (skew <| T(h, size newLeft, newLeft, v, sr, r))

@@ -15,7 +15,8 @@ module Program =
     [<EntryPoint>]
     let main _ =  
         let table = TextTable.create ""
-        let table = table.Insert(0, text)
-        let table = table.Insert(3, insText)
-        printfn "%s" <| table.Text()
+        let mutable table = table.Insert(0, text)
+        for i in [1..20] do
+            table <- table.Insert(3, insText)
+        printfn "%s" <| PieceTree.print table.Pieces
         0

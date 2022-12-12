@@ -148,17 +148,15 @@ module PieceTree =
                     let nextIndex = curIndex - (pieceLength l)
                     T(h, newSl, ins nextIndex l, v, sr, r)
                 elif curIndex = insIndex then
-                    // How do I move the current piece to the right in a balanced way?
                     let newLeft = bubbleLeft piece l
                     split <| (skew <| T(h, size newLeft, newLeft, v, sr, r))
                 elif curIndex = nodeEndIndex then
-                    // How do I move the insertion piece to the right in a balanced way?
                     let newRight = bubbleRight piece r
                     split <| (skew <| T(h, sl, l, v, size newRight, newRight))
                 else
-                    // We are in range: what now?
+                    // We are in range.
                     let (p1, p2, p3) = Piece.split v piece (insIndex - curIndex)
-                    let newLeft = bubbleLeft v l |> bubbleLeft p1
+                    let newLeft = bubbleLeft p1 l
                     let newRight = bubbleRight p3 r
                     split <| (skew <| T(h, size newLeft, newLeft, p2, size newRight, newRight))
 

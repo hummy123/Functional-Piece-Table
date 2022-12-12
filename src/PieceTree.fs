@@ -20,14 +20,6 @@ module PieceTree =
             else lvt
         | _ -> failwith "unexpected nlvl case"
 
-    let private left = function
-        | E -> E
-        | T(_, _, l, _, _, _) -> l
-
-    let private right = function
-        | E -> E
-        | T(_, _, _, _, _, r) -> r
-
     let private size = function
         | E -> 0
         | T(_, sl, _, p, sr, _) -> sl + p.Span.Length + sr
@@ -104,13 +96,9 @@ module PieceTree =
                 let (newLeft, newVal) = dellrg l
                 T(h, size newLeft, newLeft, newVal, sr, r)
 
-    let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
-        match t with
-        | E -> x
-        | T(_, _, l, v, _, r) ->
-            let x = foldOpt f x l
-            let x = f.Invoke(x,v)
-            foldOpt f x r
+    let private pieceLength = function
+        | E -> 0
+        | T(_,_,_,piece,_,_) -> piece.Span.Length
 
     let rec private bubbleLeft piece node =
         match node with
@@ -125,6 +113,14 @@ module PieceTree =
         | T(h, sl, l, v, sr, r) ->
             let newRight = bubbleRight v r
             split <| (skew <| T(h, sl, l, piece, size newRight, newRight))
+
+    let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
+        match t with
+        | E -> x
+        | T(_, _, l, v, _, r) ->
+            let x = foldOpt f x l
+            let x = f.Invoke(x,v)
+            foldOpt f x r
 
     /// Executes a function on each element in order (for example: 1, 2, 3 or a, b, c).
     let fold f x t = foldOpt (OptimizedClosures.FSharpFunc<_,_,_>.Adapt(f)) x t
@@ -143,13 +139,13 @@ module PieceTree =
             | E -> T(1, 0, E, piece, 0, E)
             | T(h, sl, l, v, sr, r) as node ->
                 let nodeEndIndex = curIndex + v.Span.Length
-                if curIndex < insIndex then 
+                if insIndex > nodeEndIndex then 
                     let newSr = sr + v.Span.Length
                     let nextIndex = curIndex + v.Span.Length
                     T(h, sl, l, v, newSr, ins nextIndex r)
-                elif curIndex > nodeEndIndex then
+                elif insIndex < curIndex then
                     let newSl = sl + v.Span.Length
-                    let nextIndex = curIndex - v.Span.Length
+                    let nextIndex = curIndex - (pieceLength l)
                     T(h, newSl, ins nextIndex l, v, sr, r)
                 elif curIndex = insIndex then
                     // How do I move the current piece to the right in a balanced way?

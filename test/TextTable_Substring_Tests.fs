@@ -20,13 +20,9 @@ let ``Can get a substring from the start of a table's OriginalBuffer`` () =
     Assert.Equal("Du", substring)
 
 [<Fact>]
-let ``Can delete from the start of a table's AddBuffer`` () =
-    let table = TextTable.create ""
-    let table = table.Insert(0, text)
-    let table = table.Delete(0, 2)
-    Assert.Equal(text.Substring(2), table.Text())
-    Assert.Equal(text.Length - 2, table.Text().Length)
-    Assert.Equal(0, table.Pieces.Index)
+let ``Can get a substring from the a table's AddBuffer`` () =
+    let table = initialTable.Insert(5, insText)
+    Assert.Equal("TEST!", table.Substring(5, insText.Length))
 
 [<Fact>]
 let ``Can delete from the end of a table's OriginalBuffer`` () = 

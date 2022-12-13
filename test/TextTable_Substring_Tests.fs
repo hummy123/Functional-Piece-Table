@@ -28,7 +28,7 @@ let ``Can get a substring from the whole of a table's AddBuffer`` () =
 [<Fact>]
 let ``Can get a substring from around of a table's AddBuffer`` () =
     let table = initialTable.Insert(5, insText)
-    let substring = table.Substring(4, insText.Length + 1)
+    let substring = table.Substring(4, insText.Length + 2)
     Assert.Equal("nTEST!g", substring)
 
 [<Fact>]

@@ -15,7 +15,7 @@ module Program =
     [<EntryPoint>]
     let main _ =  
         let table = initialTable.Insert(5, insText)
-        let substring = table.Substring(4, insText.Length + 1)
+        let substring = table.Substring(4, insText.Length + 2)
         printfn "%s" <| substring
         printfn "%s" <| table.Text()
         0

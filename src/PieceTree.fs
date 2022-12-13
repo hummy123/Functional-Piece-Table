@@ -20,6 +20,14 @@ module PieceTree =
             else lvt
         | _ -> failwith "unexpected nlvl case"
 
+    let private left = function
+        | E -> E
+        | T(_, _, l, _, _, _) -> l
+
+    let private right = function
+        | E -> E
+        | T(_, _, _, _, _, r) -> r
+
     let private size = function
         | E -> 0
         | T(_, sl, _, p, sr, _) -> sl + p.Span.Length + sr
@@ -96,9 +104,13 @@ module PieceTree =
                 let (newLeft, newVal) = dellrg l
                 T(h, size newLeft, newLeft, newVal, sr, r)
 
-    let private pieceLength = function
-        | E -> 0
-        | T(_,_,_,piece,_,_) -> piece.Span.Length
+    let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
+        match t with
+        | E -> x
+        | T(_, _, l, v, _, r) ->
+            let x = foldOpt f x l
+            let x = f.Invoke(x,v)
+            foldOpt f x r
 
     let rec private bubbleLeft piece node =
         match node with
@@ -114,14 +126,6 @@ module PieceTree =
             let newRight = bubbleRight v r
             split <| (skew <| T(h, sl, l, piece, size newRight, newRight))
 
-    let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
-        match t with
-        | E -> x
-        | T(_, _, l, v, _, r) ->
-            let x = foldOpt f x l
-            let x = f.Invoke(x,v)
-            foldOpt f x r
-
     /// Executes a function on each element in order (for example: 1, 2, 3 or a, b, c).
     let fold f x t = foldOpt (OptimizedClosures.FSharpFunc<_,_,_>.Adapt(f)) x t
 
@@ -133,50 +137,33 @@ module PieceTree =
     /// O(1): Returns an empty AaTree.
     let empty = E
 
-    let insert insIndex piece tree =
+    let rec insert insIndex piece tree =
         let rec ins curIndex node =
             match node with
             | E -> T(1, 0, E, piece, 0, E)
             | T(h, sl, l, v, sr, r) as node ->
                 let nodeEndIndex = curIndex + v.Span.Length
-                if insIndex > nodeEndIndex then 
+                if curIndex < insIndex then 
                     let newSr = sr + v.Span.Length
                     let nextIndex = curIndex + v.Span.Length
-                    split <| (skew <| T(h, sl, l, v, newSr, ins nextIndex r))
-                elif insIndex < curIndex then
+                    T(h, sl, l, v, newSr, ins nextIndex r)
+                elif curIndex > nodeEndIndex then
                     let newSl = sl + v.Span.Length
-                    let nextIndex = curIndex - (pieceLength l)
-                    split <| (skew <| T(h, newSl, ins nextIndex l, v, sr, r))
+                    let nextIndex = curIndex - v.Span.Length
+                    T(h, newSl, ins nextIndex l, v, sr, r)
                 elif curIndex = insIndex then
+                    // How do I move the current piece to the right in a balanced way?
                     let newLeft = bubbleLeft piece l
                     split <| (skew <| T(h, size newLeft, newLeft, v, sr, r))
                 elif curIndex = nodeEndIndex then
+                    // How do I move the insertion piece to the right in a balanced way?
                     let newRight = bubbleRight piece r
                     split <| (skew <| T(h, sl, l, v, size newRight, newRight))
                 else
-                    // We are in range.
+                    // We are in range: what now?
                     let (p1, p2, p3) = Piece.split v piece (insIndex - curIndex)
-                    let newLeft = bubbleLeft p1 l
+                    let newLeft = bubbleLeft v l |> bubbleLeft p1
                     let newRight = bubbleRight p3 r
                     split <| (skew <| T(h, size newLeft, newLeft, p2, size newRight, newRight))
 
         ins (sizeLeft tree) tree
-    
-    /// For debugging / balancing.
-    let print (tree) =
-        let subprint acc (v) level dir =
-            let str1 = String.replicate (4 * level) " "
-            let str2 = acc + " " + dir
-            let str3 = "str\n"
-            str1 + str2 + str3
-
-        let rec traverse (node) (level: int) (acc: string) dir =
-            match node with
-            | E -> acc
-            | T(_, _, l, v, _, r) ->
-                let acc = subprint acc node level dir
-                let acc = acc + (traverse l (level + 1) "" "<-")
-                acc + (traverse r (level + 1) "" "->")
-
-        let text = traverse tree 0 "" "--"
-        printfn "%s" text

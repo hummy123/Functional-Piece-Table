@@ -16,7 +16,7 @@ let initialTable = TextTable.create text
 
 [<Fact>]
 let ``Can get a substring from the start of a table's OriginalBuffer`` () =
-    let substring = initialTable.Substring(0, 9)
+    let substring = initialTable.Substring(0, 2)
     Assert.Equal("Du", substring)
 
 [<Fact>]

@@ -206,8 +206,8 @@ module ListZipper =
                 let text = Piece.textSlice zipper.Index f[0] span table
                 textSliceFocus span (next zipper) table (acc + text)
             | PieceFullyInSpan, f -> 
-                let text = Piece.text f[0] table
-                textSliceFocus span (next zipper) table (acc + text)
+                let text = Piece.textSlice zipper.Index f[0] span table
+                acc + text
             | SpanWithinPiece, f ->
                 let text = Piece.textSlice zipper.Index f[0] span table
                 textSliceFocus span (next zipper) table (acc + text)

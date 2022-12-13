@@ -22,7 +22,7 @@ module TextTable =
         let folder = (fun (acc: string) (piece: PieceType) ->
             let text = (Buffer.substring piece.Span table.Buffer)
             acc + text
-         )
+        )
         PieceTree.fold folder "" table.Pieces
 
     /// Consolidates a table into a buffer with only used characters and a single piece.
@@ -40,7 +40,7 @@ module TextTable =
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
         let buffer = Buffer.append str table.Buffer
-        let piece = Piece.create false (buffer.Length - str.Length) str.Length
+        let piece = Piece.create false 0 str.Length
         let pieces = PieceTree.insert index piece table.Pieces
 
         { table with
@@ -49,7 +49,6 @@ module TextTable =
 
     (* Alternative OOP API. *)
     type TextTableType with
-
         member this.Insert(index, str) = insert index str this
         member this.Text() = text this
 

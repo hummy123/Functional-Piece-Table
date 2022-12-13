@@ -136,19 +136,28 @@ module internal Piece =
     let text piece table =
         Buffer.substring piece.Span table.Buffer
 
-    let textSlice curIndex piece span table =
-        let tempStart = 
-            if curIndex <= span.Start
-            then piece.Span.Start + (span.Start - curIndex)
-            else (span.Start - curIndex) + piece.Span.Start
+    let private textInRange curIndex span piece table =
+        let spanStop = Span.stop span 
+        let textStart = span.Start - curIndex + piece.Span.Start
+        let textStop = spanStop - curIndex + piece.Span.Start
+        Buffer.substring (Span.createWithStop textStart textStop) table.Buffer
 
+    let private textAtStart curIndex span piece table =
         let spanStop = Span.stop span
-        let pieceStop = curIndex + piece.Span.Length
+        let textStop = piece.Span.Start + (spanStop - curIndex)
+        let substrSpan = Span.createWithStop piece.Span.Start textStop
+        Buffer.substring substrSpan table.Buffer
 
-        let tempStop =
-            if pieceStop <= spanStop
-            then pieceStop
-            else spanStop - curIndex + piece.Span.Start
+    let private textAtEnd curIndex span piece table =
+        let textStop = Span.stop piece.Span
+        let textStart = span.Start - curIndex
+        let substrSpan = Span.createWithStop textStart textStop
+        Buffer.substring substrSpan table.Buffer
 
-        let tempSpan = Span.createWithStop tempStart tempStop
-        Buffer.substring tempSpan table.Buffer
+    let textSlice pos curIndex piece span table =
+        match pos with
+        | PieceFullyInSpan -> text piece table
+        | SpanWithinPiece -> textInRange curIndex span piece table
+        | StartOfPieceInSpan -> textAtStart curIndex span piece table
+        | EndOfPieceInSpan -> textAtEnd curIndex span piece table
+        | _ -> failwith "unexpected Piece.textSlice case"

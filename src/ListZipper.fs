@@ -26,12 +26,6 @@ module ListZipper =
 
     let rec next zipper =
         match zipper.Focus, zipper.Path with
-        (* Removes empty pieces from zipper when we traverse over them. *)
-        | f :: fs, _ when f.Span.Length <= 0 -> 
-            next {zipper with Focus = fs}
-         | f :: fs, p :: ps when isConsecutive f p ->
-            let mergePiece = Piece.merge f p
-            { Focus = fs; Path = mergePiece::ps; Index = nextIndex zipper}
         | f :: fs, _ ->
             { Focus = fs
               Path = f :: zipper.Path
@@ -41,11 +35,6 @@ module ListZipper =
 
     let rec prev zipper =
         match zipper.Focus, zipper.Path with
-        | _, b :: bs when b.Span.Length <= 0 ->
-            prev {zipper with Path = bs}
-        | f :: fs, b :: bs when isConsecutive f b ->
-            let mergePiece = Piece.merge f b
-            { Focus = mergePiece::fs; Path = bs; Index = prevIndex zipper}
         | _, b :: bs ->
             { Focus = b :: zipper.Focus
               Path = bs
@@ -59,7 +48,10 @@ module ListZipper =
         else
             let curPos = Piece.compareWithIndex insIndex zipper.Index zipper.Focus[0]
             match curPos, zipper.Path, zipper.Focus with
-            | EqualTo, _, f -> {zipper with Focus = piece::f}
+            | EqualTo, _, fHead::fList -> 
+                if isConsecutive fHead piece
+                then {zipper with Focus = (Piece.merge fHead piece)::fList}
+                else {zipper with Focus = piece::fHead::fList}
             | InRangeOf, p, [f] -> 
                 let (p1, p2, p3) = Piece.split f piece (insIndex - zipper.Index)
                 { zipper with Focus = [ p2; p3 ]; Path = p1::p; Index = zipper.Index + p1.Span.Length }
@@ -81,8 +73,10 @@ module ListZipper =
     let private deleteList pos curIndex dSpan dPiece =
         match Piece.delete pos curIndex dSpan dPiece with
         | Empty -> [], 0
-        | CutOne(p,c) -> [p], c
-        | CutTwo(p1,p2,c) -> [p1;p2], c
+        | CutOne(p,c) -> 
+            [p] |> List.filter (fun p -> p.Span.Length > 0), c
+        | CutTwo(p1,p2,c) -> 
+            [p1;p2] |> List.filter (fun p -> p.Span.Length > 0), c
 
     let rec private deletePath dSpan zipper (pathAcc: PieceType list) dLength =
         if zipper.Path.IsEmpty then
@@ -173,16 +167,16 @@ module ListZipper =
             let pos = Piece.compareWithSpan span pieceIndex zipper.Path[0]
             match pos, zipper.Path with
             | StartOfPieceInSpan, p ->
-                let text = Piece.textSlice pieceIndex p[0] span table
+                let text = Piece.textSlice pos pieceIndex p[0] span table
                 text + acc
             | EndOfPieceInSpan, p ->
-                let text = Piece.textSlice pieceIndex p[0] span table
+                let text = Piece.textSlice pos pieceIndex p[0] span table
                 textPath span table (prev zipper) (text + acc)
             | PieceFullyInSpan, p ->
                 let text = Piece.text p[0] table
                 textPath span table (prev zipper) (text + acc)
             | SpanWithinPiece, p ->
-                let text = Piece.textSlice pieceIndex p[0] span table
+                let text = Piece.textSlice pos pieceIndex p[0] span table
                 text + acc
             | LessThanSpan, _ -> acc
             | GreaterThanSpan, _ -> textPath span table (prev zipper) ""
@@ -200,16 +194,16 @@ module ListZipper =
             let pos = Piece.compareWithSpan span zipper.Index zipper.Focus[0]
             match pos, zipper.Focus with
             | StartOfPieceInSpan, f ->
-                let text = Piece.textSlice zipper.Index f[0] span table
+                let text = Piece.textSlice pos zipper.Index f[0] span table
                 acc + text
             | EndOfPieceInSpan, f ->
-                let text = Piece.textSlice zipper.Index f[0] span table
+                let text = Piece.textSlice pos zipper.Index f[0] span table
                 textSliceFocus span (next zipper) table (acc + text)
             | PieceFullyInSpan, f -> 
-                let text = Piece.textSlice zipper.Index f[0] span table
-                acc + text
+                let text = Piece.text f[0] table
+                textSliceFocus span (next zipper) table (acc + text)
             | SpanWithinPiece, f ->
-                let text = Piece.textSlice zipper.Index f[0] span table
+                let text = Piece.textSlice pos zipper.Index f[0] span table
                 textSliceFocus span (next zipper) table (acc + text)
             | GreaterThanSpan, _ -> acc
             | LessThanSpan, _-> 

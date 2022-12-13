@@ -139,15 +139,16 @@ module internal Piece =
     let textSlice curIndex piece span table =
         let tempStart = 
             if curIndex <= span.Start
-            then piece.Span.Start
+            then piece.Span.Start + (span.Start - curIndex)
             else (span.Start - curIndex) + piece.Span.Start
 
         let spanStop = Span.stop span
         let pieceStop = curIndex + piece.Span.Length
-        let tempLength =
+
+        let tempStop =
             if pieceStop <= spanStop
-            then piece.Span.Length
+            then pieceStop
             else spanStop - curIndex + piece.Span.Start
 
-        let tempSpan = Span.createWithLength tempStart tempLength
+        let tempSpan = Span.createWithStop tempStart tempStop
         Buffer.substring tempSpan table.Buffer

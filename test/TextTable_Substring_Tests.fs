@@ -20,9 +20,16 @@ let ``Can get a substring from the start of a table's OriginalBuffer`` () =
     Assert.Equal("Du", substring)
 
 [<Fact>]
-let ``Can get a substring from the a table's AddBuffer`` () =
+let ``Can get a substring from the whole of a table's AddBuffer`` () =
     let table = initialTable.Insert(5, insText)
-    Assert.Equal("TEST!", table.Substring(5, insText.Length))
+    let substring = table.Substring(5, insText.Length)
+    Assert.Equal("TEST!", substring)
+
+[<Fact>]
+let ``Can get a substring from around of a table's AddBuffer`` () =
+    let table = initialTable.Insert(5, insText)
+    let substring = table.Substring(4, insText.Length + 1)
+    Assert.Equal("nTEST!g", substring)
 
 [<Fact>]
 let ``Can delete from the end of a table's OriginalBuffer`` () = 

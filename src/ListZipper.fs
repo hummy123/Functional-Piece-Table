@@ -164,6 +164,67 @@ module ListZipper =
                 acc + (Piece.text piece table) |> buildText (listPos + 1)
 
         buildText 0 ""
+
+    let rec private textPath span (table: TextTableType) zipper acc =
+        if zipper.Path.IsEmpty then
+            acc
+        else
+            let pieceIndex = zipper.Index - zipper.Path[0].Span.Length
+            let pos = Piece.compareWithSpan span pieceIndex zipper.Path[0]
+            match pos, zipper.Path with
+            | StartOfPieceInSpan, p ->
+                let text = Piece.textSlice pieceIndex p[0] span table
+                text + acc
+            | EndOfPieceInSpan, p ->
+                let text = Piece.textSlice pieceIndex p[0] span table
+                textPath span table (prev zipper) (text + acc)
+            | PieceFullyInSpan, p ->
+                let text = Piece.text p[0] table
+                textPath span table (prev zipper) (text + acc)
+            | SpanWithinPiece, p ->
+                let text = Piece.textSlice pieceIndex p[0] span table
+                text + acc
+            | LessThanSpan, _ -> acc
+            | GreaterThanSpan, _ -> textPath span table (prev zipper) ""
+
+    let private textSliceLeft span table =
+        if table.Pieces.Index <= span.Start then 
+            ""
+        else
+            textPath span table table.Pieces ""
+
+    let rec private textSliceFocus span zipper table acc =
+        if zipper.Focus.IsEmpty then
+            acc
+        else
+            let pos = Piece.compareWithSpan span zipper.Index zipper.Focus[0]
+            match pos, zipper.Focus with
+            | StartOfPieceInSpan, f ->
+                let text = Piece.textSlice zipper.Index f[0] span table
+                acc + text
+            | EndOfPieceInSpan, f ->
+                let text = Piece.textSlice zipper.Index f[0] span table
+                textSliceFocus span (next zipper) table (acc + text)
+            | PieceFullyInSpan, f -> 
+                let text = Piece.text f[0] table
+                textSliceFocus span (next zipper) table (acc + text)
+            | SpanWithinPiece, fHead::fList ->
+                let text = Piece.textSlice zipper.Index f[0] span table
+                textSliceFocus span (next zipper) table (acc + text)
+            | GreaterThanSpan, _ -> acc
+            | LessThanSpan, _-> 
+                textSliceFocus span (next zipper) table ""
+            | SpanWithinPiece, _ -> 
+                Piece.textSlice zipper.Index f[0] span table
+        
+
+    let private textSliceRight span table =
+        if table.Pieces.Index > Span.stop span then
+            ""
+        else
+            textSliceFocus span table.Pieces table ""
     
-    let textSlice textSpan (table: TextTableType) =
-        "" // todo : implement
+    let textSlice span (table: TextTableType) =
+        let left = textSliceLeft span table
+        let right = textSliceRight span table
+        left + right

@@ -133,7 +133,7 @@ module PieceTree =
     /// O(1): Returns an empty AaTree.
     let empty = E
 
-    let insert insIndex piece tree =
+    let rec insert insIndex piece tree =
         let rec ins curIndex node =
             match node with
             | E -> T(1, 0, E, piece, 0, E)
@@ -180,3 +180,4 @@ module PieceTree =
 
         let text = traverse tree 0 "" "--"
         printfn "%s" text
+        text

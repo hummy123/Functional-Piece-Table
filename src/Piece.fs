@@ -146,8 +146,8 @@ module internal Piece =
         let pieceStop = curIndex + piece.Span.Length
         let tempStop =
             if pieceStop <= spanStop
-            then pieceStop
-            else spanStop
+            then (Span.stop piece.Span)
+            else spanStop - pieceStop + piece.Span.Start
 
         let tempSpan = Span.createWithStop tempStart tempStop
         Buffer.substring tempSpan table.Buffer

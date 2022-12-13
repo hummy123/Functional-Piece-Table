@@ -3,7 +3,7 @@ namespace PieceTable
 open Types
 
 module TextTable =
-    /// Create a TextTableType given a string,
+    /// Create a TextTableType given a string.
     let create str =
         let (buffer, pieces) =
             if str = ""
@@ -23,9 +23,8 @@ module TextTable =
     let consolidate table =
         let oldPieces = ListZipper.ofList table.Pieces
         let buffer = List.fold (fun acc piece -> Buffer.append (Piece.text piece table) acc ) Buffer.empty oldPieces
-        let path = Piece.create false 0 (table.Pieces.Index)
-        let focus = Piece.createWithSpan (Span.createWithStop table.Pieces.Index buffer.Length)
-        let zipper = {table.Pieces with Focus = [focus]; Path = [path] }
+        let piece = Piece.createWithSpan (Span.createWithLength 0 buffer.Length)
+        let zipper = {Focus = [piece]; Path = []; Index = 0 }
         {Pieces = zipper; Buffer = buffer;}
 
     /// Returns a new table with the string inserted.

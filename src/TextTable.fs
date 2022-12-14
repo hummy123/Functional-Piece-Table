@@ -22,7 +22,7 @@ module TextTable =
     /// Recommended to call this in another thread: do not use it synchronously.
     let consolidate table =
         let folder acc piece = 
-            Buffer.append (Piece.text piece table) acc) 
+            Buffer.append (Piece.text piece table) acc
         let buffer = List.fold folder Buffer.empty table.Pieces.Path
         let buffer = List.fold folder buffer table.Pieces.Focus
         let piece = Piece.createWithSpan (Span.createWithLength 0 buffer.Length)

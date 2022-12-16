@@ -18,7 +18,12 @@ module Program =
         let mutable runningStr = ""
         for i in [0..10] do
             let halfLength = runningStr.Length / 2
-            table <- table.Insert(halfLength, "hello")
-            runningStr <- runningStr.Substring(0,halfLength) + "hello" + runningStr.Substring(halfLength)
+            printfn "loop %i" i
+            printfn "inspos %i" halfLength
+
+            table <- table.Insert(halfLength, "12345")
+            runningStr <- runningStr.Substring(0,halfLength) + "12345" + runningStr.Substring(halfLength)
+            printfn "%s" runningStr
+            printfn "%s\n" <| table.Text()
         printfn "test"
         0

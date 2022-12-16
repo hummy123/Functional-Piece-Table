@@ -49,14 +49,14 @@ module internal Piece =
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
-    let split (a: PieceType) (b: PieceType) (difference: int) =
+    let split (a: PieceType) (b: PieceType) (difference: int) curIndex insIndex =
         let p1Length = a.Span.Start + difference
-        let p1Span = Span.createWithLength a.Span.Start p1Length
+        let p1Span = Span.createWithStop a.Span.Start p1Length  
         let p1 = createWithSpan p1Span
 
-        let span3 = Span.createWithStop p1Length (Span.stop a.Span)
+        let span3 = Span.createWithStop (p1Length) (Span.stop a.Span)
         let p3 = createWithSpan span3
-        (p1, b, p3)
+        (p1, p3)
 
     /// Given a search index (for example the index we want to insert at), 
     /// a current index (keeping track of current index in a loop) 

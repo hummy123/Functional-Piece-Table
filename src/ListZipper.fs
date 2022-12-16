@@ -59,11 +59,11 @@ module ListZipper =
             | AtEndOf, _, fHead::fList ->
                 {zipper with Focus = fHead::piece::fList}
             | InRangeOf, p, [f] -> 
-                let (p1, p2, p3) = Piece.split f piece (insIndex - zipper.Index)
-                { zipper with Focus = [ p2; p3 ]; Path = p1::p; Index = zipper.Index + p1.Span.Length }
+                let (p1, p3) = Piece.split f piece (insIndex - zipper.Index) zipper.Index insIndex
+                { zipper with Focus = [ piece; p3 ]; Path = p1::p; Index = zipper.Index + p1.Span.Length }
             | InRangeOf, p, fHead::fList -> 
-                let (p1, p2, p3) = Piece.split fHead piece (insIndex - zipper.Index)
-                { zipper with Focus = [ p2; p3 ] @ fList ; Path = p1::p; Index = zipper.Index + p1.Span.Length }
+                let (p1,  p3) = Piece.split fHead piece (insIndex - zipper.Index) zipper.Index insIndex
+                { zipper with Focus = piece::p3::fList ; Path = p1::p; Index = zipper.Index + p1.Span.Length }
             | LessThanIndex, _, f -> 
                 if f.IsEmpty then
                     {zipper with Focus = f @ [piece];}
@@ -154,16 +154,20 @@ module ListZipper =
     /// Retrieve the string contained within a TextTableType. Building this string takes O(n).
     /// Note that .NET has a size limit of 2 GB on objects and thus you cannot retrieve a string longer than that.
     let text (table: TextTableType) =
-        let pieces = ofList table.Pieces
-
-        let rec buildText listPos (acc: string) =
-            let piece = pieces[listPos]
-            if listPos = pieces.Length - 1 then
-                acc + (Piece.text piece table)
+        let inline add1 acc piece = acc + piece
+        let inline add2 scc piece = piece + scc
+        let rec buildText fAdd (curList: PieceType list) listPos (acc: string) =
+            if listPos = curList.Length then
+                acc
+            elif listPos = curList.Length - 1 then
+                let piece = curList[listPos]
+                fAdd acc (Piece.text piece table)
             else
-                acc + (Piece.text piece table) |> buildText (listPos + 1)
+                let piece = curList[listPos]
+                fAdd acc (Piece.text piece table) |> buildText fAdd curList (listPos + 1)
 
-        buildText 0 ""
+        let path = buildText add2 table.Pieces.Path 0 ""
+        buildText add1 table.Pieces.Focus 0 path
 
     let rec private textPath span (table: TextTableType) zipper acc =
         if zipper.Path.IsEmpty then

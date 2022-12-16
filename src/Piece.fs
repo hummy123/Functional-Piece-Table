@@ -62,9 +62,12 @@ module internal Piece =
     /// a current index (keeping track of current index in a loop) 
     /// and a piece, returns a DU telling us where we are.
     let compareWithIndex searchIndex curIndex curPiece =
+        let endIndex = curIndex + curPiece.Span.Length
         if searchIndex = curIndex then
             EqualTo
-        elif searchIndex >= curIndex && searchIndex <= curIndex + curPiece.Span.Length then
+        elif searchIndex = endIndex then
+            AtEndOf
+        elif searchIndex > curIndex && searchIndex < endIndex then
             InRangeOf
         elif searchIndex < curIndex then
             LessThanIndex

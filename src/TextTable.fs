@@ -3,18 +3,17 @@ namespace PieceTable
 open Types
 
 module TextTable =
+    /// Creates an empty TextTableType.
+    let empty = {Buffer = Buffer.empty; Pieces = ListZipper.empty}
+
     /// Create a TextTableType given a string.
     let create str =
-        let (buffer, pieces) =
-            if str = ""
-            then Buffer.empty, ListZipper.empty
-            else 
-                let buffer = Buffer.createWithString str
-                let pieces = ListZipper.createWithPiece (Piece.create true 0 str.Length)
-                (buffer, pieces)
-
-        { Buffer = buffer
-          Pieces = pieces }
+        if str = ""
+        then empty
+        else
+            let buffer = Buffer.createWithString str
+            let pieces = ListZipper.createWithPiece (Piece.create true 0 str.Length)
+            {Buffer = buffer; Pieces = pieces}
 
     let text table = ListZipper.text table
 

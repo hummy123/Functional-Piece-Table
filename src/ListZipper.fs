@@ -45,6 +45,8 @@ module ListZipper =
     let rec insert insIndex piece zipper =
         if zipper.Path.IsEmpty && zipper.Focus.IsEmpty then
             createWithPiece piece
+        elif zipper.Focus.IsEmpty && insIndex >= zipper.Index then
+            {zipper with Focus = [piece]}
         else
             let curPos = Piece.compareWithIndex insIndex zipper.Index zipper.Focus[0]
             match curPos, zipper.Path, zipper.Focus with
@@ -52,6 +54,10 @@ module ListZipper =
                 if isConsecutive fHead piece
                 then {zipper with Focus = (Piece.merge fHead piece)::fList}
                 else {zipper with Focus = piece::fHead::fList}
+            | AtEndOf, _, [f] ->
+                { zipper with Path = f::zipper.Path; Focus = [piece]; Index = zipper.Index + f.Span.Length}
+            | AtEndOf, _, fHead::fList ->
+                {zipper with Focus = fHead::piece::fList}
             | InRangeOf, p, [f] -> 
                 let (p1, p2, p3) = Piece.split f piece (insIndex - zipper.Index)
                 { zipper with Focus = [ p2; p3 ]; Path = p1::p; Index = zipper.Index + p1.Span.Length }
@@ -62,12 +68,12 @@ module ListZipper =
                 if f.IsEmpty then
                     {zipper with Focus = f @ [piece];}
                 else
-                    insert insIndex piece (next zipper)
+                    insert insIndex piece (prev zipper)
             | GreaterThanIndex, p, f -> 
                 if p.IsEmpty then
                     {zipper with Focus = piece::f; Index = 0}
                 else
-                    insert insIndex piece (prev zipper)
+                    insert insIndex piece (next zipper)
             | _, _, _ -> failwith "unexpected ListZipper.insert case"
 
     let private deleteList pos curIndex dSpan dPiece =

@@ -14,8 +14,11 @@ let initialTable = TextTable.create text
 module Program =
     [<EntryPoint>]
     let main _ =  
-        let table = initialTable.Insert(5, insText)
-        let substring = table.Substring(4, insText.Length + 2)
-        printfn "%s" <| substring
-        printfn "%s" <| table.Text()
+        let mutable table = TextTable.create ""
+        let mutable runningStr = ""
+        for i in [0..10] do
+            let halfLength = runningStr.Length / 2
+            table <- table.Insert(halfLength, "hello")
+            runningStr <- runningStr.Substring(0,halfLength) + "hello" + runningStr.Substring(halfLength)
+        printfn "test"
         0

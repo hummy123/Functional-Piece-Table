@@ -13,6 +13,7 @@ module Types =
     type CompareIndex = 
         | EqualTo
         | InRangeOf
+        | AtEndOf
         | LessThanIndex
         | GreaterThanIndex
 

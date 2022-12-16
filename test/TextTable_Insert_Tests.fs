@@ -75,3 +75,30 @@ let ``Can insert into the end of a table's AddBuffer`` () =
     // Assert the zipper's index is at the buffer's end
     Assert.Equal(text.Length + insText.Length, table.Text().Length)
 
+[<Fact>]
+let ``Can continuously insert at start`` () =
+    let mutable table = TextTable.create ""
+    let mutable runningStr = ""
+    for i in [0..10] do
+        table <- table.Insert(0, "hello")
+        runningStr <- runningStr + "hello"
+        Assert.Equal(runningStr, table.Text())
+
+[<Fact>]
+let ``Can continuously insert at middle`` () =
+    let mutable table = TextTable.create ""
+    let mutable runningStr = ""
+    for i in [0..10] do
+        let halfLength = runningStr.Length / 2
+        table <- table.Insert(halfLength, "hello")
+        runningStr <- runningStr.Substring(0,halfLength) + "hello" + runningStr.Substring(halfLength)
+    Assert.Equal(runningStr, table.Text())
+
+[<Fact>]
+let ``Can continuously insert at end`` () =
+    let mutable table = TextTable.create ""
+    let mutable runningStr = ""
+    for i in [0..10] do
+        table <- table.Insert(runningStr.Length, "hello")
+        runningStr <- runningStr + "hello"
+    Assert.Equal(runningStr, table.Text())

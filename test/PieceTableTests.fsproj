@@ -12,6 +12,7 @@
     <Compile Include="TextTable_Insert_Tests.fs" />
     <Compile Include="TextTable_Delete_Tests.fs" />
     <Compile Include="TextTable_Substring_Tests.fs" />
+    <Compile Include="TextTable_Consolidate_Tests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

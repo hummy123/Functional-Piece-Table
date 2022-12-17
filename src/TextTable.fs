@@ -51,3 +51,7 @@ module TextTable =
         member this.Substring(startIndex, length) =
             let span = Span.createWithLength startIndex length
             ListZipper.textSlice span this
+
+        member this.CharAt(index) =
+            let span = Span.createWithLength index 1
+            ListZipper.textSlice span this

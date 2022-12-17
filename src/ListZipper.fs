@@ -76,13 +76,17 @@ module ListZipper =
                     insert insIndex piece (next zipper)
             | _, _, _ -> failwith "unexpected ListZipper.insert case"
 
-    let private deleteList pos curIndex dSpan dPiece =
+    let private deleteList pos curIndex dSpan dPiece isPath =
         match Piece.delete pos curIndex dSpan dPiece with
         | Empty -> [], 0
         | CutOne(p,c) -> 
-            [p] |> List.filter (fun p -> p.Span.Length > 0), c
+            [p], c
         | CutTwo(p1,p2,c) -> 
-            [p1;p2] |> List.filter (fun p -> p.Span.Length > 0), c
+            let l = 
+                if isPath
+                then [p2;p1]
+                else [p1;p2]
+            l, c
 
     let rec private deletePath dSpan zipper (pathAcc: PieceType list) dLength =
         if zipper.Path.IsEmpty then
@@ -94,15 +98,15 @@ module ListZipper =
             let pos = Piece.compareWithSpan dSpan pieceIndex zipper.Path[0]
             match pos, zipper.Path with
             | StartOfPieceInSpan, p ->
-                let (dList, dNum) = deleteList pos pieceIndex dSpan p[0]
+                let (dList, dNum) = deleteList pos pieceIndex dSpan p[0] true
                 dList @ pathAcc, dLength + dNum
             | EndOfPieceInSpan, p ->
-                let (dList, dNum) = deleteList pos pieceIndex dSpan p[0]
+                let (dList, dNum) = deleteList pos pieceIndex dSpan p[0] true
                 deletePath dSpan (prev zipper) (dList @ pathAcc) (dLength + dNum)
             | PieceFullyInSpan, p -> 
                 deletePath dSpan (prev zipper) pathAcc (p[0].Span.Length + dLength)
             | SpanWithinPiece, p ->
-                let (dList, dNum) = deleteList pos pieceIndex dSpan p[0]
+                let (dList, dNum) = deleteList pos pieceIndex dSpan p[0] true
                 dList @ pathAcc, dLength + dNum
             | LessThanSpan, _ -> 
                 pathAcc, dLength
@@ -123,14 +127,14 @@ module ListZipper =
             let pos = Piece.compareWithSpan dSpan zipper.Index zipper.Focus[0]
             match pos, zipper.Focus with
             | StartOfPieceInSpan, f ->
-                let (dList, _) = deleteList pos zipper.Index dSpan f[0]
+                let (dList, _) = deleteList pos zipper.Index dSpan f[0] false
                 focusAcc @ dList
             | EndOfPieceInSpan, f ->
-                let (dList, _) = deleteList pos zipper.Index dSpan f[0]
+                let (dList, _) = deleteList pos zipper.Index dSpan f[0] false
                 deleteFocus dSpan (next zipper) (focusAcc @ dList) table
             | PieceFullyInSpan, _ -> deleteFocus dSpan (next zipper) focusAcc table
             | SpanWithinPiece, fHead::fList ->
-                let (dList, _) = deleteList pos zipper.Index dSpan fHead
+                let (dList, _) = deleteList pos zipper.Index dSpan fHead false
                 focusAcc @ dList @ fList
             | GreaterThanSpan, _ -> focusAcc
             | LessThanSpan, fHead::_-> deleteFocus dSpan (next zipper) (fHead :: focusAcc) table

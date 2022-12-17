@@ -11,7 +11,6 @@ module InsertData =
     let mutable table = TextTable.create ""
     let mutable tableLength = 0
 
-[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
 type Insert() =
     [<Params(100, 1_000, 10_000)>]
     member val size = 0 with get, set

@@ -14,8 +14,8 @@ let initialTable = TextTable.create text
 module Program =
     [<EntryPoint>]
     let main _ =  
-        let table = initialTable.Insert(0, insText)
-        let table = table.Delete(0,10)
+        let table = TextTable.create ""
+        let table = table.Insert(0, text)
+        let table = table.Insert(0, insText)
         printfn "%s" <| table.Text()
-        printfn "%s" <| text.Substring(10)
         0

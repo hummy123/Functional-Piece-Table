@@ -15,12 +15,12 @@ module internal Piece =
     /// and one stopping where the other starts).
     /// Can be used to merge pieces for memory efficiency.
     let isConsecutive a b =
-        (Span.stop b.Span) = a.Span.Start
+        (Span.stop a.Span) = b.Span.Start
 
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 
     let merge a b =
-        createWithSpan <| Span.createWithLength b.Span.Start (a.Span.Length + b.Span.Length)
+        createWithSpan <| Span.createWithLength a.Span.Start (a.Span.Length + b.Span.Length)
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.

@@ -50,10 +50,8 @@ module ListZipper =
         else
             let curPos = Piece.compareWithIndex insIndex zipper.Index zipper.Focus[0]
             match curPos, zipper.Path, zipper.Focus with
-            | EqualTo, _, fHead::fList -> 
-                if isConsecutive fHead piece
-                then {zipper with Focus = (Piece.merge fHead piece)::fList}
-                else {zipper with Focus = piece::zipper.Focus}
+            | EqualTo, _, _ -> 
+                {zipper with Focus = piece::zipper.Focus}
             | AtEndOf, _, [f] ->
                 if isConsecutive f piece
                 then { zipper with Focus = [(Piece.merge f piece)] }

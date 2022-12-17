@@ -17,35 +17,32 @@ module internal Piece =
     let isConsecutive a b =
         let aStop = Span.stop a.Span
         let bStop = Span.stop b.Span
-        if aStop > bStop then
-            if aStop + 1 <= bStop then
+        if aStop = b.Span.Start then
+            if aStop = b.Span.Start then
                 true
             else 
                 false
-        elif bStop + 1 <= aStop then
+        elif bStop = a.Span.Start then
             true
         else false
 
     /// Merges two consecutive pieces into one.
-    /// If Piece.isConsecutive returns false with these two pieces, this method throws an error.
+    /// Expects to be called only when Piece.isConsecutive returns true. 
     let merge a b =
-        match isConsecutive a b with
-        | false -> failwith "Piece.merge caller error: Tried to merge non-consecutive pieces."
-        | true ->
-            let mergedStart = 
-                if a.Span.Start < b.Span.Start 
-                then a.Span.Start
-                else b.Span.Start
+        let mergedStart = 
+            if a.Span.Start < b.Span.Start 
+            then a.Span.Start
+            else b.Span.Start
 
-            let fStop = Span.stop a.Span
-            let pStop = Span.stop b.Span
-            let mergeStop =
-                if pStop > fStop
-                then pStop
-                else fStop
+        let fStop = Span.stop a.Span
+        let pStop = Span.stop b.Span
+        let mergeStop =
+            if pStop > fStop
+            then pStop
+            else fStop
 
-            let mergeSpan = Span.createWithStop mergedStart mergeStop
-            createWithSpan mergeSpan
+        let mergeSpan = Span.createWithStop mergedStart mergeStop
+        createWithSpan mergeSpan
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.

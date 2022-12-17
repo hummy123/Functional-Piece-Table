@@ -53,9 +53,11 @@ module ListZipper =
             | EqualTo, _, fHead::fList -> 
                 if isConsecutive fHead piece
                 then {zipper with Focus = (Piece.merge fHead piece)::fList}
-                else {zipper with Focus = piece::fHead::fList}
+                else {zipper with Focus = piece::zipper.Focus}
             | AtEndOf, _, [f] ->
-                { zipper with Path = f::zipper.Path; Focus = [piece]; Index = zipper.Index + f.Span.Length}
+                if isConsecutive f piece
+                then { zipper with Focus = [(Piece.merge f piece)] }
+                else { zipper with Path = f::zipper.Path; Focus = [piece]; Index = zipper.Index + f.Span.Length}
             | AtEndOf, _, fHead::fList ->
                 {zipper with Focus = fHead::piece::fList}
             | InRangeOf, p, [f] -> 

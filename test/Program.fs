@@ -14,6 +14,4 @@ let initialTable = TextTable.create text
 module Program =
     [<EntryPoint>]
     let main _ =  
-        let table = initialTable.Delete(1, 1)
-        printfn "%s" <| table.Text()
         0

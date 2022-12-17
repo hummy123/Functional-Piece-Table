@@ -36,7 +36,6 @@ type Insert() =
     member this.InsertNearEndOfTable() =
         InsertData.table <- InsertData.table.Insert(InsertData.tableLength - 3, "A")
 
-
 type Consolidate() =
     [<Params(100, 1_000, 10_000)>]
     member val size = 0 with get, set

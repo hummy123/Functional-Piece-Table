@@ -15,16 +15,7 @@ module internal Piece =
     /// and one stopping where the other starts).
     /// Can be used to merge pieces for memory efficiency.
     let isConsecutive a b =
-        let aStop = Span.stop a.Span
-        let bStop = Span.stop b.Span
-        if aStop = b.Span.Start then
-            if aStop = b.Span.Start then
-                true
-            else 
-                false
-        elif bStop = a.Span.Start then
-            true
-        else false
+        (Span.stop b.Span) = a.Span.Start
 
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 

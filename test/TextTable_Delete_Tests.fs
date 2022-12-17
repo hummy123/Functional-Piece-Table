@@ -18,9 +18,6 @@ let initialTable = TextTable.create text
 let ``Can delete from the start of a table's OriginalBuffer`` () =
     let table = initialTable.Delete(0, 2)
     Assert.Equal(text.Substring(2), table.Text())
-    // Assert text length and zipper position
-    Assert.Equal(text.Length - 2, table.Text().Length)
-    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete from the start of a table's AddBuffer`` () =
@@ -28,16 +25,11 @@ let ``Can delete from the start of a table's AddBuffer`` () =
     let table = table.Insert(0, text)
     let table = table.Delete(0, 2)
     Assert.Equal(text.Substring(2), table.Text())
-    Assert.Equal(text.Length - 2, table.Text().Length)
-    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete from the end of a table's OriginalBuffer`` () = 
     let table = initialTable.Delete(text.Length - 5, 5)
     Assert.Equal(text.Substring(0, text.Length - 5), table.Text())
-    Assert.Equal(text.Length - 5, table.Text().Length)
-    // There is still only one piece and we are never at end ([]) of focus.
-    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete from the end of a table's AddBuffer`` () =
@@ -45,16 +37,12 @@ let ``Can delete from the end of a table's AddBuffer`` () =
     let table = table.Insert(0, text)
     let table = table.Delete(text.Length - 5, 5)
     Assert.Equal(text.Substring(0, text.Length - 5), table.Text())
-    Assert.Equal(text.Length - 5, table.Text().Length)
-    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete from the middle of a table's OriginalBuffer`` () = 
     let table = initialTable.Delete(1, 1)
     let expectedStr = text[0].ToString() + text.Substring(2)
     Assert.Equal(expectedStr, table.Text())
-    Assert.Equal(text.Length - 1, table.Text().Length)
-    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete from the middle of a table's AddBuffer`` () =
@@ -62,8 +50,6 @@ let ``Can delete from the middle of a table's AddBuffer`` () =
     let table = initialTable.Delete(1, 1)
     let expectedStr = text[0].ToString() + text.Substring(2)
     Assert.Equal(expectedStr, table.Text())
-    Assert.Equal(text.Length - 1, table.Text().Length)
-    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete when zipper is at start and deletion range includes multiple pieces in a table.`` () =
@@ -71,8 +57,6 @@ let ``Can delete when zipper is at start and deletion range includes multiple pi
     let table = table.Delete(0,10)
     let expectedStr = (insText + text).Substring(10)
     Assert.Equal(expectedStr, table.Text())
-    Assert.Equal(expectedStr.Length, table.Text().Length)
-    Assert.Equal(0, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete from start when zipper is at end`` () =
@@ -80,7 +64,6 @@ let ``Can delete from start when zipper is at end`` () =
     let table = table.Delete(0,10)
     let expectedStr = text.Substring(10) + insText
     Assert.Equal(expectedStr, table.Text())
-    Assert.Equal(149, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete in between when zipper is at end`` () =
@@ -88,7 +71,6 @@ let ``Can delete in between when zipper is at end`` () =
     let table = table.Delete(1, 1)
     let expectedStr = text[0].ToString() + text.Substring(2) + insText
     Assert.Equal(expectedStr, table.Text())
-    Assert.Equal(158, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete at end when zipper is at end`` () =
@@ -96,7 +78,6 @@ let ``Can delete at end when zipper is at end`` () =
     let table = table.Delete(text.Length, insText.Length)
     let expectedStr = text
     Assert.Equal(expectedStr, table.Text())
-    Assert.Equal(159, table.Pieces.Index)
 
 [<Fact>]
 let ``Can delete at start when zipper is in middle`` () =

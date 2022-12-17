@@ -36,6 +36,7 @@ module Types =
     (* Buffer collection as a red black tree. *)
     [<Struct>]
     type Colour = R | B
+
     type BufferTree = Empty | Tree of Colour * BufferTree * Key * Value * BufferTree
 
     (* Interface type to tree storing length as well. *)

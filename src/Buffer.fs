@@ -15,7 +15,7 @@ module Buffer =
 
     (* The maximum number of characters permitted in a buffer, before we create a new one. *)
     [<Literal>]
-    let private MaxBufferLength = 65535
+    let MaxBufferLength = 1024
 
     /// An empty buffer.
     let empty = {Tree = Empty; Length = 0}

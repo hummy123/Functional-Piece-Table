@@ -7,10 +7,23 @@ open PieceTable
 
 let rnd = Random()
 
+/// Creates a list containing the expected value of Buffer.lengthAsList.
+let stringLengthAsList (str: string) =
+    let MaxBufferLen = Buffer.MaxBufferLength
+    match str.Length <= MaxBufferLen with
+    | true -> [str.Length]
+    | false ->
+        let loopTimes = str.Length / MaxBufferLen
+        let remainChars = str.Length % MaxBufferLen
+        let lengthAsList = List.map (fun _ -> MaxBufferLen) [0..loopTimes - 1]
+        if remainChars = 0
+        then lengthAsList
+        else lengthAsList @ [remainChars]
+
 [<Fact>]
 let ``New buffer with short string contains expected text and length`` () =
     let text = "short string"
-    let expectedList: IEnumerable = [text.Length]
+    let expectedList: IEnumerable = stringLengthAsList text
 
     let buffer = Buffer.createWithString text
     let bufferText = Buffer.text buffer
@@ -22,7 +35,7 @@ let ``New buffer with short string contains expected text and length`` () =
 let ``New buffer will store text with length of 65535 chars in one node`` () =
     let baseText = "12345"
     let text = String.replicate 13_107 baseText
-    let expectedList: IEnumerable = [65535]
+    let expectedList: IEnumerable = stringLengthAsList text
 
     let buffer = Buffer.createWithString text
     let bufferText = Buffer.text buffer
@@ -34,7 +47,7 @@ let ``New buffer will store text with length of 65535 chars in one node`` () =
 let ``New buffer will store text with length of 65540 chars in two nodes`` () =
     let baseText = "12345"
     let text = String.replicate 13_108 baseText
-    let expectedList: IEnumerable = [65535;5]
+    let expectedList: IEnumerable = stringLengthAsList text
     let buffer = Buffer.createWithString text
     let bufferText = Buffer.text buffer
     let bufferList: IEnumerable = Buffer.lengthAsList buffer
@@ -46,7 +59,7 @@ let ``Adding a string to a buffer with one full node will create a buffer with t
     let baseText = "12345"
     let text = String.replicate 13_107 baseText
     let expectedText = text + baseText
-    let expectedList: IEnumerable = [65535; 5]
+    let expectedList: IEnumerable = stringLengthAsList expectedText
 
     let buffer = Buffer.createWithString text
     let buffer = Buffer.append baseText buffer
@@ -61,7 +74,7 @@ let ``Adding a string to a buffer with one almost-full node will return a buffer
     let baseText = "12345"
     let text = (String.replicate 13_107 baseText)[1..]
     let expectedText = (text + baseText)
-    let expectedList: IEnumerable = [65535; 4]
+    let expectedList: IEnumerable = stringLengthAsList (text + baseText)
 
     let buffer = Buffer.createWithString text
     let buffer = Buffer.append baseText buffer
@@ -82,7 +95,7 @@ let ``Random test inserting small strings`` () =
 
         let bufferText = Buffer.text buffer
         let bufferList: IEnumerable = Buffer.lengthAsList buffer
-        let expectedList: IEnumerable = [bufferText.Length]
+        let expectedList: IEnumerable = stringLengthAsList bufferText
 
         Assert.Equal(runningStr, bufferText)
         Assert.Equal(expectedList, bufferList)
@@ -102,17 +115,7 @@ let ``Random test inserting large strings`` () =
         let bufferText = Buffer.text buffer
         Assert.Equal(runningStr, bufferText)
 
-    (* Arrange buffer's expected "length as list" result, 
-     * based on running string's length. *)
-    let loopTimes = runningStr.Length / 65535 (* Max buffer length. *)
-    let reminChars = runningStr.Length % 65535
-    let expectedList = 
-        List.map (fun _ -> 65535) [0..(loopTimes - 1)]
-
-    let expectedList : IEnumerable = 
-        if reminChars = 0
-        then expectedList
-        else expectedList @ [reminChars]
+    let expectedList : IEnumerable = stringLengthAsList runningStr
 
     let bufferList: IEnumerable = Buffer.lengthAsList buffer
 

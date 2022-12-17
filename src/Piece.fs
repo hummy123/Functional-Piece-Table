@@ -20,20 +20,7 @@ module internal Piece =
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 
     let merge a b =
-        let mergedStart = 
-            if a.Span.Start < b.Span.Start 
-            then a.Span.Start
-            else b.Span.Start
-
-        let fStop = Span.stop a.Span
-        let pStop = Span.stop b.Span
-        let mergeStop =
-            if pStop > fStop
-            then pStop
-            else fStop
-
-        let mergeSpan = Span.createWithStop mergedStart mergeStop
-        createWithSpan mergeSpan
+        createWithSpan <| Span.createWithLength b.Span.Start (a.Span.Length + b.Span.Length)
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.

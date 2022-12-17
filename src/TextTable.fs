@@ -6,6 +6,10 @@ module TextTable =
     /// Creates an empty TextTableType.
     let empty = {Buffer = Buffer.empty; Pieces = ListZipper.empty}
 
+    /// Checks if a TextTableType can be consolidated.
+    let isConsolidated table =
+        table.Pieces.Focus.Length + table.Pieces.Path.Length > 1
+
     /// Create a TextTableType given a string.
     let create str =
         if str = ""
@@ -50,8 +54,4 @@ module TextTable =
 
         member this.Substring(startIndex, length) =
             let span = Span.createWithLength startIndex length
-            ListZipper.textSlice span this
-
-        member this.CharAt(index) =
-            let span = Span.createWithLength index 1
             ListZipper.textSlice span this

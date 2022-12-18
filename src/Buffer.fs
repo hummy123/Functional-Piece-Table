@@ -1,11 +1,19 @@
 ﻿namespace PieceTable
 
 open Types
+open System.Globalization
 
 (* Inspired by Chris Okasaki's Red Black Tree design and F# implementation at 
  * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
 
 module Buffer =
+    type StringInfo with
+        member inline this.Length = this.LengthInTextElements
+        member this.GetSlice(start: int option, finish: int option) =
+            let start = defaultArg start 0
+            let finish = defaultArg finish (this.Length - start)
+            this.SubstringByTextElements(start, finish)
+
     (* Discriminated union for handling different append cases. *)
     [<Struct>]
     type private AppendResult =
@@ -72,16 +80,18 @@ module Buffer =
             | Tree(c, a, curKey, curVal, b) -> 
                 match b with
                 | Empty ->
-                    if curVal.Length + str.Length <= MaxBufferLength
+                    let curValInfo = StringInfo curVal 
+                    let strInfo = StringInfo str
+                    if curValInfo.Length + strInfo.Length <= MaxBufferLength
                     then 
                         let newTree = balance(c, a, curKey, curVal + str, b)
                         FullAdd(newTree)
-                    elif curVal.Length = MaxBufferLength
+                    elif curValInfo.Length = MaxBufferLength
                     then BufferWasFull(curKey)
-                    elif curVal.Length < MaxBufferLength && curVal.Length + str.Length > MaxBufferLength
+                    elif curValInfo.Length < MaxBufferLength && curValInfo.Length + strInfo.Length > MaxBufferLength
                     then 
-                        let remainingBufferLength = MaxBufferLength - curVal.Length
-                        let fitString = str[0..remainingBufferLength - 1]
+                        let remainingBufferLength = MaxBufferLength - curValInfo.Length
+                        let fitString = strInfo[0..remainingBufferLength]
                         let newTree = Tree(c, a, curKey, curVal + fitString, b)
                         PartialAdd(newTree, curKey, fitString.Length)
                     else failwith "unexpected Buffer.tryAppend case"

@@ -15,7 +15,11 @@ module Program =
     [<EntryPoint>]
     let main _ =  
         let table = TextTable.create ""
-        let table = table.Insert(0, text)
-        let table = table.Insert(0, insText)
+        let baseText = "12345678"
+        let testText = (String.replicate (128 * 3) baseText)[1..]
+
+        let buffer = Buffer.createWithString testText
+        let buffer = Buffer.append baseText buffer
+        let bufferText = Buffer.text buffer
         printfn "%s" <| table.Text()
         0

@@ -1,19 +1,13 @@
 ﻿namespace PieceTable
 
-open Types
 open System.Globalization
+open Types
+open StringInfoExtensions
 
 (* Inspired by Chris Okasaki's Red Black Tree design and F# implementation at 
  * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
-
+ 
 module Buffer =
-    type StringInfo with
-        member inline this.Length = this.LengthInTextElements
-        member this.GetSlice(start: int option, finish: int option) =
-            let start = defaultArg start 0
-            let finish = defaultArg finish (this.Length - start)
-            this.SubstringByTextElements(start, finish)
-
     (* Discriminated union for handling different append cases. *)
     [<Struct>]
     type private AppendResult =
@@ -53,6 +47,7 @@ module Buffer =
     /// Asumes that the largest buffer in the tree is already filled to max buffer length.
     /// There is also no harm using this if the string is less than the max buffer length.
     let private insertLongString (str: string) maxKeyInTree tree =
+        let str = StringInfo str
         let rec loop curKey loopNum start newTree =
             if start >= str.Length 
             then newTree
@@ -91,7 +86,7 @@ module Buffer =
                     elif curValInfo.Length < MaxBufferLength && curValInfo.Length + strInfo.Length > MaxBufferLength
                     then 
                         let remainingBufferLength = MaxBufferLength - curValInfo.Length
-                        let fitString = strInfo[0..remainingBufferLength]
+                        let fitString = strInfo[0..remainingBufferLength - 1]
                         let newTree = Tree(c, a, curKey, curVal + fitString, b)
                         PartialAdd(newTree, curKey, fitString.Length)
                     else failwith "unexpected Buffer.tryAppend case"

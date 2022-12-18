@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="StringInfoExtensions.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Span.fs" />
 	<Compile Include="Buffer.fs" />

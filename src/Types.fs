@@ -1,5 +1,7 @@
 ﻿namespace PieceTable
 
+open System.Globalization
+
 (* My benchmarks showed that using structs for small types,
  * and for discriminated unions where applicable was slightly faster. *)
 module Types =
@@ -31,7 +33,7 @@ module Types =
     type BufferLength = int
     type InsertedLength = int
     type Key = int (* The node's index (0, 1, 2, 3, etc.). *)
-    type Value = string
+    type Value = StringInfo
 
     (* Buffer collection as a red black tree. *)
     [<Struct>]

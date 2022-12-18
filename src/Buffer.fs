@@ -46,13 +46,12 @@ module Buffer =
     /// by splitting the string and adding it to multiple buffer nodes.
     /// Asumes that the largest buffer in the tree is already filled to max buffer length.
     /// There is also no harm using this if the string is less than the max buffer length.
-    let private insertLongString (str: string) maxKeyInTree tree =
-        let str = StringInfo str
+    let private insertLongString (str: StringInfo) maxKeyInTree tree =
         let rec loop curKey loopNum start newTree =
             if start >= str.Length 
             then newTree
             else
-                let subStr = str[start..(loopNum * MaxBufferLength) - 1]
+                let subStr = str[start..(loopNum * MaxBufferLength) - 1] |> StringInfo
                 let nextKey = curKey + 1
                 let nextLoopNum = loopNum + 1
                 let nextTree = insert nextKey subStr newTree
@@ -67,27 +66,27 @@ module Buffer =
                 if str.Length >= MaxBufferLength
                 then 
                     let nextIndex = MaxBufferLength
-                    let newTree = Tree(R, Empty, 0, str[..MaxBufferLength - 1], Empty)
+                    let str = str[..MaxBufferLength - 1] |> StringInfo
+                    let newTree = Tree(R, Empty, 0, str, Empty)
                     PartialAdd(newTree, 0, nextIndex)
                 else 
-                    let newTree = Tree(R, Empty, 0, str, Empty)
+                    let newTree = Tree(R, Empty, 0, StringInfo str, Empty)
                     FullAdd(newTree)
             | Tree(c, a, curKey, curVal, b) -> 
                 match b with
                 | Empty ->
-                    let curValInfo = StringInfo curVal 
                     let strInfo = StringInfo str
-                    if curValInfo.Length + strInfo.Length <= MaxBufferLength
+                    if curVal.Length + strInfo.Length <= MaxBufferLength
                     then 
-                        let newTree = balance(c, a, curKey, curVal + str, b)
+                        let newTree = balance(c, a, curKey, curVal.Concat str, b)
                         FullAdd(newTree)
-                    elif curValInfo.Length = MaxBufferLength
+                    elif curVal.Length = MaxBufferLength
                     then BufferWasFull(curKey)
-                    elif curValInfo.Length < MaxBufferLength && curValInfo.Length + strInfo.Length > MaxBufferLength
+                    elif curVal.Length < MaxBufferLength && curVal.Length + strInfo.Length > MaxBufferLength
                     then 
-                        let remainingBufferLength = MaxBufferLength - curValInfo.Length
+                        let remainingBufferLength = MaxBufferLength - curVal.Length
                         let fitString = strInfo[0..remainingBufferLength - 1]
-                        let newTree = Tree(c, a, curKey, curVal + fitString, b)
+                        let newTree = Tree(c, a, curKey, curVal.Concat fitString, b)
                         PartialAdd(newTree, curKey, fitString.Length)
                     else failwith "unexpected Buffer.tryAppend case"
                 | Tree(_, _, _, _, _) ->
@@ -104,10 +103,11 @@ module Buffer =
         | FullAdd tree -> tree
         | PartialAdd(partialTree, maxKey, insLength) ->
             (* Insert the rest of the string into the tree. *)
-            insertLongString str[insLength..] maxKey partialTree 
+            let str = StringInfo str[insLength..]
+            insertLongString str maxKey partialTree 
         | BufferWasFull maxKey ->
             (* Insert the string into the tree. *)
-            insertLongString str maxKey tree
+            insertLongString (StringInfo str) maxKey tree
 
     let append str buffer =
         let tree = add str buffer.Tree
@@ -186,7 +186,7 @@ module Buffer =
             match tree with
             | Empty -> accText
             | Tree(_,l,_,v,r) ->
-                (traverse l accText) + v |> traverse r
+                (traverse l accText) + v.String |> traverse r
         traverse buffer.Tree ""
 
     /// OOP API for substring method for testing, as SpanType is internal to this assembly.

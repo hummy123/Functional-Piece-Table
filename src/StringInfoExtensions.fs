@@ -23,7 +23,7 @@ module StringInfoExtensions =
         /// Returns LengthInTextElements.
         member inline this.Length = this.LengthInTextElements
 
-        /// Gets a slice of a StringInfo using the same syntax one would can use 
+        /// Gets a slice of a StringInfo using the same syntax one can 
         /// for a String, but respects Unicode code points.
         member this.GetSlice(start: int option, finish: int option) =
             let start, finish = ComputeSlice 0 start finish this.LengthInTextElements

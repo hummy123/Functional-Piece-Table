@@ -41,3 +41,18 @@ let ``Can get different substrings there are three nodes in buffer`` () =
 
     (* Can get substring including all nodes. *)
     Assert.Equal(str, buffer.Substring(0, (65535 * 3)))
+
+[<Fact>]
+let ``Buffer returns a code point instead of splitting when we try to substring`` () =
+    let str = "123😊567"
+    let buffer = Buffer.createWithString str
+    
+    let t0 = buffer.Substring(0, 3)
+    let t1 = buffer.Substring(0, 4)
+    let t2 = buffer.Substring(2, 3)
+    let t3 = buffer.Substring(4, 2)
+
+    Assert.Equal("123", t0) (* Can get before emoji. *)
+    Assert.Equal("123😊", t1) (* Can get emoji. *)
+    Assert.Equal("3😊5", t2) (* Can get around emoji. *)
+    Assert.Equal("56", t3) (* Can get after emoji. *)

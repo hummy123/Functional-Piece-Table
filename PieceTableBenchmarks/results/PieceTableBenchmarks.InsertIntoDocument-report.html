@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>PieceTableBenchmarks.InsertIntoDocument-20221219-124125</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.13.2, OS=Windows 11 (10.0.22000.1335/21H2)
+AMD Ryzen 3 5300U with Radeon Graphics, 1 CPU, 8 logical and 4 physical cores
+.NET SDK=7.0.101
+  [Host]     : .NET 6.0.11 (6.0.1122.52304), X64 RyuJIT AVX2 DEBUG
+  Job-JUFKHE : .NET 6.0.11 (6.0.1122.52304), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>InvocationCount=1  UnrollFactor=1  
+</code></pre>
+
+<table>
+<thead><tr><th>           Method</th><th>insertTimes</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>InsertIntoTableAtStart</td><td>100</td><td>4.452 &mu;s</td><td>0.7724 &mu;s</td><td>2.1913 &mu;s</td><td>3.700 &mu;s</td><td>1.84 KB</td>
+</tr><tr><td>InsertIntoTableAtMiddle</td><td>100</td><td>3.819 &mu;s</td><td>0.4189 &mu;s</td><td>1.1745 &mu;s</td><td>3.300 &mu;s</td><td>1.84 KB</td>
+</tr><tr><td>InsertIntoTableAtEnd</td><td>100</td><td>3.393 &mu;s</td><td>0.3150 &mu;s</td><td>0.8516 &mu;s</td><td>3.100 &mu;s</td><td>1.84 KB</td>
+</tr><tr><td>InsertIntoTableAtStart</td><td>1000</td><td>11.199 &mu;s</td><td>1.7656 &mu;s</td><td>5.1781 &mu;s</td><td>11.400 &mu;s</td><td>3.09 KB</td>
+</tr><tr><td>InsertIntoTableAtMiddle</td><td>1000</td><td>13.106 &mu;s</td><td>2.0057 &mu;s</td><td>5.9139 &mu;s</td><td>12.900 &mu;s</td><td>3.09 KB</td>
+</tr><tr><td>InsertIntoTableAtEnd</td><td>1000</td><td>12.924 &mu;s</td><td>1.6731 &mu;s</td><td>4.8538 &mu;s</td><td>12.750 &mu;s</td><td>3.09 KB</td>
+</tr><tr><td>InsertIntoTableAtStart</td><td>10000</td><td>12.944 &mu;s</td><td>1.0899 &mu;s</td><td>3.0018 &mu;s</td><td>12.650 &mu;s</td><td>3.27 KB</td>
+</tr><tr><td>InsertIntoTableAtMiddle</td><td>10000</td><td>11.097 &mu;s</td><td>1.0743 &mu;s</td><td>3.0651 &mu;s</td><td>9.900 &mu;s</td><td>3.59 KB</td>
+</tr><tr><td>InsertIntoTableAtEnd</td><td>10000</td><td>10.582 &mu;s</td><td>0.7600 &mu;s</td><td>2.0931 &mu;s</td><td>9.600 &mu;s</td><td>3.59 KB</td>
+</tr></tbody></table>
+</body>
+</html>

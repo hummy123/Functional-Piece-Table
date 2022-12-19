@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>PieceTableBenchmarks.TableOperationsWhenSetupAlwaysInsertsAtEnd-20221219-123510</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.13.2, OS=Windows 11 (10.0.22000.1335/21H2)
+AMD Ryzen 3 5300U with Radeon Graphics, 1 CPU, 8 logical and 4 physical cores
+.NET SDK=7.0.101
+  [Host]     : .NET 6.0.11 (6.0.1122.52304), X64 RyuJIT AVX2 DEBUG
+  Job-IWUGBN : .NET 6.0.11 (6.0.1122.52304), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>InvocationCount=1  UnrollFactor=1  
+</code></pre>
+
+<table>
+<thead><tr><th>               Method</th><th>insertTimes</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>InsertIntoTableAtStart</td><td>100</td><td>2.604 &mu;s</td><td>0.2145 &mu;s</td><td>0.6086 &mu;s</td><td>2.400 &mu;s</td><td>1712 B</td>
+</tr><tr><td>InsertIntoTableAtMiddle</td><td>100</td><td>2.234 &mu;s</td><td>0.0418 &mu;s</td><td>0.0815 &mu;s</td><td>2.200 &mu;s</td><td>1808 B</td>
+</tr><tr><td>InsertIntoTableAtEnd</td><td>100</td><td>2.198 &mu;s</td><td>0.0475 &mu;s</td><td>0.0869 &mu;s</td><td>2.200 &mu;s</td><td>1376 B</td>
+</tr><tr><td>DeleteFromStartOfTable</td><td>100</td><td>1.732 &mu;s</td><td>0.0381 &mu;s</td><td>0.0687 &mu;s</td><td>1.700 &mu;s</td><td>648 B</td>
+</tr><tr><td>DeleteFromMiddleOfTable</td><td>100</td><td>1.911 &mu;s</td><td>0.0401 &mu;s</td><td>0.0937 &mu;s</td><td>1.900 &mu;s</td><td>688 B</td>
+</tr><tr><td>DeleteFromEndOfTable</td><td>100</td><td>2.223 &mu;s</td><td>0.0718 &mu;s</td><td>0.2000 &mu;s</td><td>2.200 &mu;s</td><td>688 B</td>
+</tr><tr><td>GetSubstringAtStartOfTable</td><td>100</td><td>1.676 &mu;s</td><td>0.0533 &mu;s</td><td>0.1477 &mu;s</td><td>1.600 &mu;s</td><td>528 B</td>
+</tr><tr><td>GetSubstringAtMiddleOfTable</td><td>100</td><td>2.011 &mu;s</td><td>0.0552 &mu;s</td><td>0.1539 &mu;s</td><td>2.000 &mu;s</td><td>600 B</td>
+</tr><tr><td>GetSubstringAtEndOfTable</td><td>100</td><td>2.009 &mu;s</td><td>0.0498 &mu;s</td><td>0.1412 &mu;s</td><td>2.000 &mu;s</td><td>592 B</td>
+</tr><tr><td>InsertIntoTableAtStart</td><td>1000</td><td>2.278 &mu;s</td><td>0.0480 &mu;s</td><td>0.1247 &mu;s</td><td>2.200 &mu;s</td><td>2632 B</td>
+</tr><tr><td>InsertIntoTableAtMiddle</td><td>1000</td><td>2.526 &mu;s</td><td>0.0825 &mu;s</td><td>0.2232 &mu;s</td><td>2.400 &mu;s</td><td>2728 B</td>
+</tr><tr><td>InsertIntoTableAtEnd</td><td>1000</td><td>2.468 &mu;s</td><td>0.0528 &mu;s</td><td>0.1373 &mu;s</td><td>2.400 &mu;s</td><td>2632 B</td>
+</tr><tr><td>DeleteFromStartOfTable</td><td>1000</td><td>2.379 &mu;s</td><td>0.1982 &mu;s</td><td>0.5590 &mu;s</td><td>2.200 &mu;s</td><td>648 B</td>
+</tr><tr><td>DeleteFromMiddleOfTable</td><td>1000</td><td>2.096 &mu;s</td><td>0.0770 &mu;s</td><td>0.2028 &mu;s</td><td>2.000 &mu;s</td><td>688 B</td>
+</tr><tr><td>DeleteFromEndOfTable</td><td>1000</td><td>2.424 &mu;s</td><td>0.0732 &mu;s</td><td>0.1941 &mu;s</td><td>2.400 &mu;s</td><td>688 B</td>
+</tr><tr><td>GetSubstringAtStartOfTable</td><td>1000</td><td>1.852 &mu;s</td><td>0.0720 &mu;s</td><td>0.1921 &mu;s</td><td>1.800 &mu;s</td><td>528 B</td>
+</tr><tr><td>GetSubstringAtMiddleOfTable</td><td>1000</td><td>2.233 &mu;s</td><td>0.0740 &mu;s</td><td>0.1949 &mu;s</td><td>2.200 &mu;s</td><td>600 B</td>
+</tr><tr><td>GetSubstringAtEndOfTable</td><td>1000</td><td>2.267 &mu;s</td><td>0.0641 &mu;s</td><td>0.1700 &mu;s</td><td>2.200 &mu;s</td><td>592 B</td>
+</tr><tr><td>InsertIntoTableAtStart</td><td>10000</td><td>3.106 &mu;s</td><td>0.2686 &mu;s</td><td>0.7397 &mu;s</td><td>2.850 &mu;s</td><td>2744 B</td>
+</tr><tr><td>InsertIntoTableAtMiddle</td><td>10000</td><td>3.733 &mu;s</td><td>0.2139 &mu;s</td><td>0.5854 &mu;s</td><td>3.600 &mu;s</td><td>2840 B</td>
+</tr><tr><td>InsertIntoTableAtEnd</td><td>10000</td><td>3.288 &mu;s</td><td>0.3358 &mu;s</td><td>0.9249 &mu;s</td><td>3.000 &mu;s</td><td>2744 B</td>
+</tr><tr><td>DeleteFromStartOfTable</td><td>10000</td><td>4.442 &mu;s</td><td>0.4600 &mu;s</td><td>1.3273 &mu;s</td><td>4.600 &mu;s</td><td>648 B</td>
+</tr><tr><td>DeleteFromMiddleOfTable</td><td>10000</td><td>4.129 &mu;s</td><td>0.2572 &mu;s</td><td>0.7127 &mu;s</td><td>4.100 &mu;s</td><td>688 B</td>
+</tr><tr><td>DeleteFromEndOfTable</td><td>10000</td><td>5.061 &mu;s</td><td>0.4774 &mu;s</td><td>1.3849 &mu;s</td><td>5.300 &mu;s</td><td>688 B</td>
+</tr><tr><td>GetSubstringAtStartOfTable</td><td>10000</td><td>3.276 &mu;s</td><td>0.2793 &mu;s</td><td>0.7967 &mu;s</td><td>3.200 &mu;s</td><td>528 B</td>
+</tr><tr><td>GetSubstringAtMiddleOfTable</td><td>10000</td><td>4.483 &mu;s</td><td>0.2886 &mu;s</td><td>0.7996 &mu;s</td><td>4.400 &mu;s</td><td>600 B</td>
+</tr><tr><td>GetSubstringAtEndOfTable</td><td>10000</td><td>4.296 &mu;s</td><td>0.3925 &mu;s</td><td>1.1197 &mu;s</td><td>4.200 &mu;s</td><td>592 B</td>
+</tr></tbody></table>
+</body>
+</html>

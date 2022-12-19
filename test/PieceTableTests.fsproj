@@ -7,8 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Buffer_Append_Tests.fs" />
-    <Compile Include="Buffer_Substring_Tests.fs" />
     <Compile Include="TextTable_Insert_Tests.fs" />
     <Compile Include="TextTable_Delete_Tests.fs" />
     <Compile Include="TextTable_Substring_Tests.fs" />

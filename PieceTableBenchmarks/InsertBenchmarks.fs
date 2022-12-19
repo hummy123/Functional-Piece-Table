@@ -57,6 +57,6 @@ type Consolidate() =
 module Main = 
     [<EntryPoint>]
     let Main _ =
-        BenchmarkRunner.Run<Insert>() |> ignore
+        //BenchmarkRunner.Run<Insert>() |> ignore
         BenchmarkRunner.Run<Consolidate>() |> ignore
         0

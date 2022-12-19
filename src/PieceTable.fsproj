@@ -6,17 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="StringInfoExtensions.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Span.fs" />
 	<Compile Include="Buffer.fs" />
 	<Compile Include="Piece.fs" />
     <Compile Include="ListZipper.fs" />
 	<Compile Include="TextTable.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="FSharpx.Collections" Version="3.1.0" />
   </ItemGroup>
 
 </Project>

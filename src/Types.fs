@@ -29,7 +29,7 @@ module Types =
         | LessThanSpan
         | GreaterThanSpan
 
-    type BufferType = { HashMap: PersistentHashMap<int, StringInfo>; Length: int }
+    type BufferType = { HashMap: PersistentHashMap<int, string>; Length: int }
 
     type ListZipperType =
         { Focus: PieceType list

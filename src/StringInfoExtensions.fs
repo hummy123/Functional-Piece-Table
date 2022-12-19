@@ -34,3 +34,7 @@ module StringInfoExtensions =
         /// Concatenates a String info with a string, returning a StringInfo.
         member this.Concat(other) =
             this.String + other |> StringInfo
+
+    type System.String with
+        member this.Concat(other) =
+            this + other

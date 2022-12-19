@@ -16,12 +16,12 @@ module Buffer =
     /// An empty buffer.
     let empty = {HashMap = PersistentHashMap.empty; Length = 0}
                 
-    let private insertLongString (str: StringInfo) maxKeyInTree map =
+    let private insertLongString (str: string) maxKeyInTree map =
         let rec loop curKey loopNum start newMap =
             if start >= str.Length 
             then newMap
             else
-                let subStr = str[start..(loopNum * MaxBufferLength) - 1] |> StringInfo
+                let subStr = str[start..(loopNum * MaxBufferLength) - 1]
                 let nextKey = curKey + 1
                 let nextLoopNum = loopNum + 1
                 let nextTree = PersistentHashMap.add nextKey subStr newMap
@@ -29,32 +29,30 @@ module Buffer =
                 loop nextKey nextLoopNum nextStart nextTree
         loop maxKeyInTree 1 0 map
 
-    let private add str (map: PersistentHashMap<int, StringInfo>) =
+    let private add (str: string) (map: PersistentHashMap<int, string>) =
         let mapLength = map.Count - 1
-        let strInfo = StringInfo str
         let curVal = map.Item mapLength
-        if curVal.Length + strInfo.Length <= MaxBufferLength
+        if curVal.Length + str.Length <= MaxBufferLength
         then 
             PersistentHashMap.remove mapLength map
             |> PersistentHashMap.add mapLength (curVal.Concat str)
         elif curVal.Length = MaxBufferLength
-        then insertLongString strInfo mapLength map
-        elif curVal.Length < MaxBufferLength && curVal.Length + strInfo.Length > MaxBufferLength
+        then insertLongString str mapLength map
+        elif curVal.Length < MaxBufferLength && curVal.Length + str.Length > MaxBufferLength
         then 
             let remainingBufferLength = MaxBufferLength - curVal.Length
-            let fitString = strInfo[0..remainingBufferLength - 1]
+            let fitString = str[0..remainingBufferLength - 1]
             PersistentHashMap.remove mapLength map
             |> PersistentHashMap.add mapLength (curVal.Concat fitString)
-            |> insertLongString (StringInfo strInfo[fitString.Length..]) mapLength
+            |> insertLongString (str[fitString.Length..]) mapLength
         else failwith "unexpected Buffer.tryAppend case"
 
     /// Append a string to the buffer.
     let append str buffer =
         if buffer.HashMap.Count = 0
         then 
-            let strInfo = StringInfo str
-            let tree = insertLongString strInfo -1 empty.HashMap
-            { HashMap = tree; Length = strInfo.Length }
+            let tree = insertLongString str -1 empty.HashMap
+            { HashMap = tree; Length = str.Length }
         else
             let tree = add str buffer.HashMap
             { HashMap = tree; Length = buffer.Length + str.Length }
@@ -63,7 +61,7 @@ module Buffer =
     let createWithString str = append str empty
 
     /// Find the string associated with a particular key.
-    let rec private nodeSubstring key startPos endPos (map: PersistentHashMap<int, StringInfo>) = 
+    let rec private nodeSubstring key startPos endPos (map: PersistentHashMap<int, string>) = 
         (map.Item key)[startPos..endPos]
 
     /// Gets text in a buffer at a specific span.

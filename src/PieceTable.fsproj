@@ -6,12 +6,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="UStringTypeExtension.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Span.fs" />
 	<Compile Include="Buffer.fs" />
 	<Compile Include="Piece.fs" />
     <Compile Include="ListZipper.fs" />
 	<Compile Include="TextTable.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NStack.Core" Version="1.0.7" />
   </ItemGroup>
 
 </Project>

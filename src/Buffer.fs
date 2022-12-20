@@ -1,6 +1,8 @@
 ﻿namespace PieceTable
 
 open Types
+open NStack
+open UStringTypeExtension
 
 (* Inspired by Chris Okasaki's Red Black Tree design and F# implementation at 
  * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees *)
@@ -44,9 +46,9 @@ module Buffer =
     /// by splitting the string and adding it to multiple buffer nodes.
     /// Asumes that the largest buffer in the tree is already filled to max buffer length.
     /// There is also no harm using this if the string is less than the max buffer length.
-    let private insertLongString (str: string) maxKeyInTree tree =
+    let private insertLongString (str: ustring) maxKeyInTree tree =
         let rec loop curKey loopNum start newTree =
-            if start >= str.Length 
+            if start >= str.RuneCount 
             then newTree
             else
                 let subStr = str[start..(loopNum * MaxBufferLength) - 1]
@@ -58,10 +60,10 @@ module Buffer =
         loop maxKeyInTree 1 0 tree
 
     /// Append a string to the buffer.
-    let private add (str: string) tree =
+    let private add (str: ustring) tree =
         let rec loop = function
             | Empty -> (* Only ever matched if whole tree is empty. *)
-                if str.Length >= MaxBufferLength
+                if str.RuneCount >= MaxBufferLength
                 then 
                     let nextIndex = MaxBufferLength
                     let newTree = Tree(R, Empty, 0, str[..MaxBufferLength - 1], Empty)
@@ -72,18 +74,18 @@ module Buffer =
             | Tree(c, a, curKey, curVal, b) -> 
                 match b with
                 | Empty ->
-                    if curVal.Length + str.Length <= MaxBufferLength
+                    if curVal.RuneCount + str.RuneCount <= MaxBufferLength
                     then 
                         let newTree = balance(c, a, curKey, curVal + str, b)
                         FullAdd(newTree)
-                    elif curVal.Length = MaxBufferLength
+                    elif curVal.RuneCount = MaxBufferLength
                     then BufferWasFull(curKey)
-                    elif curVal.Length < MaxBufferLength && curVal.Length + str.Length > MaxBufferLength
+                    elif curVal.RuneCount < MaxBufferLength && curVal.RuneCount + str.RuneCount > MaxBufferLength
                     then 
-                        let remainingBufferLength = MaxBufferLength - curVal.Length
+                        let remainingBufferLength = MaxBufferLength - curVal.RuneCount
                         let fitString = str[0..remainingBufferLength - 1]
                         let newTree = Tree(c, a, curKey, curVal + fitString, b)
-                        PartialAdd(newTree, curKey, fitString.Length)
+                        PartialAdd(newTree, curKey, fitString.RuneCount)
                     else failwith "unexpected Buffer.tryAppend case"
                 | Tree(_, _, _, _, _) ->
                     match loop b with
@@ -104,9 +106,10 @@ module Buffer =
             (* Insert the string into the tree. *)
             insertLongString str maxKey tree
 
-    let append str buffer =
+    let append (str: string) buffer =
+        let str = ustring.Make(str)
         let tree = add str buffer.Tree
-        { Tree = tree; Length = buffer.Length + str.Length }
+        { Tree = tree; Length = buffer.Length + str.RuneCount }
                 
     /// Create a buffer with a string.
     let createWithString str = append str empty
@@ -116,7 +119,7 @@ module Buffer =
         | Empty -> ""
         | Tree(_, l, curKey, value, r) ->
             if key = curKey 
-            then value[startPos..endPos] (* Returns valid substring even if end is out of bounds. *)
+            then value[startPos..endPos].ToString() (* Returns valid substring even if end is out of bounds. *)
             elif key < curKey 
             then nodeSubstring key startPos endPos l
             else nodeSubstring key startPos endPos r
@@ -159,7 +162,7 @@ module Buffer =
             match tree with
             | Empty -> acc
             | Tree(_, l, _, v, r) ->
-                (traverse l acc) + v.Length |> traverse r
+                (traverse l acc) + v.RuneCount |> traverse r
         traverse buffer.Tree 0
 
     /// For testing/debugging purposes. 
@@ -170,7 +173,7 @@ module Buffer =
             match tree with
             | Empty -> accList
             | Tree(_,l,_,v,r) ->
-                (traverse l accList) @ [v.Length] |> traverse r
+                (traverse l accList) @ [v.RuneCount] |> traverse r
         traverse buffer.Tree []
 
     /// For testing/debugging purposes, returns all text in a buffer through an in-order traversal.
@@ -181,7 +184,7 @@ module Buffer =
             match tree with
             | Empty -> accText
             | Tree(_,l,_,v,r) ->
-                (traverse l accText) + v |> traverse r
+                (traverse l accText) + v.ToString() |> traverse r
         traverse buffer.Tree ""
 
     /// OOP API for substring method for testing, as SpanType is internal to this assembly.

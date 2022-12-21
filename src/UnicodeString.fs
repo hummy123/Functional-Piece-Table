@@ -42,19 +42,19 @@ module UnicodeString =
             | Unicode a, Plain b -> a.String + b |> StringInfo |> Unicode
             | Unicode a, Unicode b -> a.String + b.String |> StringInfo |> Unicode
 
-        member this.Length =
+        member inline this.Length =
             match this with
             | Plain s -> s.Length
             | Unicode s -> s.LengthInTextElements
 
-        member this.GetSlice(start: int option, finish: int option) =
+        member inline this.GetSlice(start: int option, finish: int option) =
             let start, finish = ComputeSlice 0 start finish this.Length
             match this with
             | Plain s -> s[start..finish]
             | Unicode s -> s[start..finish]
 
     /// Creates a new UnicodeStringType instance.
-    let create (str: string) =
+    let inline create (str: string) =
         let strInfo = StringInfo str
         if strInfo.LengthInTextElements = str.Length
         then Plain str

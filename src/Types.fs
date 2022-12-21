@@ -1,6 +1,6 @@
 ﻿namespace PieceTable
 
-open NStack
+open UnicodeString
 
 (* My benchmarks showed that using structs for small types,
  * and for discriminated unions where applicable was slightly faster. *)
@@ -33,13 +33,15 @@ module Types =
     type BufferLength = int
     type InsertedLength = int
     type Key = int (* The node's index (0, 1, 2, 3, etc.). *)
-    type Value = ustring
+    type Value = UnicodeStringType
 
     (* Buffer collection as a red black tree. *)
     [<Struct>]
     type Colour = R | B
 
-    type BufferTree = Empty | Tree of Colour * BufferTree * Key * ustring * BufferTree
+    type BufferTree =
+        | Empty 
+        | Tree of Colour * BufferTree * Key * UnicodeStringType * BufferTree
 
     (* Interface type to tree storing length as well. *)
     type BufferType = { Tree: BufferTree; Length: BufferLength }

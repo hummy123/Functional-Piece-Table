@@ -12,6 +12,5 @@ This particular implementation contains a Piece Table with the Pieces stored in 
 Third party libraries used in this implementation include:
 
 - [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) for performance tests.
-- [NStack](https://github.com/gui-cs/NStack) for enabling Unicode CodePoint support.
 
-The associated licenses can be found in the third-party-licenses directory within this repository's root.
+The associated license can be found in the third-party-licenses directory within this repository's root.

@@ -43,7 +43,8 @@ module TextTable =
             Pieces = pieces
             Buffer = buffer }
 
-    /// Find the first occurrence of a string in the table.
+    /// Find the first occurrence of a string in the table  returns an int representing the index.
+    /// Returns -1 if the given string was not found.
     let indexOf (str: string) (table: TextTableType) =
         let rec loop curPos =
             if curPos >= table.Buffer.Length then
@@ -67,11 +68,12 @@ module TextTable =
         then (text table).IndexOf(str, StringComparison.OrdinalIgnoreCase)
         else loop 0
 
-    /// Find the last occurrence of a string from the table.
+    /// Find the last occurrence of a string from the table and returns an int representing the index.
+    /// Returns -1 if the given string was not found.
     let lastIndexOf (str: string) (table: TextTableType) = 
         let rec loop curPos = 
-            if curPos < 0 then
-                -1
+            if curPos < 0 
+            then -1
             else
                 let searchStartPos = curPos - Buffer.MaxBufferLength
                 let searchSpan = Span.createWithLength searchStartPos Buffer.MaxBufferLength
@@ -89,6 +91,23 @@ module TextTable =
         then (text table).LastIndexOf(str)
         else loop (table.Buffer.Length - 1)
 
+    /// Finds all occurrences of a string in the table and returns a list containing each index in order.
+    /// Returns an empty list if the given string was not found.
+    let allIndexesOf (str: string) (table: TextTableType) =
+        let rec loop curPos acc =
+            if curPos < 0
+            then acc
+            else
+                let searchStartPos = curPos - Buffer.MaxBufferLength
+                let searchSpan = Span.createWithLength searchStartPos Buffer.MaxBufferLength
+                let searchText = ListZipper.textSlice searchSpan table
+                let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
+                if isFound >= 0
+                then loop isFound (isFound :: acc)
+                else loop searchStartPos acc
+
+        loop (table.Buffer.Length - 1) []
+
     (* Alternative OOP API. *)
     type TextTableType with
 
@@ -105,3 +124,4 @@ module TextTable =
 
         member this.IndexOf(str) = indexOf str this
         member this.LastIndexOf(str) = lastIndexOf str this
+        member this.AllIndexesOf(str) = allIndexesOf str this

@@ -50,7 +50,11 @@ module TextTable =
             if curPos >= table.Buffer.Length then
                 -1
             else
-                let searchSpan = Span.createWithLength curPos Buffer.MaxBufferLength
+                let searchLength = 
+                    if curPos + Buffer.MaxBufferLength < table.Buffer.Length
+                    then Buffer.MaxBufferLength
+                    else table.Buffer.Length - curPos
+                let searchSpan = Span.createWithLength curPos searchLength
                 let searchText = ListZipper.textSlice searchSpan table
                 let isFound = searchText.IndexOf(str, StringComparison.OrdinalIgnoreCase)
                 if isFound >= 0
@@ -75,7 +79,10 @@ module TextTable =
             if curPos < 0 
             then -1
             else
-                let searchStartPos = curPos - Buffer.MaxBufferLength
+                let searchStartPos = 
+                    if curPos >= Buffer.MaxBufferLength
+                    then curPos - Buffer.MaxBufferLength
+                    else 0
                 let searchSpan = Span.createWithLength searchStartPos Buffer.MaxBufferLength
                 let searchText = ListZipper.textSlice searchSpan table
                 let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
@@ -98,7 +105,10 @@ module TextTable =
             if curPos < 0
             then acc
             else
-                let searchStartPos = curPos - Buffer.MaxBufferLength
+                let searchStartPos = 
+                    if curPos >= Buffer.MaxBufferLength
+                    then curPos - Buffer.MaxBufferLength
+                    else 0
                 let searchSpan = Span.createWithLength searchStartPos Buffer.MaxBufferLength
                 let searchText = ListZipper.textSlice searchSpan table
                 let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)

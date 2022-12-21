@@ -1,6 +1,7 @@
 namespace PieceTable
 
 open Types
+open System
 
 module TextTable =
     /// Creates an empty TextTableType.
@@ -42,6 +43,52 @@ module TextTable =
             Pieces = pieces
             Buffer = buffer }
 
+    /// Find the first occurrence of a string in the table.
+    let indexOf (str: string) (table: TextTableType) =
+        let rec loop curPos =
+            if curPos >= table.Buffer.Length then
+                -1
+            else
+                let searchSpan = Span.createWithLength curPos Buffer.MaxBufferLength
+                let searchText = ListZipper.textSlice searchSpan table
+                let isFound = searchText.IndexOf(str, StringComparison.OrdinalIgnoreCase)
+                if isFound >= 0
+                then isFound
+                else 
+                    (* We start oour next search at the last occurrence 
+                     * in this string, of the first letter in the search string
+                     * if possible; else start search at next node. *)
+                    let lastPosOfFirstChar = searchText.LastIndexOf(str[0].ToString(), StringComparison.OrdinalIgnoreCase)
+                    if lastPosOfFirstChar > -1
+                    then loop lastPosOfFirstChar
+                    else loop (curPos + Buffer.MaxBufferLength) 
+
+        if table.Buffer.Length <= Buffer.MaxBufferLength
+        then (text table).IndexOf(str, StringComparison.OrdinalIgnoreCase)
+        else loop 0
+
+    /// Find the last occurrence of a string from the table.
+    let lastIndexOf (str: string) (table: TextTableType) = 
+        let rec loop curPos = 
+            if curPos < 0 then
+                -1
+            else
+                let searchStartPos = curPos - Buffer.MaxBufferLength
+                let searchSpan = Span.createWithLength searchStartPos Buffer.MaxBufferLength
+                let searchText = ListZipper.textSlice searchSpan table
+                let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
+                if isFound >= 0
+                then isFound
+                else 
+                    let firstPosOfLastChar = searchText.IndexOf(str[str.Length - 1], StringComparison.OrdinalIgnoreCase)
+                    if firstPosOfLastChar > -1
+                    then loop firstPosOfLastChar
+                    else loop searchStartPos
+
+        if table.Buffer.Length <= Buffer.MaxBufferLength
+        then (text table).LastIndexOf(str)
+        else loop (table.Buffer.Length - 1)
+
     (* Alternative OOP API. *)
     type TextTableType with
 
@@ -55,3 +102,6 @@ module TextTable =
         member this.Substring(startIndex, length) =
             let span = Span.createWithLength startIndex length
             ListZipper.textSlice span this
+
+        member this.IndexOf(str) = indexOf str this
+        member this.LastIndexOf(str) = lastIndexOf str this

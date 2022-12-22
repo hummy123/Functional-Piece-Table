@@ -84,3 +84,29 @@ let ``TextTable.lastIndexOf = string.LastIndexOf when substring crosses buffer n
     let expected = strToSearchIn.LastIndexOf(substrToSearchFor)
     let actual = TextTable.lastIndexOf substrToSearchFor <| TextTable.create strToSearchIn
     Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``TextTable.allIndexesOf returns list equal to string length when every character matches`` () =
+    let str = String.replicate (Buffer.MaxBufferLength * 2) "A"
+    let substrToSearchFor = "A"
+    let expectedLength = str.Length
+    let result: int list = TextTable.allIndexesOf substrToSearchFor <| TextTable.create str
+    Assert.Equal(expectedLength, result.Length)
+
+[<Fact>]
+let ``TextTable.allIndexOf returns list from [0..MaxBufferLength * 2] when every character matches and string fully fits two buffers`` () =
+    let str = String.replicate (Buffer.MaxBufferLength * 2) "A"
+    let substrToSearchFor = "A"
+    let expected = [0..(Buffer.MaxBufferLength * 2) - 1] :> IEnumerable
+
+    let table = TextTable.create str
+    let result = TextTable.allIndexesOf substrToSearchFor table :> IEnumerable
+    Assert.Equal(expected, result)
+
+[<Fact>]
+let ``TextTable.allIndexesOf returns emptty list when there are no matches`` () =
+    let str = String.replicate (Buffer.MaxBufferLength * 2) "A"
+    let substrToSearchFor = "1"
+    let expected: int list = []
+    let result: int list = TextTable.allIndexesOf substrToSearchFor <| TextTable.create str
+    Assert.Equal(expected :> IEnumerable, result :> IEnumerable)

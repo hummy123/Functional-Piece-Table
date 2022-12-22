@@ -43,7 +43,7 @@ module TextTable =
             Pieces = pieces
             Buffer = buffer }
 
-    /// Find the first occurrence of a string in the table  returns an int representing the index.
+    /// Find the first occurrence of a string in the table returns an int representing the index.
     /// Returns -1 if the given string was not found.
     let indexOf (str: string) (table: TextTableType) =
         let rec loop curPos =
@@ -76,10 +76,11 @@ module TextTable =
     /// Returns -1 if the given string was not found.
     let lastIndexOf (str: string) (table: TextTableType) = 
         let rec loop curPos = 
-            if curPos < 0 
-            then -1
-            elif curPos = 0
-            then str[..0].LastIndexOf(str)
+            if curPos <= 0
+            then 
+                let searchSpan = Span.createWithLength 0 1
+                let searchText = ListZipper.textSlice searchSpan table 
+                searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
             else
                 let searchStartPos = 
                     if curPos >= Buffer.MaxBufferLength
@@ -103,24 +104,41 @@ module TextTable =
     /// Finds all occurrences of a string in the table and returns a list containing each index in order.
     /// Returns an empty list if the given string was not found.
     let allIndexesOf (str: string) (table: TextTableType) =
-        let rec loop curPos acc =
-            if curPos < 0
-            then acc
-            else
-                let searchStartPos = 
-                    if curPos >= Buffer.MaxBufferLength
-                    then curPos - Buffer.MaxBufferLength
-                    else 0
-                let searchSpan = Span.createWithLength searchStartPos Buffer.MaxBufferLength
-                let searchText = ListZipper.textSlice searchSpan table
+        let rec loop curStart curLength (acc: int list) =
+            if curStart = 0 
+            then
+                let searchSpan = Span.createWithLength 0 curLength
+                let searchText = ListZipper.textSlice searchSpan table 
                 let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
-                if isFound >= 0
-                then
-                    let foundPos = isFound + searchStartPos
-                    loop foundPos (foundPos :: acc)
-                else loop searchStartPos acc
+                if isFound = -1
+                then acc
+                else 
+                    loop curStart (curLength - 1) (isFound::acc)
+            elif curStart <= Buffer.MaxBufferLength * -1
+            then
+                acc
+            elif curStart < 0
+            then
+                let searchSpan = Span.createWithLength 0 (curLength + curStart)
+                let searchText = ListZipper.textSlice searchSpan table 
+                let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
+                if isFound = -1
+                then acc
+                else 
+                    loop 0 (searchSpan.Length - 1) (isFound::acc)
+            else
+                let searchSpan = Span.createWithLength curStart curLength
+                let searchText = ListZipper.textSlice searchSpan table 
+                let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
+                if isFound = -1
+                then loop (curStart - 1) Buffer.MaxBufferLength acc
+                else
+                    let findPos = isFound + curStart
+                    loop (curStart - 1) Buffer.MaxBufferLength (findPos::acc)
 
-        loop (table.Buffer.Length) []
+        if table.Buffer.Length <= Buffer.MaxBufferLength
+        then loop 0 table.Buffer.Length []
+        else loop (table.Buffer.Length - Buffer.MaxBufferLength) Buffer.MaxBufferLength []
 
     (* Alternative OOP API. *)
     type TextTableType with

@@ -13,9 +13,8 @@ let stringGen min max =
 
 let substringGen (str: string) =
     if str.Length % 2 = 0 then
-        let halfLength = str.Length / 2
-        let min = Gen.choose(0, halfLength - 1) |> Gen.sample 0 1 |> Seq.exactlyOne
-        let max = Gen.choose(halfLength, str.Length - 1) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let min = Gen.choose(0, str.Length - 1) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let max = Gen.choose(min, str.Length - 1) |> Gen.sample 0 1 |> Seq.exactlyOne
         str[min..max]
     else
         stringGen 1 20    

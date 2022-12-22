@@ -89,7 +89,7 @@ module TextTable =
                 let searchText = ListZipper.textSlice searchSpan table
                 let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
                 if isFound >= 0
-                then isFound
+                then isFound + searchStartPos
                 else 
                     let firstPosOfLastChar = searchText.IndexOf(str[str.Length - 1], StringComparison.OrdinalIgnoreCase)
                     if firstPosOfLastChar > -1
@@ -98,7 +98,7 @@ module TextTable =
 
         if table.Buffer.Length <= Buffer.MaxBufferLength
         then (text table).LastIndexOf(str)
-        else loop (table.Buffer.Length - 1)
+        else loop (table.Buffer.Length)
 
     /// Finds all occurrences of a string in the table and returns a list containing each index in order.
     /// Returns an empty list if the given string was not found.
@@ -115,10 +115,12 @@ module TextTable =
                 let searchText = ListZipper.textSlice searchSpan table
                 let isFound = searchText.LastIndexOf(str, StringComparison.OrdinalIgnoreCase)
                 if isFound >= 0
-                then loop isFound (isFound :: acc)
+                then
+                    let foundPos = isFound + searchStartPos
+                    loop foundPos (foundPos :: acc)
                 else loop searchStartPos acc
 
-        loop (table.Buffer.Length - 1) []
+        loop (table.Buffer.Length) []
 
     (* Alternative OOP API. *)
     type TextTableType with

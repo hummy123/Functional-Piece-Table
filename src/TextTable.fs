@@ -78,6 +78,8 @@ module TextTable =
         let rec loop curPos = 
             if curPos < 0 
             then -1
+            elif curPos = 0
+            then str[..0].LastIndexOf(str)
             else
                 let searchStartPos = 
                     if curPos >= Buffer.MaxBufferLength

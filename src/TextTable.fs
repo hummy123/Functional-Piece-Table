@@ -58,7 +58,7 @@ module TextTable =
                 let searchText = ListZipper.textSlice searchSpan table
                 let isFound = searchText.IndexOf(str, StringComparison.OrdinalIgnoreCase)
                 if isFound >= 0
-                then isFound
+                then isFound + curPos
                 else 
                     (* We start oour next search at the last occurrence 
                      * in this string, of the first letter in the search string

@@ -48,7 +48,7 @@ let ``TextTable.indexOf = string.IndexOf for strings fitting in three buffers`` 
         Assert.Equal(expected, actual)
 
 [<Fact>]
-let ``TextTable.indexOf = string.IndexOf fwhen substring crosses buffer nodes`` () =
+let ``TextTable.indexOf = string.IndexOf when substring crosses buffer nodes`` () =
     let baseString = String.replicate (Buffer.MaxBufferLength - 5) "a"
     let substrToSearchFor = String.replicate 10 "b"
     let strToSearchIn = baseString + substrToSearchFor

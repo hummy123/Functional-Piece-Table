@@ -24,13 +24,6 @@ module UnicodeString =
 
         low, high
 
-    type StringInfo with
-        member this.GetSlice(start, finish) =
-            let start, finish = ComputeSlice 0 start finish this.LengthInTextElements
-            let len = finish - start + 1
-            if len <= 0 then ""
-            else this.SubstringByTextElements(start, len)
-
     type UnicodeStringType = 
         | Plain of string
         | Unicode of StringInfo
@@ -49,9 +42,12 @@ module UnicodeString =
 
         member inline this.GetSlice(start: int option, finish: int option) =
             let start, finish = ComputeSlice 0 start finish this.Length
-            match this with
-            | Plain s -> s[start..finish]
-            | Unicode s -> s[start..finish]
+            let len = finish - start + 1
+            if len <= 0 then ""
+            else
+                match this with
+                | Plain s -> s.Substring(start, len)
+                | Unicode s -> s.SubstringByTextElements(start, len)
 
     /// Creates a new UnicodeStringType instance.
     let inline create (str: string) =

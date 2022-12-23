@@ -18,12 +18,12 @@ module TextTable =
             let pieces = ListZipper.createWithPiece (Piece.create true 0 str.Length)
             {Buffer = buffer; Pieces = pieces}
 
-    (* TextTable IO functions and a text functoin. *)
-    /// Retrieves all of the text from a table as a string.
-    /// It is recommended to use the substring method for 
-    /// text retrieval in most cases for performance reasons.
-    let text table = ListZipper.text table
+    (* TextTable IO functions. *)
+    /// Save a TextTableType using the specified StreamWriter.
+    let saveFile table (writer: StreamWriter) =
+        ListZipper.write table writer
 
+    (* TextTable consolidation functions. *)
     /// Checks if a TextTableType can be consolidated.
     let inline private canBeConsolidated table =
         table.Pieces.Focus.Length + table.Pieces.Path.Length > 1
@@ -55,7 +55,8 @@ module TextTable =
         else
             table
 
-    /// Returns a new table with the string inserted.
+    (* TextTable "modification" functions. *)
+    /// Returns a new TextTableType with the string inserted.
     let insert index (str: string) (table: TextTableType) =
         let buffer = Buffer.append str table.Buffer
         let piece = Piece.create false (buffer.Length - str.Length) str.Length
@@ -64,6 +65,22 @@ module TextTable =
         { table with
             Pieces = pieces
             Buffer = buffer }
+
+    /// Returns a new TextTableType with the text in the given range removed.
+    let delete startIndex length table =
+        let span = Span.createWithLength startIndex length
+        ListZipper.delete span table
+
+    (* TextTable read functions. *)
+    /// Retrieves all of the text from a table as a string.
+    /// It is recommended to use the substring method for 
+    /// text retrieval in most cases for performance reasons.
+    let text table = ListZipper.text table
+
+    /// Returns a substring from the table.
+    let substring startIndex length table = 
+        let span = Span.createWithLength startIndex length
+        ListZipper.textSlice span table
 
     /// Find the first occurrence of a string in the table returns an int representing the index.
     /// Returns -1 if the given string was not found.

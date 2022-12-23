@@ -192,11 +192,11 @@ module ListZipper =
     let text table = textBuilder (fun _ -> ()) table
 
     /// Writes all text in the table to a file using a TextWriter instance.
-    let write table (writer: TextWriter) =
+    let write table (writer: StreamWriter) =
         let writeFunc (str: string) =
             writer.Write(str)
         textBuilder writeFunc table |> ignore
-        writer.DisposeAsync()
+        writer.Close()
 
     /// Returns text within the span's range located on the path (zipper's left).
     let private textSliceLeft span table =

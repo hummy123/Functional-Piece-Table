@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>PieceTableBenchmarks.DeleteFromDocument-20221223-022643</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.13.2, OS=Windows 11 (10.0.22000.1335/21H2)
+AMD Ryzen 3 5300U with Radeon Graphics, 1 CPU, 8 logical and 4 physical cores
+.NET SDK=7.0.101
+  [Host]     : .NET 6.0.12 (6.0.1222.56807), X64 RyuJIT AVX2 DEBUG
+  Job-GNCVCO : .NET 6.0.12 (6.0.1222.56807), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>InvocationCount=1  UnrollFactor=1  
+</code></pre>
+
+<table>
+<thead><tr><th>           Method</th><th>insertTimes</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>DeleteFromStartOfTable</td><td>100</td><td>3.279 &mu;s</td><td>0.3746 &mu;s</td><td>1.0441 &mu;s</td><td>2.850 &mu;s</td><td>792 B</td>
+</tr><tr><td>DeleteFromMiddleOfTable</td><td>100</td><td>9.823 &mu;s</td><td>0.7246 &mu;s</td><td>2.1136 &mu;s</td><td>9.350 &mu;s</td><td>9320 B</td>
+</tr><tr><td>DeleteFromEndOfTable</td><td>100</td><td>10.608 &mu;s</td><td>0.2157 &mu;s</td><td>0.5085 &mu;s</td><td>10.650 &mu;s</td><td>17384 B</td>
+</tr><tr><td>DeleteFromStartOfTable</td><td>1000</td><td>3.273 &mu;s</td><td>0.1071 &mu;s</td><td>0.2897 &mu;s</td><td>3.200 &mu;s</td><td>792 B</td>
+</tr><tr><td>DeleteFromMiddleOfTable</td><td>1000</td><td>38.146 &mu;s</td><td>0.7262 &mu;s</td><td>0.6064 &mu;s</td><td>38.100 &mu;s</td><td>84920 B</td>
+</tr><tr><td>DeleteFromEndOfTable</td><td>1000</td><td>75.850 &mu;s</td><td>1.3779 &mu;s</td><td>1.2214 &mu;s</td><td>75.600 &mu;s</td><td>168584 B</td>
+</tr><tr><td>DeleteFromStartOfTable</td><td>10000</td><td>5.395 &mu;s</td><td>0.8129 &mu;s</td><td>2.3454 &mu;s</td><td>4.700 &mu;s</td><td>792 B</td>
+</tr><tr><td>DeleteFromMiddleOfTable</td><td>10000</td><td>194.735 &mu;s</td><td>9.7615 &mu;s</td><td>26.2235 &mu;s</td><td>184.150 &mu;s</td><td>840920 B</td>
+</tr><tr><td>DeleteFromEndOfTable</td><td>10000</td><td>436.332 &mu;s</td><td>8.4877 &mu;s</td><td>21.2939 &mu;s</td><td>431.800 &mu;s</td><td>1680584 B</td>
+</tr></tbody></table>
+</body>
+</html>

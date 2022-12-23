@@ -35,13 +35,12 @@ module Types =
     type Key = int (* The node's index (0, 1, 2, 3, etc.). *)
     type Value = UnicodeStringType
 
-    (* Buffer collection as a red black tree. *)
-    [<Struct>]
-    type Colour = R | B
+    (* Buffer collection as an AA Tree. *)
+    type Height = int
 
     type BufferTree =
-        | Empty 
-        | Tree of Colour * BufferTree * Key * UnicodeStringType * BufferTree
+        | E 
+        | T of Height * BufferTree * Key * UnicodeStringType * BufferTree
 
     (* Interface type to tree storing length as well. *)
     type BufferType = { Tree: BufferTree; Length: BufferLength }

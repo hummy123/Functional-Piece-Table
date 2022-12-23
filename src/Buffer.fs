@@ -19,12 +19,32 @@ open System.Globalization
  * The logic switching between a normal string and StringInfo is encapsulated in the
  * UnicodeString module, but the performance advantages are part of this buffer's design.
  *
- * The balanced binary tree used is inspired by Chris Okasaki's Red Black Tree design,
- * and the F# implementation linked below.
- * https://en.wikibooks.org/wiki/F_Sharp_Programming/Advanced_Data_Structures#Binary_Search_Trees
+ * The balanced binary tree used is inspired by Prabhakar Ragde's AA Tree design,
+ * available at the below link.
+ * https://arxiv.org/pdf/1412.4882.pdf
+ *
+ * An F# implementation of all the features described in that paper is available at
+ * the following link.
+ * http://github.com/hummy123/functional-aa-Tree/
  *)
 
 module Buffer =
+    let private skew = function
+        | T(lvx, T(lvy, a, ky, vy, b), kx, vx, c) when lvx = lvy
+            -> T(lvx, a, ky, vy, T(lvx, b, kx, vx, c))
+        | t -> t
+
+    let private split = function
+        | T(lvx, a, kx, vx, T(lvy, b, ky, vy, T(lvz, c, kz, vz, d))) 
+            when lvx = lvy && lvy = lvz
+              -> T(lvx + 1, T(lvx, a, kx, vx, b), ky, vy, T(lvx, c, kz, vz, d))
+        | t -> t
+
+    let rec insert key value = function
+        | E -> T(1, E, key, value, E)
+        | T(h, l, k, v, r) as node ->
+            split <| (skew <| T(h, l, k, v, insert key value r))
+
     (* Discriminated union for handling different append cases. *)
     [<Struct>]
     type private AppendResult =
@@ -32,32 +52,12 @@ module Buffer =
         | PartialAdd of paTree:BufferTree * paKey:Key * insLength:InsertedLength
         | BufferWasFull of bufFullKey:Key
 
-    (* The maximum number of characters permitted in a buffer, before we create a new one. *)
+    (* The maximum numbeEcharacters permitted in a buffer, before we create a new one. *)
     [<Literal>]
     let MaxBufferLength = 1024
 
     /// An empty buffer.
-    let empty = {Tree = Empty; Length = 0}
-
-    let private balance = function                                        (* Red nodes in relation to black root *)
-        | B, Tree(R, Tree(R, a, x, s1, b), y, s2, c), z, s3, d            (* Left, left *)
-        | B, Tree(R, a, x, s1, Tree(R, b, y, s2, c)), z, s3, d            (* Left, right *)
-        | B, a, x, s1, Tree(R, Tree(R, b, y, s2, c), z, s3, d)            (* Right, left *)
-        | B, a, x, s1, Tree(R, b, y, s2, Tree(R, c, z, s3, d))            (* Right, right *)
-            -> Tree(R, Tree(B, a, x, s1, b), y, s2, Tree(B, c, z, s3, d))
-        | c, l, x, s1, r -> Tree(c, l, x, s1, r)
-
-    let private insert key value tree: BufferTree =
-        let rec ins = function
-            | Empty -> Tree(R, Empty, key, value, Empty)
-            | Tree(c, a, curKey, curVal, b) ->
-                (* We only ever want to insert at the end of the buffer tree. *)
-                balance(c, a, curKey, curVal, ins b)
-
-        (* Forcing root node to be black *)                
-        match ins tree with
-            | Empty -> failwith "Should never return empty from an insert"
-            | Tree(_, l, k, v, r) -> Tree(B, l, k, v, r)
+    let empty = {Tree = E; Length = 0}
 
     /// Inserts a long string (greater than the max buffer length) into a tree,
     /// by splitting the string and adding it to multiple buffer nodes.
@@ -79,22 +79,22 @@ module Buffer =
     /// Append a string to the buffer.
     let private add (str: UnicodeStringType) tree =
         let rec loop = function
-            | Empty -> (* Only ever matched if whole tree is empty. *)
+            | E -> (* Only ever matched if whole tree is empty. *)
                 if str.Length >= MaxBufferLength
                 then 
                     let nextIndex = MaxBufferLength
                     let str = str[..MaxBufferLength - 1] |> UnicodeString.create
-                    let newTree = Tree(R, Empty, 0, str, Empty)
+                    let newTree = T(1, E, 0, str, E)
                     PartialAdd(newTree, 0, nextIndex)
                 else 
-                    let newTree = Tree(R, Empty, 0, str, Empty)
+                    let newTree = T(1, E, 0, str, E)
                     FullAdd(newTree)
-            | Tree(c, a, curKey, curVal, b) -> 
+            | T(c, a, curKey, curVal, b) -> 
                 match b with
-                | Empty ->
+                | E ->
                     if curVal.Length + str.Length <= MaxBufferLength
                     then 
-                        let newTree = balance(c, a, curKey, curVal + str, b)
+                        let newTree = T(c, a, curKey, curVal + str, b)
                         FullAdd(newTree)
                     elif curVal.Length = MaxBufferLength
                     then BufferWasFull(curKey)
@@ -102,16 +102,16 @@ module Buffer =
                     then 
                         let remainingBufferLength = MaxBufferLength - curVal.Length
                         let fitString = str[0..remainingBufferLength - 1] |> UnicodeString.create
-                        let newTree = Tree(c, a, curKey, curVal + fitString, b)
+                        let newTree = T(c, a, curKey, curVal + fitString, b)
                         PartialAdd(newTree, curKey, fitString.Length)
                     else failwith "unexpected Buffer.tryAppend case"
-                | Tree(_, _, _, _, _) ->
+                | T(_, _, _, _, _) ->
                     match loop b with
                     | FullAdd newRight ->
-                        let reconstructTree = Tree(c, a, curKey, curVal, newRight)
+                        let reconstructTree = T(c, a, curKey, curVal, newRight)
                         FullAdd(reconstructTree)
                     | PartialAdd(newRight, maxKey, insLength) ->
-                        let reconstructTree = Tree(c, a, curKey, curVal, newRight)
+                        let reconstructTree = T(c, a, curKey, curVal, newRight)
                         PartialAdd(reconstructTree, maxKey, insLength)
                     | BufferWasFull key -> BufferWasFull key
 
@@ -135,8 +135,8 @@ module Buffer =
 
     /// Find the string associated with a particular key.
     let rec private nodeSubstring key startPos endPos = function
-        | Empty -> ""
-        | Tree(_, l, curKey, value, r) ->
+        | E -> ""
+        | T(_, l, curKey, value, r) ->
             if key = curKey 
             then value[startPos..endPos] (* Returns valid substring even if end is out of bounds. *)
             elif key < curKey 
@@ -179,8 +179,8 @@ module Buffer =
     let stringLength buffer =
         let rec traverse tree (acc: int) =
             match tree with
-            | Empty -> acc
-            | Tree(_, l, _, v, r) ->
+            | E -> acc
+            | T(_, l, _, v, r) ->
                 (traverse l acc) + v.Length |> traverse r
         traverse buffer.Tree 0
 
@@ -190,8 +190,8 @@ module Buffer =
     let lengthAsList buffer =
         let rec traverse tree (accList: int list) =
             match tree with
-            | Empty -> accList
-            | Tree(_,l,_,v,r) ->
+            | E -> accList
+            | T(_,l,_,v,r) ->
                 (traverse l accList) @ [v.Length] |> traverse r
         traverse buffer.Tree []
 
@@ -201,8 +201,8 @@ module Buffer =
     let text buffer =
         let rec traverse tree accText =
             match tree with
-            | Empty -> accText
-            | Tree(_,l,_,v,r) ->
+            | E -> accText
+            | T(_,l,_,v,r) ->
                 (traverse l accText) + v[0..v.Length] |> traverse r
         traverse buffer.Tree ""
 

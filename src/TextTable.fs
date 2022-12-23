@@ -2,14 +2,12 @@ namespace PieceTable
 
 open Types
 open System
+open System.IO
 
 module TextTable =
+    (* TextTable creation functions. *)
     /// Creates an empty TextTableType.
     let empty = {Buffer = Buffer.empty; Pieces = ListZipper.empty}
-
-    /// Checks if a TextTableType can be consolidated.
-    let isConsolidated table =
-        table.Pieces.Focus.Length + table.Pieces.Path.Length > 1
 
     /// Create a TextTableType given a string.
     let create str =
@@ -20,18 +18,42 @@ module TextTable =
             let pieces = ListZipper.createWithPiece (Piece.create true 0 str.Length)
             {Buffer = buffer; Pieces = pieces}
 
+    (* TextTable IO functions and a text functoin. *)
+    /// Retrieves all of the text from a table as a string.
+    /// It is recommended to use the substring method for 
+    /// text retrieval in most cases for performance reasons.
     let text table = ListZipper.text table
 
-    /// Consolidates a table into a buffer with only used characters and a single piece.
-    /// Recommended to call this in another thread: do not use it synchronously.
+    /// Checks if a TextTableType can be consolidated.
+    let inline private canBeConsolidated table =
+        table.Pieces.Focus.Length + table.Pieces.Path.Length > 1
+
+    /// Returns a consolidated table with only used characters and a single piece
+    /// or returns the original table if it cannot be consolidated any further.
+    /// This provides better performance for table operations as the table's memory may
+    /// degrade over time. 
+    /// The author's use case was in a text editor where this method can be called 
+    /// asynchronously or in another thread (it is thread safe) 
+    /// after an appreciable delay after typing to ensure continued 
+    /// best-case performance for core operations like insert and delete.
+    /// If the user types during that time, the result can be discarded 
+    /// in the multithreaded version or the operation can be cancelled 
+    /// in the async version.
+    /// Note that the caller must wrap around this method to implement it
+    /// in either a multithreaded or async manner.
     let consolidate table =
-        let folder acc piece = 
-            Buffer.append (Piece.text piece table) acc
-        let buffer = List.fold folder Buffer.empty (List.rev table.Pieces.Path)
-        let buffer = List.fold folder buffer table.Pieces.Focus
-        let piece = Piece.createWithSpan (Span.createWithLength 0 buffer.Length)
-        let zipper = {Focus = [piece]; Path = []; Index = 0 }
-        {Pieces = zipper; Buffer = buffer;}
+        if canBeConsolidated table
+        then
+            let folder acc piece = 
+                let text = Piece.text piece table
+                Buffer.append text acc
+            let buffer = List.fold folder Buffer.empty (List.rev table.Pieces.Path)
+            let buffer = List.fold folder buffer table.Pieces.Focus
+            let piece = Piece.createWithSpan (Span.createWithLength 0 buffer.Length)
+            let zipper = {Focus = [piece]; Path = []; Index = 0 }
+            {Pieces = zipper; Buffer = buffer;}
+        else
+            table
 
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =

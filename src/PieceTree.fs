@@ -41,19 +41,6 @@ module PieceTree =
                 let left = PT(lvx, sizeA, a, kx, sizeB, b)
                 PT(lvx + 1, size left, left, ky, size right, right)
         | t -> t
-            
-    let rec private add item = function
-        | PE -> PT(1, 0, PE, item, 0, PE)
-        | PT(h, sl, l, v, sr, r) as node ->
-            if item < v
-            then
-                let newLeft = add item l
-                split <| (skew <| PT(h, size newLeft, newLeft, v, sr, r))
-            elif item > v
-            then 
-                let newRight = add item r
-                split <| (skew <| PT(h, sl, l, v, size newRight, newRight))
-            else node
 
     let rec private dellrg = function
         | PT(_, _, l, v, _, PE) -> (l, v)
@@ -61,40 +48,6 @@ module PieceTree =
             let (newLeft, newVal) = dellrg l
             PT(h, size newLeft, newLeft, v, sr, r), newVal
         | _ -> failwith "unexpected dellrg case"
-
-    let private adjust = function
-        | PT(lvt, _, lt, kt, _, rt) as t when lvl lt >= lvt - 1 && lvl rt >= (lvt - 1) 
-            -> t
-        | PT(lvt, sl, lt, kt, sr, rt) when lvl rt < lvt - 1 && sngl lt-> 
-            skew <| PT(lvt - 1, sl, lt, kt, sr, rt)
-        | PT(lvt, _, PT(lv1, sizeA, a, kl, _, PT(lvb, sizeLb, lb, kb, sizeRb, rb)), kt, sizeRt, rt) 
-            when lvl rt < lvt - 1 -> 
-                let left = PT(lv1, sizeA, a, kl, sizeLb, lb)
-                let right = PT(lvt - 1, sizeRb, rb, kt, sizeRt, rt)
-                PT(lvb + 1, size left, left, kb, size right, right)
-        | PT(lvt, sl, lt, kt, sr, rt) when lvl rt < lvt -> 
-            split <| PT(lvt - 1, sl, lt, kt, sr, rt)
-        | PT(lvt, sizeLt, lt, kt, sr1, PT(lvr, sl2, PT(lva, sizeC, c, ka, sizeD, d), kr, sizeB, b)) -> 
-            let a = PT(lva, sizeC, c, ka, sizeD, d)
-            let right = split <| PT(nlvl a, sizeD, d, kr, sizeB, b)
-            let left = PT(lvt-1, sizeLt, lt, kt, sizeC, c)
-            PT(lva + 1, size left, left,  ka, size right, right)
-        | _ -> failwith "unexpected adjust case"
-
-    let rec remove item = function
-        | PE -> PE
-        | PT(_, _, PE, v, _, rt) when item = v -> rt
-        | PT(_, _, lt, v, _, PE) when item = v -> lt
-        | PT(h, sl, l, v, sr, r) as node ->
-            if item < v then
-                let newLeft = remove item l
-                adjust <| PT(h, size newLeft, newLeft, v, sr, r)
-            elif item > v then 
-                let newRight = remove item r
-                PT(h, sl, l, v, size newRight, newRight)
-            else 
-                let (newLeft, newVal) = dellrg l
-                PT(h, size newLeft, newLeft, newVal, sr, r)
 
     let private pieceLength = function
         | PE -> 0
@@ -238,9 +191,3 @@ module PieceTree =
                 middle
         del (sizeLeft tree) tree 
     
-    let rec printPieces = function
-        | PE -> ()
-        | PT(_, _, l, v, _, r) ->
-            printPieces l
-            printfn "%A" v
-            printPieces r

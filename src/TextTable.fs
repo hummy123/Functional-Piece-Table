@@ -59,4 +59,3 @@ module TextTable =
         member this.Text() = text this
         member this.Substring(start, length) = substring start length this
         member this.Delete(start, length) = delete start length this
-        member this.PrintPoeces() = PieceTree.printPieces this.Pieces

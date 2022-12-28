@@ -219,8 +219,13 @@ module PieceTree =
                     | LessThanSpan -> 
                         split <| (skew <| PT(h, size left, left, v, size right, right))
                     | PieceFullyInSpan ->
-                        let newVal = Piece.create true 0 0
-                        PT(h, size left, left, newVal, size right, right)
+                        try
+                            let (newLeft, newVal) = dellrg l
+                            PT(h, size newLeft, newLeft, newVal, size right, right)
+                        with
+                        | _ ->    
+                            let newVal = Piece.create true 0 0
+                            PT(h, size left, left, newVal, size right, right)
                     | SpanWithinPiece ->
                         let (p1, p2) = Piece.deleteInRange curIndex span v
                         let newLeft = bubbleLeft p1 left
@@ -234,35 +239,3 @@ module PieceTree =
                 middle
         del (sizeLeft tree) tree 
     
-    /// For debugging / balancing.
-    let print (tree) =
-        let subprint acc (v) level dir =
-            let str1 = String.replicate (4 * level) " "
-            let str2 = acc + " " + dir
-            let str3 = "str\n"
-            str1 + str2 + str3
-
-        let rec traverse (node) (level: int) (acc: string) dir =
-            match node with
-            | PE -> acc
-            | PT(_, _, l, v, _, r) ->
-                let acc = subprint acc node level dir
-                let acc = acc + (traverse l (level + 1) "" "<-")
-                acc + (traverse r (level + 1) "" "->")
-
-        let text = traverse tree 0 "" "--"
-        printfn "%s" text
-        text
-
-    let printChildren tree =
-        let rec traverse node =
-            match node with
-            | PE -> 0
-            | PT(_, _, l, _, _, r) ->
-                let left = traverse l
-                let right = traverse r
-                left + right + 1
-
-        let left = traverse <| left tree
-        let right = traverse <| right tree
-        printfn "left: %i; right: %i" left right

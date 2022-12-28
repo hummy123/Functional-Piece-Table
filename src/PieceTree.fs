@@ -186,9 +186,11 @@ module PieceTree =
                     | LessThanSpan -> left
                     | _ -> left + (Piece.textSlice pos curIndex v span table)
 
-                if span.Start + span.Length > nodeEndIndex
-                then sub (curIndex + v.Span.Length) r middle
-                else middle
+                let right =
+                    if span.Start + span.Length > nodeEndIndex
+                    then sub (curIndex + v.Span.Length) r middle
+                    else middle
+                right
 
         sub (sizeLeft table.Pieces) table.Pieces ""
 

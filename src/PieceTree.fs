@@ -133,7 +133,7 @@ module PieceTree =
     /// O(1): Returns an empty AaTree.
     let empty = E
 
-    let rec insert insIndex piece tree =
+    let insert insIndex piece tree =
         let rec ins curIndex node =
             match node with
             | E -> T(1, 0, E, piece, 0, E)
@@ -151,8 +151,8 @@ module PieceTree =
                     let newLeft = bubbleLeft piece l
                     split <| (skew <| T(h, size newLeft, newLeft, v, sr, r))
                 elif curIndex = nodeEndIndex then
-                    let newRight = bubbleRight piece r
-                    split <| (skew <| T(h, sl, l, v, size newRight, newRight))
+                    let newPiece = Piece.merge v piece
+                    T(h, sl, l, newPiece, sr, r)
                 else
                     // We are in range.
                     let (p1, p2, p3) = Piece.split v piece (insIndex - curIndex)
@@ -161,6 +161,32 @@ module PieceTree =
                     split <| (skew <| T(h, size newLeft, newLeft, p2, size newRight, newRight))
 
         ins (sizeLeft tree) tree
+
+    let substring (span: SpanType) table =
+        let rec sub curIndex node acc =
+            match node with
+            | E -> acc
+            | T(h, sl, l, v, sr, r) ->
+                let nodeEndIndex = curIndex + v.Span.Length
+                let left = 
+                    if span.Start < curIndex
+                    then sub (curIndex - (pieceLength l)) l acc
+                    else acc
+
+                let pos = Piece.compareWithSpan span curIndex v
+                let middle =
+                    match pos with
+                    | GreaterThanSpan
+                    | LessThanSpan -> left
+                    | _ -> left + (Piece.textSlice pos curIndex v span table)
+
+                let right =
+                    if span.Start + span.Length > nodeEndIndex
+                    then sub (curIndex + v.Span.Length) r middle
+                    else middle
+                right
+
+        sub (sizeLeft table.Pieces) table.Pieces ""
     
     /// For debugging / balancing.
     let print (tree) =

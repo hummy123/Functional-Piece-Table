@@ -4,6 +4,8 @@ open Types
 open PieceTree
 
 module TextTable =
+    let empty = {Buffer = Buffer.empty; Pieces = PieceTree.empty}
+
     /// Create a TextTableType given a string,
     let create str =
         let (buffer, pieces) =
@@ -47,9 +49,13 @@ module TextTable =
             Pieces = pieces
             Buffer = buffer }
 
+    let substring startIndex length table = 
+        let span = Span.createWithLength startIndex length
+        PieceTree.substring span table
+
     (* Alternative OOP API. *)
     type TextTableType with
 
         member this.Insert(index, str) = insert index str this
         member this.Text() = text this
-
+        member this.Substring(start, length) = substring start length this

@@ -27,25 +27,9 @@ module internal Piece =
         else false
 
     /// Merges two consecutive pieces into one.
-    /// If Piece.isConsecutive returns false with these two pieces, this method throws an error.
+    /// Expects to be called only when Piece.isConsecutive returns true. 
     let merge a b =
-        match isConsecutive a b with
-        | false -> failwith "Piece.merge caller error: Tried to merge non-consecutive pieces."
-        | true ->
-            let mergedStart = 
-                if a.Span.Start < b.Span.Start 
-                then a.Span.Start
-                else b.Span.Start
-
-            let fStop = Span.stop a.Span
-            let pStop = Span.stop b.Span
-            let mergeStop =
-                if pStop > fStop
-                then pStop
-                else fStop
-
-            let mergeSpan = Span.createWithStop mergedStart mergeStop
-            createWithSpan mergeSpan
+        createWithSpan <| Span.createWithLength a.Span.Start (a.Span.Length + b.Span.Length)
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
@@ -135,3 +119,29 @@ module internal Piece =
 
     let text piece table =
         Buffer.substring piece.Span table.Buffer
+    
+    let private textInRange curIndex span piece table =
+        let spanStop = Span.stop span 
+        let textStart = span.Start - curIndex + piece.Span.Start
+        let textStop = spanStop - curIndex + piece.Span.Start
+        Buffer.substring (Span.createWithStop textStart textStop) table.Buffer
+
+    let private textAtStart curIndex span piece table =
+        let spanStop = Span.stop span
+        let textStop = piece.Span.Start + (spanStop - curIndex)
+        let substrSpan = Span.createWithStop piece.Span.Start textStop
+        Buffer.substring substrSpan table.Buffer
+
+    let private textAtEnd curIndex span piece table =
+        let textStop = Span.stop piece.Span
+        let textStart = span.Start - curIndex
+        let substrSpan = Span.createWithStop textStart textStop
+        Buffer.substring substrSpan table.Buffer
+
+    let textSlice pos curIndex piece span table =
+        match pos with
+        | PieceFullyInSpan -> text piece table
+        | SpanWithinPiece -> textInRange curIndex span piece table
+        | StartOfPieceInSpan -> textAtStart curIndex span piece table
+        | EndOfPieceInSpan -> textAtEnd curIndex span piece table
+        | _ -> failwith "unexpected Piece.textSlice case"

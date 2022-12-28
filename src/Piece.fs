@@ -44,15 +44,6 @@ module internal Piece =
         else
             LessThanSpan
 
-    /// Specifies how we should handle a Piece given to the delete method.
-    /// Empty: We can simply remove this Piece from the list.
-    /// CutOne: We can replace the Piece with the newly returned one.
-    /// CutTwo: We can replace the Piece given in the parameter with the two pieces returned, where the first is before the second.
-    type DeletedPiece =
-        | Empty
-        | CutOne of PieceType * int
-        | CutTwo of PieceType * PieceType * int
-
     let deleteInRange curIndex span piece =
         let spanStop = Span.stop span 
 
@@ -77,16 +68,6 @@ module internal Piece =
         let newSpan = Span.createWithLength piece.Span.Start newLength
         { piece with Span = newSpan }
 
-    /// Deletes either a part of a piece or a full piece itself.
-    /// See the documentation for the DeletedPiece type on how to use this method's return value.
-    (*let delete pos curIndex (span: SpanType) (piece: PieceType) =        
-        match pos with
-        | PieceFullyInSpan -> DeletedPiece.Empty
-        | SpanWithinPiece -> deleteInRange curIndex span piece
-        | StartOfPieceInSpan -> deleteAtStart curIndex span piece
-        | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
-        | _ -> failwith "Piece.delete error"
-        *)
     let text piece table =
         Buffer.substring piece.Span table.Buffer
 

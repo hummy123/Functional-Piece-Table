@@ -15,16 +15,7 @@ module internal Piece =
     /// and one stopping where the other starts).
     /// Can be used to merge pieces for memory efficiency.
     let isConsecutive a b =
-        let aStop = Span.stop a.Span
-        let bStop = Span.stop b.Span
-        if aStop > bStop then
-            if aStop + 1 <= bStop then
-                true
-            else 
-                false
-        elif bStop + 1 <= aStop then
-            true
-        else false
+        (Span.stop a.Span) = b.Span.Start
 
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 
@@ -35,25 +26,12 @@ module internal Piece =
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
     let split (a: PieceType) (b: PieceType) (difference: int) =
         let p1Length = a.Span.Start + difference
-        let p1Span = Span.createWithLength a.Span.Start p1Length
+        let p1Span = Span.createWithStop a.Span.Start p1Length  
         let p1 = createWithSpan p1Span
 
-        let span3 = Span.createWithStop p1Length (Span.stop a.Span)
+        let span3 = Span.createWithStop (p1Length) (Span.stop a.Span)
         let p3 = createWithSpan span3
-        (p1, b, p3)
-
-    /// Given a search index (for example the index we want to insert at), 
-    /// a current index (keeping track of current index in a loop) 
-    /// and a piece, returns a DU telling us where we are.
-    let compareWithIndex searchIndex curIndex curPiece =
-        if searchIndex = curIndex then
-            EqualTo
-        elif searchIndex >= curIndex && searchIndex <= curIndex + curPiece.Span.Length then
-            InRangeOf
-        elif searchIndex < curIndex then
-            LessThanIndex
-        else
-            GreaterThanIndex
+        (p1, p3)
 
     let compareWithSpan (span: SpanType) curIndex curPiece =
         let spanStop = Span.stop span
@@ -81,7 +59,7 @@ module internal Piece =
         | CutOne of PieceType * int
         | CutTwo of PieceType * PieceType * int
 
-    let private deleteInRange curIndex span piece =
+    let deleteInRange curIndex span piece =
         let spanStop = Span.stop span 
 
         let p1Start = piece.Span.Start
@@ -92,34 +70,34 @@ module internal Piece =
         
         let p2Stop = Span.stop piece.Span
         let p2 = {piece with Span = Span.createWithStop p2Start p2Stop}
-        CutTwo(p1, p2, span.Length)
+        (p1, p2)
 
-    let private deleteAtStart curIndex span piece =
+    let deleteAtStart curIndex span piece =
         let spanStop = Span.stop span
         let newPieceStart = piece.Span.Start + (spanStop - curIndex)
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
         let difference = piece.Span.Length - newPieceSpan.Length
-        CutOne({ piece with Span = newPieceSpan }, difference)
+        { piece with Span = newPieceSpan }
 
-    let private deleteAtEnd curIndex span piece =
+    let deleteAtEnd curIndex span piece =
         let newLength = span.Start - curIndex
         let newSpan = Span.createWithLength piece.Span.Start newLength
         let difference = piece.Span.Length - newSpan.Length
-        CutOne({ piece with Span = newSpan }, difference)
+        { piece with Span = newSpan }
 
     /// Deletes either a part of a piece or a full piece itself.
     /// See the documentation for the DeletedPiece type on how to use this method's return value.
-    let delete pos curIndex (span: SpanType) (piece: PieceType) =        
+    (*let delete pos curIndex (span: SpanType) (piece: PieceType) =        
         match pos with
         | PieceFullyInSpan -> DeletedPiece.Empty
         | SpanWithinPiece -> deleteInRange curIndex span piece
         | StartOfPieceInSpan -> deleteAtStart curIndex span piece
         | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
         | _ -> failwith "Piece.delete error"
-
+        *)
     let text piece table =
         Buffer.substring piece.Span table.Buffer
-    
+
     let private textInRange curIndex span piece table =
         let spanStop = Span.stop span 
         let textStart = span.Start - curIndex + piece.Span.Start

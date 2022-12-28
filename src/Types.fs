@@ -1,5 +1,7 @@
 ﻿namespace PieceTable
 
+open UnicodeString
+
 (* My benchmarks showed that using structs for small types,
  * and for discriminated unions where applicable was slightly faster. *)
 module Types =
@@ -8,13 +10,6 @@ module Types =
 
     [<Struct>]
     type PieceType = { Span: SpanType }
-
-    [<Struct>]
-    type CompareIndex = 
-        | EqualTo
-        | InRangeOf
-        | LessThanIndex
-        | GreaterThanIndex
 
     [<Struct>]
     type CompareSpan =
@@ -30,12 +25,14 @@ module Types =
     type BufferLength = int
     type InsertedLength = int
     type Key = int (* The node's index (0, 1, 2, 3, etc.). *)
-    type Value = string
+    type Value = UnicodeStringType
 
-    (* Buffer collection as a red black tree. *)
-    [<Struct>]
-    type Colour = R | B
-    type BufferTree = Empty | Tree of Colour * BufferTree * Key * Value * BufferTree
+    (* Buffer collection as an AA Tree. *)
+    type Height = int
+
+    type BufferTree =
+        | BE 
+        | BT of Height * BufferTree * Key * Value * BufferTree
 
     (* Interface type to tree storing length as well. *)
     type BufferType = { Tree: BufferTree; Length: BufferLength }
@@ -46,8 +43,8 @@ module Types =
     type SizeRight = int
 
     type AaTree = 
-        | E
-        | T of int * SizeLeft * AaTree * PieceType * SizeRight * AaTree
+        | PE
+        | PT of int * SizeLeft * AaTree * PieceType * SizeRight * AaTree
     (* ...end of type definitions for piece tree. *)
 
     type TextTableType =

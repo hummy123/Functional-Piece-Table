@@ -27,14 +27,6 @@ module PieceTree =
     let private sizeLeft = function
         | PE -> 0
         | PT(_, sl, _, _, _, _) -> sl
-
-    let private left = function
-        | PE -> PE
-        | PT(_, _, l, _, _, _) -> l
-
-    let private right = function
-        | PE -> PE
-        | PT(_, _, _, _, _, r) -> r
  
     let private skew = function
         | PT(lvx, _, PT(lvy, _, a, ky, _, b), kx, _, c) when lvx = lvy -> 
@@ -108,19 +100,17 @@ module PieceTree =
         | PE -> 0
         | PT(_,_,_,piece,_,_) -> piece.Span.Length
 
-    let rec private bubbleLeft piece node =
+    let rec private insMin piece node =
         match node with
         | PE -> PT(1, 0, PE, piece, 0, PE)
         | PT(h, sl, l, v, sr, r) ->
-            let newLeft = bubbleLeft v l
-            split <| (skew <| PT(h, size newLeft, newLeft, piece, sr, r))
+            split <| (skew <| PT(h, sl + piece.Span.Length, insMin piece l, v, sr, r))
 
-    let rec private bubbleRight piece node =
+    let rec private insMax piece node =
         match node with
         | PE -> PT(1, 0, PE, piece, 0, PE)
         | PT(h, sl, l, v, sr, r) ->
-            let newRight = bubbleRight v r
-            split <| (skew <| PT(h, sl, l, piece, size newRight, newRight))
+            split <| (skew <| PT(h, sl, l, v, sr + piece.Span.Length, insMax piece r))
 
     let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
         match t with
@@ -132,6 +122,14 @@ module PieceTree =
 
     /// Executes a function on each element in order (for example: 1, 2, 3 or a, b, c).
     let fold f x t = foldOpt (OptimizedClosures.FSharpFunc<_,_,_>.Adapt(f)) x t
+
+    /// Returns the text contained in the PieceTree.
+    let text table = 
+        let folder = (fun (acc: string) (piece: PieceType) ->
+            let text = (Buffer.substring piece.Span table.Buffer)
+            acc + text
+        )
+        fold folder "" table.Pieces
 
     /// O(1): Returns a boolean if tree is empty.
     let isEmpty = function
@@ -156,16 +154,16 @@ module PieceTree =
                     let nextIndex = curIndex - (pieceLength l)
                     split <| (skew <| PT(h, newSl, ins nextIndex l, v, sr, r))
                 elif curIndex = insIndex then
-                    let newLeft = bubbleLeft piece l
+                    let newLeft = insMax piece l
                     split <| (skew <| PT(h, size newLeft, newLeft, v, sr, r))
                 elif insIndex = nodeEndIndex then
                     let newPiece = Piece.merge v piece
                     PT(h, sl, l, newPiece, sr, r)
                 else
                     // We are in range.
-                    let (p1, p3) = Piece.split v piece (insIndex - curIndex)
-                    let newLeft = bubbleLeft p1 l
-                    let newRight = bubbleRight p3 r
+                    let (p1, p3) = Piece.split v (insIndex - curIndex)
+                    let newLeft = insMax p1 l
+                    let newRight = insMin p3 r
                     split <| (skew <| PT(h, size newLeft, newLeft, piece, size newRight, newRight))
 
         ins (sizeLeft tree) tree
@@ -197,6 +195,7 @@ module PieceTree =
         sub (sizeLeft table.Pieces) table.Pieces ""
 
     let delete (span: SpanType) tree =
+        let spanEnd = span.Start + span.Length
         let rec del curIndex node =
             match node with
             | PE -> PE
@@ -208,7 +207,7 @@ module PieceTree =
                     else l
 
                 let right =
-                    if span.Start + span.Length > nodeEndIndex
+                    if spanEnd > nodeEndIndex
                     then del (curIndex + v.Span.Length) r
                     else r
 
@@ -228,7 +227,7 @@ module PieceTree =
                             PT(h, size left, left, newVal, size right, right)
                     | SpanWithinPiece ->
                         let (p1, p2) = Piece.deleteInRange curIndex span v
-                        let newLeft = bubbleLeft p1 left
+                        let newLeft = insMax p1 left
                         split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
                     | StartOfPieceInSpan ->
                         let newPiece = Piece.deleteAtStart curIndex span v
@@ -239,3 +238,9 @@ module PieceTree =
                 middle
         del (sizeLeft tree) tree 
     
+    let rec printPieces = function
+        | PE -> ()
+        | PT(_, _, l, v, _, r) ->
+            printPieces l
+            printfn "%A" v
+            printPieces r

@@ -20,12 +20,7 @@ module TextTable =
         { Buffer = buffer
           Pieces = pieces }
 
-    let text table = 
-        let folder = (fun (acc: string) (piece: PieceType) ->
-            let text = (Buffer.substring piece.Span table.Buffer)
-            acc + text
-         )
-        PieceTree.fold folder "" table.Pieces
+    let text table = PieceTree.text table
 
     /// Consolidates a table into a buffer with only used characters and a single piece.
     /// Recommended to call this in another thread: do not use it synchronously.
@@ -64,3 +59,4 @@ module TextTable =
         member this.Text() = text this
         member this.Substring(start, length) = substring start length this
         member this.Delete(start, length) = delete start length this
+        member this.PrintPoeces() = PieceTree.printPieces this.Pieces

@@ -11,12 +11,6 @@ module internal Piece =
     let createWithSpan span =
         { Span = span }
 
-    /// Checks if two Pieces are consecutive (from the same buffer
-    /// and one stopping where the other starts).
-    /// Can be used to merge pieces for memory efficiency.
-    let isConsecutive a b =
-        (Span.stop a.Span) = b.Span.Start
-
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 
     let merge a b =
@@ -24,7 +18,7 @@ module internal Piece =
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
-    let split (a: PieceType) (b: PieceType) (difference: int) =
+    let split (a: PieceType) (difference: int) =
         let p1Length = a.Span.Start + difference
         let p1Span = Span.createWithStop a.Span.Start p1Length  
         let p1 = createWithSpan p1Span

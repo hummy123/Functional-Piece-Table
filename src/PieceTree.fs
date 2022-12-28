@@ -202,12 +202,12 @@ module PieceTree =
             | PT(h, sl, l, v, sr, r) ->
                 let nodeEndIndex = curIndex + v.Span.Length
                 let left = 
-                    if span.Start < curIndex
+                    if span.Start < curIndex && l <> PE
                     then del (curIndex - (pieceLength l)) l
                     else l
 
                 let right =
-                    if spanEnd > nodeEndIndex
+                    if spanEnd > nodeEndIndex && r <> PE
                     then del (curIndex + v.Span.Length) r
                     else r
 
@@ -219,7 +219,7 @@ module PieceTree =
                         split <| (skew <| PT(h, size left, left, v, size right, right))
                     | PieceFullyInSpan ->
                         try
-                            let (newLeft, newVal) = dellrg l
+                            let (newLeft, newVal) = dellrg left
                             PT(h, size newLeft, newLeft, newVal, size right, right)
                         with
                         | _ ->    

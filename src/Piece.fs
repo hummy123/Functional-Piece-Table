@@ -33,7 +33,7 @@ module internal Piece =
 
         if span.Start <= curIndex && spanStop >= pieceStop then
             PieceFullyInSpan
-        elif span.Start <= curIndex && spanStop < pieceStop then
+        elif span.Start <= curIndex && spanStop < pieceStop && curIndex < spanStop then
             StartOfPieceInSpan
         elif span.Start > curIndex && spanStop >= pieceStop && span.Start <= pieceStop then
             EndOfPieceInSpan
@@ -70,13 +70,11 @@ module internal Piece =
         let spanStop = Span.stop span
         let newPieceStart = piece.Span.Start + (spanStop - curIndex)
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
-        let difference = piece.Span.Length - newPieceSpan.Length
         { piece with Span = newPieceSpan }
 
     let deleteAtEnd curIndex span piece =
         let newLength = span.Start - curIndex
         let newSpan = Span.createWithLength piece.Span.Start newLength
-        let difference = piece.Span.Length - newSpan.Length
         { piece with Span = newSpan }
 
     /// Deletes either a part of a piece or a full piece itself.

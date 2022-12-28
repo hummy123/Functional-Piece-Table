@@ -27,6 +27,14 @@ module PieceTree =
     let private sizeLeft = function
         | PE -> 0
         | PT(_, sl, _, _, _, _) -> sl
+
+    let private left = function
+        | PE -> PE
+        | PT(_, _, l, _, _, _) -> l
+
+    let private right = function
+        | PE -> PE
+        | PT(_, _, _, _, _, r) -> r
  
     let private skew = function
         | PT(lvx, _, PT(lvy, _, a, ky, _, b), kx, _, c) when lvx = lvy -> 
@@ -150,7 +158,7 @@ module PieceTree =
                 elif curIndex = insIndex then
                     let newLeft = bubbleLeft piece l
                     split <| (skew <| PT(h, size newLeft, newLeft, v, sr, r))
-                elif curIndex = nodeEndIndex then
+                elif insIndex = nodeEndIndex then
                     let newPiece = Piece.merge v piece
                     PT(h, sl, l, newPiece, sr, r)
                 else
@@ -211,15 +219,15 @@ module PieceTree =
                     | LessThanSpan -> 
                         split <| (skew <| PT(h, size left, left, v, size right, right))
                     | PieceFullyInSpan ->
-                        let (newLeft, newVal) = dellrg left
-                        PT(h, size newLeft, newLeft, newVal, size right, right)
+                        let newVal = Piece.create true 0 0
+                        PT(h, size left, left, newVal, size right, right)
                     | SpanWithinPiece ->
                         let (p1, p2) = Piece.deleteInRange curIndex span v
                         let newLeft = bubbleLeft p1 left
-                        PT(h, size newLeft, newLeft, p2, size right, right)
+                        split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
                     | StartOfPieceInSpan ->
                         let newPiece = Piece.deleteAtStart curIndex span v
-                        PT(h, size left, left, newPiece, size right, right)
+                        split <| (skew <| PT(h, size left, left, newPiece, size right, right))
                     | EndOfPieceInSpan ->
                         let newPiece = Piece.deleteAtEnd curIndex span v
                         PT(h, size left, left, newPiece, size right, right)
@@ -245,3 +253,16 @@ module PieceTree =
         let text = traverse tree 0 "" "--"
         printfn "%s" text
         text
+
+    let printChildren tree =
+        let rec traverse node =
+            match node with
+            | PE -> 0
+            | PT(_, _, l, _, _, r) ->
+                let left = traverse l
+                let right = traverse r
+                left + right + 1
+
+        let left = traverse <| left tree
+        let right = traverse <| right tree
+        printfn "left: %i; right: %i" left right

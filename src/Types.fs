@@ -49,4 +49,5 @@ module Types =
 
     type TextTableType =
         { Buffer: BufferType
-          Pieces: AaTree }
+          Pieces: AaTree
+          Length: int }

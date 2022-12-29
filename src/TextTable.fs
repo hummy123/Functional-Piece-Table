@@ -4,21 +4,18 @@ open Types
 open PieceTree
 
 module TextTable =
-    let empty = {Buffer = Buffer.empty; Pieces = PieceTree.empty}
+    let empty = { Buffer = Buffer.empty; Pieces = PieceTree.empty; Length = 0 }
 
     /// Create a TextTableType given a string,
     let create str =
-        let (buffer, pieces) =
-            if str = ""
-            then Buffer.empty, PieceTree.empty
-            else 
-                let buffer = Buffer.createWithString str
-                let piece = Piece.create true 0 str.Length
-                let pieces = PieceTree.insert 0 piece PieceTree.empty
-                (buffer, pieces)
-
-        { Buffer = buffer
-          Pieces = pieces }
+        if str = ""
+        then 
+            empty
+        else 
+            let buffer = Buffer.createWithString str
+            let piece = Piece.create true 0 str.Length
+            let pieces = PieceTree.insert 0 piece PieceTree.empty
+            { Buffer=buffer; Pieces=pieces; Length=str.Length }
 
     let text table = PieceTree.text table
 
@@ -32,7 +29,7 @@ module TextTable =
         let buffer = PieceTree.fold folder Buffer.empty table.Pieces
         let piece = Piece.create false 0 buffer.Length
         let tree = PieceTree.insert 0 piece PieceTree.empty
-        {Pieces = tree; Buffer = buffer;}
+        { Pieces = tree; Buffer = buffer; Length = buffer.Length }
 
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
@@ -40,14 +37,12 @@ module TextTable =
         let piece = Piece.create false (buffer.Length - str.Length) str.Length
         let pieces = PieceTree.insert index piece table.Pieces
 
-        { table with
-            Pieces = pieces
-            Buffer = buffer }
+        { Buffer = buffer; Pieces = pieces; Length = table.Length + str.Length }
 
     let delete startIndex length (table: TextTableType) =
         let span = Span.createWithLength startIndex length
         let newPieces = PieceTree.delete span table.Pieces
-        {Pieces = newPieces; Buffer = table.Buffer}
+        { Pieces = newPieces; Buffer = table.Buffer; Length = table.Length - length }
 
     let substring startIndex length table = 
         let span = Span.createWithLength startIndex length

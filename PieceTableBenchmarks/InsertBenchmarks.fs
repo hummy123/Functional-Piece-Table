@@ -177,7 +177,15 @@ module Main =
     let Main _ =
         BenchmarkRunner.Run<CreateDocument>() |> ignore
         BenchmarkRunner.Run<InsertIntoDocument>() |> ignore
+<<<<<<< HEAD
         BenchmarkRunner.Run<DeleteFromDocument>() |> ignore
         BenchmarkRunner.Run<GetSubstring>() |> ignore
         BenchmarkRunner.Run<Consolidate>() |> ignore
         0
+=======
+        BenchmarkRunner.Run<GetSubstring>() |> ignore
+        BenchmarkRunner.Run<DeleteFromDocument>() |> ignore
+        BenchmarkRunner.Run<Consolidate>() |> ignore
+        BenchmarkRunner.Run<TableOperationsWhenSetupAlwaysInsertsAtEnd>() |> ignore
+        0
+>>>>>>> main

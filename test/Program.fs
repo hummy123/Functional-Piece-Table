@@ -14,6 +14,7 @@ let initialTable = TextTable.create text
 module Program =
     [<EntryPoint>]
     let main _ =  
+<<<<<<< HEAD
         // Enter string correctly.
         let table = TextTable.create "123456789"
         let table = table.Insert(8, "a")
@@ -26,4 +27,6 @@ module Program =
         // Get substring.
         let substr9 = table.Substring(0, 9)
         printfn "acc: %s" substr9
+=======
+>>>>>>> main
         0

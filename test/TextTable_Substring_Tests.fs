@@ -90,6 +90,7 @@ let ``Can get substring of middle when zipper is in middle`` () =
     let substring = table.Substring(text.Length/2, insText.Length)
     let expectedStr = insText
     Assert.Equal(expectedStr, substring)
+<<<<<<< HEAD
 
 [<Fact>]
 let ``Can get a substring over a split piece`` () =
@@ -141,3 +142,5 @@ let ``TextEdit2`` () =
     let expsubstr = "123456ef7"
     let substr = table.Substring(0, 9)
     Assert.Equal(expsubstr, substr)
+=======
+>>>>>>> main

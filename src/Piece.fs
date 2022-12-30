@@ -67,17 +67,17 @@ module internal Piece =
     let text piece table =
         Buffer.substring piece.Span.Start piece.Span.Length table.Buffer
 
-    let private textInRange curIndex start finish piece table =
+    let inline textInRange curIndex start finish piece table =
         let textStart = start - curIndex + piece.Span.Start
         let textLength = finish - curIndex + piece.Span.Start - textStart
         Buffer.substring textStart textLength table.Buffer
 
-    let private textAtStart curIndex finish piece table =
+    let inline textAtStart curIndex finish piece table =
         let textStop = piece.Span.Start + (finish - curIndex)
         let substrSpan = Span.createWithStop piece.Span.Start textStop
         Buffer.substring piece.Span.Start substrSpan.Length table.Buffer
 
-    let private textAtEnd curIndex start piece table =
+    let inline textAtEnd curIndex start piece table =
         let textStart = start - curIndex + piece.Span.Start
         let textStop = Span.stop piece.Span
         Buffer.substring textStart (textStop - textStart) table.Buffer

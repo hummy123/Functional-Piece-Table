@@ -131,18 +131,24 @@ module PieceTree =
                     if start < curIndex
                     then sub (getLeftIndex curIndex l) l acc
                     else acc
-
-                let pos = Piece.compareWithSpan start finish curIndex v
+                
+                let pieceStop = v.Span.Start + v.Span.Length
                 let middle =
-                    match pos with
-                    | GreaterThanSpan
-                    | LessThanSpan -> left
-                    | _ -> left + (Piece.textSlice pos curIndex v start finish table)
+                    if start <= curIndex && finish >= pieceStop then
+                        Piece.text v table
+                    elif start <= curIndex && finish < pieceStop && curIndex < finish then
+                        Piece.textAtStart curIndex finish v table
+                    elif start > curIndex && finish >= pieceStop && start <= pieceStop then
+                        Piece.textAtEnd curIndex start v table
+                    elif start >= curIndex && finish <= pieceStop then
+                        Piece.textInRange curIndex start finish v table
+                    else
+                        ""
 
                 let nodeEndIndex = curIndex + v.Span.Length
                 let right =
                     if finish > nodeEndIndex
-                    then sub (nodeEndIndex + sizeLeft r) r middle
+                    then sub (nodeEndIndex + sizeLeft r) r (left + middle)
                     else middle
                 right
 

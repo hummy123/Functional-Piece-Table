@@ -156,38 +156,61 @@ module PieceTree =
 
     let delete (start: int) (length: int) (tree: AaTree): AaTree =
         let finish: int = start + length
-        let rec del (curIndex: int) (node: AaTree) =
-            match node: AaTree with
-            | PE -> PE
-            | PT(h: int, _, l: AaTree, v: PieceType, _, r: AaTree) ->
-                let left: AaTree = 
-                    if start < curIndex && l <> PE
-                    then del (getLeftIndex curIndex l) l
-                    else l
 
-                let nodeEndIndex: int = curIndex + v.Span.Length
-                let right: AaTree =
-                    if finish > nodeEndIndex && r <> PE
-                    then del (nodeEndIndex + sizeLeft r) r
+        let inline delMid h left right curIndex nodeEndIndex nodePiece =
+            if start <= curIndex && finish >= nodeEndIndex then
+                let newVal = Piece.create 0 0
+                PT(h, size left, left, newVal, size right, right)
+            elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
+                let newPiece = Piece.deleteAtStart curIndex finish nodePiece
+                split <| (skew <| PT(h, size left, left, newPiece, size right, right))
+            elif start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex then
+                let newPiece = Piece.deleteAtEnd curIndex start nodePiece
+                PT(h, size left, left, newPiece, size right, right)
+            elif start >= curIndex && finish <= nodeEndIndex then
+                let (p1, p2) = Piece.deleteInRange curIndex start finish nodePiece
+                let newLeft = insMax p1 left
+                split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
+            else
+                split <| (skew <| PT(h, size left, left, nodePiece, size right, right))
+
+        let rec del (curIndex: int) (node: AaTree) =
+            let inline searchLeft curIndex lefv lefsr l =
+                if start < curIndex
+                    then del (curIndex - lefv.Span.Length - lefsr) l
+                    else l
+            let inline searchRight nodeEndIndex rightsl r =
+                if finish > nodeEndIndex
+                    then del (nodeEndIndex + rightsl) r
                     else r
 
-                let middle = 
-                    if start <= curIndex && finish >= nodeEndIndex then
-                        let newVal = Piece.create 0 0
-                        PT(h, size left, left, newVal, size right, right)
-                    elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
-                        let newPiece = Piece.deleteAtStart curIndex finish v
-                        split <| (skew <| PT(h, size left, left, newPiece, size right, right))
-                    elif start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex then
-                        let newPiece = Piece.deleteAtEnd curIndex start v
-                        PT(h, size left, left, newPiece, size right, right)
-                    elif start >= curIndex && finish <= nodeEndIndex then
-                        let (p1, p2) = Piece.deleteInRange curIndex start finish v
-                        let newLeft = insMax p1 left
-                        split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
-                    else
-                        split <| (skew <| PT(h, size left, left, v, size right, right))
+            match node: AaTree with
+            (* Left, Right. *)
+            | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v: PieceType, _,  (PT(_, rightsl, _, rightv, _, _) as r)) ->
+                let left = searchLeft curIndex lefv lefsr l
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                let right = searchRight nodeEndIndex rightsl r
+                delMid h left right curIndex nodeEndIndex v
+                
+            (* Left, PE. *)
+            | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v, _, PE) ->
+                let left = searchLeft curIndex lefv lefsr l
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                delMid h left PE curIndex nodeEndIndex v
 
-                middle
+            (* PE, Right. *)
+            | PT(h: int, _, PE, v: PieceType, _, (PT(_, rightsl, _, rightv, _, _) as r)) ->
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                let right = searchRight nodeEndIndex rightsl r
+                delMid h PE right curIndex nodeEndIndex v
+
+            (* PE, PE. *)
+            | PT(h: int, _, PE, v: PieceType, _, PE) ->
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                delMid h PE PE curIndex nodeEndIndex v
+
+            (* Empty node. *)
+            | PE -> PE
+                
         del (sizeLeft tree) tree 
     

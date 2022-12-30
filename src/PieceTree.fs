@@ -18,11 +18,6 @@ module PieceTree =
         match node with
         | PE -> 0
         | PT(_, _, _, _, sr, _) -> sr
-
-    let inline private getLeftIndex curIndex node =
-        match node with
-        | PE -> curIndex
-        | PT(_, _, _, v, sr, _) -> curIndex - v.Span.Length - sr
  
     let inline private skew node =
         match node with

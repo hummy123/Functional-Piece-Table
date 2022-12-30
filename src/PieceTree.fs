@@ -84,19 +84,19 @@ module PieceTree =
         let rec ins curIndex node =
             match node with
             | PE -> PT(1, 0, PE, piece, 0, PE)
-            | PT(h, sl, l, v, sr, r) as node ->
+            | PT(h, sl, l, v, sr, r) ->
                 let nodeEndIndex = curIndex + v.Span.Length
                 if insIndex > nodeEndIndex then 
-                    let newSr = sr + v.Span.Length
+                    let newSr = sr + piece.Span.Length
                     let nextIndex = nodeEndIndex + sizeLeft r
                     split <| (skew <| PT(h, sl, l, v, newSr, ins nextIndex r))
                 elif insIndex < curIndex then
-                    let newSl = sl + v.Span.Length
+                    let newSl = sl + piece.Span.Length
                     let nextIndex = curIndex - pieceLength l - sizeRight l
                     split <| (skew <| PT(h, newSl, ins nextIndex l, v, sr, r))
                 elif curIndex = insIndex then
                     let newLeft = insMax piece l
-                    split <| (skew <| PT(h, size newLeft, newLeft, v, sr, r))
+                    split <| (skew <| PT(h, sl + piece.Span.Length, newLeft, v, sr, r))
                 elif insIndex = nodeEndIndex then
                     let newPiece = Piece.merge v piece
                     PT(h, sl, l, newPiece, sr, r)
@@ -105,7 +105,7 @@ module PieceTree =
                     let (p1, p3) = Piece.split v (insIndex - curIndex)
                     let newLeft = insMax p1 l
                     let newRight = insMin p3 r
-                    split <| (skew <| PT(h, size newLeft, newLeft, piece, size newRight, newRight))
+                    split <| (skew <| PT(h, sl + p1.Span.Length, newLeft, piece, sr + p3.Span.Length, newRight))
 
         ins (sizeLeft tree) tree
 

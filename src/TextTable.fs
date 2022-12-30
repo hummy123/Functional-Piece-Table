@@ -5,6 +5,34 @@ open System
 open System.IO
 
 module TextTable =
+<<<<<<< HEAD
+    let empty = { Buffer = Buffer.empty; Pieces = PieceTree.empty; Length = 0 }
+
+    /// Create a TextTableType given a string,
+    let create str =
+        if str = ""
+        then 
+            empty
+        else 
+            let buffer = Buffer.createWithString str
+            let piece = Piece.create true 0 str.Length
+            let pieces = PieceTree.insert 0 piece PieceTree.empty
+            { Buffer=buffer; Pieces=pieces; Length=str.Length }
+
+    let text table = PieceTree.text table
+
+    /// Consolidates a table into a buffer with only used characters and a single piece.
+    /// Recommended to call this in another thread: do not use it synchronously.
+    let consolidate (table: TextTableType) =
+        let folder = (fun (acc: BufferType) (piece: PieceType) -> 
+            let text = (Buffer.substring piece.Span table.Buffer)
+            Buffer.append text acc
+         )
+        let buffer = PieceTree.fold folder Buffer.empty table.Pieces
+        let piece = Piece.create false 0 buffer.Length
+        let tree = PieceTree.insert 0 piece PieceTree.empty
+        { Pieces = tree; Buffer = buffer; Length = buffer.Length }
+=======
     (* TextTable creation functions. *)
     /// Creates an empty TextTableType.
     let empty = {Buffer = Buffer.empty; Pieces = ListZipper.empty}
@@ -54,17 +82,29 @@ module TextTable =
             {Pieces = zipper; Buffer = buffer;}
         else
             table
+>>>>>>> main
 
     (* TextTable "modification" functions. *)
     /// Returns a new TextTableType with the string inserted.
     let insert index (str: string) (table: TextTableType) =
         let buffer = Buffer.append str table.Buffer
         let piece = Piece.create false (buffer.Length - str.Length) str.Length
+<<<<<<< HEAD
+        let pieces = PieceTree.insert index piece table.Pieces
+=======
         let pieces = ListZipper.insert index piece table.Pieces
+>>>>>>> main
 
-        { table with
-            Pieces = pieces
-            Buffer = buffer }
+        { Buffer = buffer; Pieces = pieces; Length = table.Length + str.Length }
+
+    let delete startIndex length (table: TextTableType) =
+        let span = Span.createWithLength startIndex length
+        let newPieces = PieceTree.delete span table.Pieces
+        { Pieces = newPieces; Buffer = table.Buffer; Length = table.Length - length }
+
+    let substring startIndex length table = 
+        let span = Span.createWithLength startIndex length
+        PieceTree.substring span table
 
     /// Returns a new TextTableType with the text in the given range removed.
     let delete startIndex length table =
@@ -184,6 +224,10 @@ module TextTable =
 
         member this.Insert(index, str) = insert index str this
         member this.Text() = text this
+<<<<<<< HEAD
+        member this.Substring(start, length) = substring start length this
+        member this.Delete(start, length) = delete start length this
+=======
 
         member this.Delete(start, length) =
             let span = Span.createWithLength start length
@@ -196,3 +240,4 @@ module TextTable =
         member this.IndexOf(str) = indexOf str this
         member this.LastIndexOf(str) = lastIndexOf str this
         member this.AllIndexesOf(str) = allIndexesOf str this
+>>>>>>> main

@@ -11,12 +11,15 @@ module internal Piece =
     let createWithSpan span =
         { Span = span }
 
+<<<<<<< HEAD
+=======
     /// Checks if two Pieces are consecutive (from the same buffer
     /// and one stopping where the other starts).
     /// Can be used to merge pieces for memory efficiency.
     let isConsecutive a b =
         (Span.stop a.Span) = b.Span.Start
 
+>>>>>>> main
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 
     let merge a b =
@@ -24,7 +27,11 @@ module internal Piece =
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
+<<<<<<< HEAD
+    let split (a: PieceType) (difference: int) =
+=======
     let split (a: PieceType) (b: PieceType) (difference: int) curIndex insIndex =
+>>>>>>> main
         let p1Length = a.Span.Start + difference
         let p1Span = Span.createWithStop a.Span.Start p1Length  
         let p1 = createWithSpan p1Span
@@ -32,6 +39,8 @@ module internal Piece =
         let span3 = Span.createWithStop (p1Length) (Span.stop a.Span)
         let p3 = createWithSpan span3
         (p1, p3)
+<<<<<<< HEAD
+=======
 
     /// Given a search index (for example the index we want to insert at), 
     /// a current index (keeping track of current index in a loop) 
@@ -48,6 +57,7 @@ module internal Piece =
             LessThanIndex
         else
             GreaterThanIndex
+>>>>>>> main
 
     let compareWithSpan (span: SpanType) curIndex curPiece =
         let spanStop = Span.stop span
@@ -55,7 +65,7 @@ module internal Piece =
 
         if span.Start <= curIndex && spanStop >= pieceStop then
             PieceFullyInSpan
-        elif span.Start <= curIndex && spanStop < pieceStop then
+        elif span.Start <= curIndex && spanStop < pieceStop && curIndex < spanStop then
             StartOfPieceInSpan
         elif span.Start > curIndex && spanStop >= pieceStop && span.Start <= pieceStop then
             EndOfPieceInSpan
@@ -66,16 +76,7 @@ module internal Piece =
         else
             LessThanSpan
 
-    /// Specifies how we should handle a Piece given to the delete method.
-    /// Empty: We can simply remove this Piece from the list.
-    /// CutOne: We can replace the Piece with the newly returned one.
-    /// CutTwo: We can replace the Piece given in the parameter with the two pieces returned, where the first is before the second.
-    type DeletedPiece =
-        | Empty
-        | CutOne of PieceType * int
-        | CutTwo of PieceType * PieceType * int
-
-    let private deleteInRange curIndex span piece =
+    let deleteInRange curIndex span piece =
         let spanStop = Span.stop span 
 
         let p1Start = piece.Span.Start
@@ -86,30 +87,18 @@ module internal Piece =
         
         let p2Stop = Span.stop piece.Span
         let p2 = {piece with Span = Span.createWithStop p2Start p2Stop}
-        CutTwo(p1, p2, span.Length)
+        (p1, p2)
 
-    let private deleteAtStart curIndex span piece =
+    let deleteAtStart curIndex span piece =
         let spanStop = Span.stop span
         let newPieceStart = piece.Span.Start + (spanStop - curIndex)
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
-        let difference = piece.Span.Length - newPieceSpan.Length
-        CutOne({ piece with Span = newPieceSpan }, difference)
+        { piece with Span = newPieceSpan }
 
-    let private deleteAtEnd curIndex span piece =
+    let deleteAtEnd curIndex span piece =
         let newLength = span.Start - curIndex
         let newSpan = Span.createWithLength piece.Span.Start newLength
-        let difference = piece.Span.Length - newSpan.Length
-        CutOne({ piece with Span = newSpan }, difference)
-
-    /// Deletes either a part of a piece or a full piece itself.
-    /// See the documentation for the DeletedPiece type on how to use this method's return value.
-    let delete pos curIndex (span: SpanType) (piece: PieceType) =        
-        match pos with
-        | PieceFullyInSpan -> DeletedPiece.Empty
-        | SpanWithinPiece -> deleteInRange curIndex span piece
-        | StartOfPieceInSpan -> deleteAtStart curIndex span piece
-        | EndOfPieceInSpan -> deleteAtEnd curIndex span piece
-        | _ -> failwith "Piece.delete error"
+        { piece with Span = newSpan }
 
     let text piece table =
         Buffer.substring piece.Span table.Buffer
@@ -127,8 +116,13 @@ module internal Piece =
         Buffer.substring substrSpan table.Buffer
 
     let private textAtEnd curIndex span piece table =
+<<<<<<< HEAD
+        let textStart = span.Start - curIndex + piece.Span.Start
+        let textStop = Span.stop piece.Span
+=======
         let textStop = Span.stop piece.Span
         let textStart = span.Start - curIndex
+>>>>>>> main
         let substrSpan = Span.createWithStop textStart textStop
         Buffer.substring substrSpan table.Buffer
 

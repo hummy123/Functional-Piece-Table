@@ -30,6 +30,22 @@ open System.Globalization
 
 module Buffer =
     let private skew = function
+<<<<<<< HEAD
+        | BT(lvx, BT(lvy, a, ky, vy, b), kx, vx, c) when lvx = lvy
+            -> BT(lvx, a, ky, vy, BT(lvx, b, kx, vx, c))
+        | t -> t
+
+    let private split = function
+        | BT(lvx, a, kx, vx, BT(lvy, b, ky, vy, BT(lvz, c, kz, vz, d))) 
+            when lvx = lvy && lvy = lvz
+              -> BT(lvx + 1, BT(lvx, a, kx, vx, b), ky, vy, BT(lvx, c, kz, vz, d))
+        | t -> t
+
+    let rec insert key value = function
+        | BE -> BT(1, BE, key, value, BE)
+        | BT(h, l, k, v, r) as node ->
+            split <| (skew <| BT(h, l, k, v, insert key value r))
+=======
         | T(lvx, T(lvy, a, ky, vy, b), kx, vx, c) when lvx = lvy
             -> T(lvx, a, ky, vy, T(lvx, b, kx, vx, c))
         | t -> t
@@ -44,6 +60,7 @@ module Buffer =
         | E -> T(1, E, key, value, E)
         | T(h, l, k, v, r) as node ->
             split <| (skew <| T(h, l, k, v, insert key value r))
+>>>>>>> main
 
     (* Discriminated union for handling different append cases. *)
     [<Struct>]
@@ -57,7 +74,11 @@ module Buffer =
     let MaxBufferLength = 1024
 
     /// An empty buffer.
+<<<<<<< HEAD
+    let empty = {Tree = BE; Length = 0}
+=======
     let empty = {Tree = E; Length = 0}
+>>>>>>> main
 
     /// Inserts a long string (greater than the max buffer length) into a tree,
     /// by splitting the string and adding it to multiple buffer nodes.
@@ -79,11 +100,28 @@ module Buffer =
     /// Append a string to the buffer.
     let private add (str: UnicodeStringType) tree =
         let rec loop = function
+<<<<<<< HEAD
+            | BE -> (* Only ever matched if whole tree is empty. *)
+=======
             | E -> (* Only ever matched if whole tree is empty. *)
+>>>>>>> main
                 if str.Length >= MaxBufferLength
                 then 
                     let nextIndex = MaxBufferLength
                     let str = str[..MaxBufferLength - 1] |> UnicodeString.create
+<<<<<<< HEAD
+                    let newTree = BT(1, BE, 0, str, BE)
+                    PartialAdd(newTree, 0, nextIndex)
+                else 
+                    let newTree = BT(1, BE, 0, str, BE)
+                    FullAdd(newTree)
+            | BT(c, a, curKey, curVal, b) -> 
+                match b with
+                | BE ->
+                    if curVal.Length + str.Length <= MaxBufferLength
+                    then 
+                        let newTree = BT(c, a, curKey, curVal + str, b)
+=======
                     let newTree = T(1, E, 0, str, E)
                     PartialAdd(newTree, 0, nextIndex)
                 else 
@@ -95,6 +133,7 @@ module Buffer =
                     if curVal.Length + str.Length <= MaxBufferLength
                     then 
                         let newTree = T(c, a, curKey, curVal + str, b)
+>>>>>>> main
                         FullAdd(newTree)
                     elif curVal.Length = MaxBufferLength
                     then BufferWasFull(curKey)
@@ -102,6 +141,18 @@ module Buffer =
                     then 
                         let remainingBufferLength = MaxBufferLength - curVal.Length
                         let fitString = str[0..remainingBufferLength - 1] |> UnicodeString.create
+<<<<<<< HEAD
+                        let newTree = BT(c, a, curKey, curVal + fitString, b)
+                        PartialAdd(newTree, curKey, fitString.Length)
+                    else failwith "unexpected Buffer.tryAppend case"
+                | BT(_, _, _, _, _) ->
+                    match loop b with
+                    | FullAdd newRight ->
+                        let reconstructTree = BT(c, a, curKey, curVal, newRight)
+                        FullAdd(reconstructTree)
+                    | PartialAdd(newRight, maxKey, insLength) ->
+                        let reconstructTree = BT(c, a, curKey, curVal, newRight)
+=======
                         let newTree = T(c, a, curKey, curVal + fitString, b)
                         PartialAdd(newTree, curKey, fitString.Length)
                     else failwith "unexpected Buffer.tryAppend case"
@@ -112,6 +163,7 @@ module Buffer =
                         FullAdd(reconstructTree)
                     | PartialAdd(newRight, maxKey, insLength) ->
                         let reconstructTree = T(c, a, curKey, curVal, newRight)
+>>>>>>> main
                         PartialAdd(reconstructTree, maxKey, insLength)
                     | BufferWasFull key -> BufferWasFull key
 
@@ -135,8 +187,13 @@ module Buffer =
 
     /// Find the string associated with a particular key.
     let rec private nodeSubstring key startPos endPos = function
+<<<<<<< HEAD
+        | BE -> ""
+        | BT(_, l, curKey, value, r) ->
+=======
         | E -> ""
         | T(_, l, curKey, value, r) ->
+>>>>>>> main
             if key = curKey 
             then value[startPos..endPos] (* Returns valid substring even if end is out of bounds. *)
             elif key < curKey 
@@ -179,8 +236,13 @@ module Buffer =
     let stringLength buffer =
         let rec traverse tree (acc: int) =
             match tree with
+<<<<<<< HEAD
+            | BE -> acc
+            | BT(_, l, _, v, r) ->
+=======
             | E -> acc
             | T(_, l, _, v, r) ->
+>>>>>>> main
                 (traverse l acc) + v.Length |> traverse r
         traverse buffer.Tree 0
 
@@ -190,8 +252,13 @@ module Buffer =
     let lengthAsList buffer =
         let rec traverse tree (accList: int list) =
             match tree with
+<<<<<<< HEAD
+            | BE -> accList
+            | BT(_,l,_,v,r) ->
+=======
             | E -> accList
             | T(_,l,_,v,r) ->
+>>>>>>> main
                 (traverse l accList) @ [v.Length] |> traverse r
         traverse buffer.Tree []
 
@@ -201,8 +268,13 @@ module Buffer =
     let text buffer =
         let rec traverse tree accText =
             match tree with
+<<<<<<< HEAD
+            | BE -> accText
+            | BT(_,l,_,v,r) ->
+=======
             | E -> accText
             | T(_,l,_,v,r) ->
+>>>>>>> main
                 (traverse l accText) + v[0..v.Length] |> traverse r
         traverse buffer.Tree ""
 

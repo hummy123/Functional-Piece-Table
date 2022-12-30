@@ -54,4 +54,8 @@ module UnicodeString =
         let strInfo = StringInfo str
         if strInfo.LengthInTextElements = str.Length
         then Plain str
+<<<<<<< HEAD
         else Unicode strInfo
+=======
+        else Unicode strInfo
+>>>>>>> main

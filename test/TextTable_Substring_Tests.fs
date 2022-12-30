@@ -98,3 +98,19 @@ let ``Can get a substring over a split piece`` () =
     let table = table.Insert(2, "b")
     let substr = table.Substring(0, 3)
     Assert.Equal("a1b", substr)
+
+[<Fact>]
+let ``TextEdit2`` () =
+    // Enter string correctly.
+    let table = TextTable.create "124567893"
+    let table = table.Insert(8, "98")
+    let table = table.Insert(9, "ab")
+    let expWholestr = "124567899ab83"
+    let wholestr = table.Text()
+    // Check we have entered string correctly.
+    Assert.Equal(expWholestr, wholestr)
+
+    // Get substring.
+    let expsubstr9 = "124567899"
+    let substr9 = table.Substring(0, 9)
+    Assert.Equal(expsubstr9, substr9)

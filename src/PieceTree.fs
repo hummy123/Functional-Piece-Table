@@ -9,24 +9,17 @@ module PieceTree =
         | PT(_, _, _, _, _, PE) -> true
         | PT(lvx,_, _, _, _, PT(lvy, _, _, _, _, _)) -> lvx > lvy
 
-    let private lvl = function
-        | PE -> 0
-        | PT(lvt, _, _, _, _, _) -> lvt
-
-    let private nlvl = function
-        | PT(lvt, _, _, _, _, _) as t -> 
-            if sngl t
-            then (lvt - 1)
-            else lvt
-        | _ -> failwith "unexpected nlvl case"
-
     let private size = function
         | PE -> 0
-        | PT(_, sl, _, p, sr, _) -> sl + p.Span.Length + sr
+        | PT(_, sl, l, p, sr, r) -> sl + p.Span.Length + sr
 
     let private sizeLeft = function
         | PE -> 0
         | PT(_, sl, _, _, _, _) -> sl
+
+    let private sizeRight = function
+        | PE -> 0
+        | PT(_, _, _, _, sr, _) -> sr
  
     let private skew = function
         | PT(lvx, _, PT(lvy, _, a, ky, _, b), kx, _, c) when lvx = lvy -> 
@@ -97,14 +90,14 @@ module PieceTree =
             match node with
             | PE -> PT(1, 0, PE, piece, 0, PE)
             | PT(h, sl, l, v, sr, r) as node ->
-                let nodeEndIndex = curIndex + v.Span.Length + sizeLeft r
+                let nodeEndIndex = curIndex + v.Span.Length
                 if insIndex > nodeEndIndex then 
                     let newSr = sr + v.Span.Length
-                    let nextIndex = nodeEndIndex 
+                    let nextIndex = nodeEndIndex + sizeLeft r
                     split <| (skew <| PT(h, sl, l, v, newSr, ins nextIndex r))
                 elif insIndex < curIndex then
                     let newSl = sl + v.Span.Length
-                    let nextIndex = curIndex - (pieceLength l)
+                    let nextIndex = curIndex - pieceLength l - sizeRight l
                     split <| (skew <| PT(h, newSl, ins nextIndex l, v, sr, r))
                 elif curIndex = insIndex then
                     let newLeft = insMax piece l
@@ -127,10 +120,9 @@ module PieceTree =
             match node with
             | PE -> acc
             | PT(h, sl, l, v, sr, r) ->
-                let nodeEndIndex = curIndex + v.Span.Length + sizeLeft r
                 let left = 
                     if span.Start < curIndex
-                    then sub (curIndex - (pieceLength l)) l acc
+                    then sub (curIndex - pieceLength l - sizeRight l) l acc
                     else acc
 
                 let pos = Piece.compareWithSpan span curIndex v
@@ -140,9 +132,10 @@ module PieceTree =
                     | LessThanSpan -> left
                     | _ -> left + (Piece.textSlice pos curIndex v span table)
 
+                let nodeEndIndex = curIndex + v.Span.Length
                 let right =
-                    if spanEnd > nodeEndIndex
-                    then sub nodeEndIndex r middle
+                    if spanEnd > nodeEndIndex 
+                    then sub (nodeEndIndex + sizeLeft r) r middle
                     else middle
                 right
 
@@ -154,15 +147,15 @@ module PieceTree =
             match node with
             | PE -> PE
             | PT(h, sl, l, v, sr, r) ->
-                let nodeEndIndex = curIndex + v.Span.Length + sizeLeft r
+                let nodeEndIndex = curIndex + v.Span.Length
                 let left = 
                     if span.Start < curIndex && l <> PE
-                    then del (curIndex - (pieceLength l)) l
+                    then del (curIndex - pieceLength l - sizeRight l) l
                     else l
 
                 let right =
                     if spanEnd > nodeEndIndex && r <> PE
-                    then del nodeEndIndex r
+                    then del (nodeEndIndex + sizeLeft r) r
                     else r
 
                 let pos = Piece.compareWithSpan span curIndex v

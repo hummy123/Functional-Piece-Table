@@ -4,11 +4,6 @@ open Types
 open Piece
 
 module PieceTree =
-    let private sngl = function
-        | PE -> false
-        | PT(_, _, _, _, _, PE) -> true
-        | PT(lvx,_, _, _, _, PT(lvy, _, _, _, _, _)) -> lvx > lvy
-
     let private size = function
         | PE -> 0
         | PT(_, sl, l, p, sr, r) -> sl + p.Span.Length + sr

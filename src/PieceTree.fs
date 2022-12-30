@@ -100,7 +100,7 @@ module PieceTree =
                 let nodeEndIndex = curIndex + v.Span.Length
                 if insIndex > nodeEndIndex then 
                     let newSr = sr + v.Span.Length
-                    let nextIndex = curIndex + v.Span.Length
+                    let nextIndex = nodeEndIndex + sizeLeft r
                     split <| (skew <| PT(h, sl, l, v, newSr, ins nextIndex r))
                 elif insIndex < curIndex then
                     let newSl = sl + v.Span.Length

@@ -135,23 +135,23 @@ module PieceTree =
                 let pieceStop = curIndex + v.Span.Length
                 let middle =
                     if start <= curIndex && finish >= pieceStop then
-                        Piece.text v table
+                        left + Piece.text v table
                     elif start <= curIndex && finish < pieceStop && curIndex < finish then
-                        Piece.textAtStart curIndex finish v table
+                        left + Piece.textAtStart curIndex finish v table
                     elif start > curIndex && finish >= pieceStop && start <= pieceStop then
-                        Piece.textAtEnd curIndex start v table
+                        left + Piece.textAtEnd curIndex start v table
                     elif start >= curIndex && finish <= pieceStop then
-                        Piece.textInRange curIndex start finish v table
+                        left + Piece.textInRange curIndex start finish v table
                     else
-                        ""
+                        left
 
                 let nodeEndIndex = curIndex + v.Span.Length
                 let right =
                     if finish > nodeEndIndex
-                    then sub (nodeEndIndex + sizeLeft r) r ""
-                    else ""
+                    then sub (nodeEndIndex + sizeLeft r) r middle
+                    else middle
 
-                left + middle + right
+                right
 
         sub (sizeLeft table.Pieces) table.Pieces ""
 

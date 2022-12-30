@@ -156,12 +156,12 @@ module PieceTree =
             | PT(h: int, _, l: AaTree, v: PieceType, _, r: AaTree) ->
                 let nodeEndIndex: int = curIndex + v.Span.Length
                 let left: AaTree = 
-                    if span.Start.isSmaller curIndex && l <> PE
+                    if span.Start < curIndex && l <> PE
                     then del (getLeftIndex curIndex l) l
                     else l
 
                 let right: AaTree =
-                    if spanEnd.isLarger nodeEndIndex && r <> PE
+                    if spanEnd > nodeEndIndex && r <> PE
                     then del (nodeEndIndex + sizeLeft r) r
                     else r
 

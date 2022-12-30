@@ -97,10 +97,10 @@ module PieceTree =
             match node with
             | PE -> PT(1, 0, PE, piece, 0, PE)
             | PT(h, sl, l, v, sr, r) as node ->
-                let nodeEndIndex = curIndex + v.Span.Length
+                let nodeEndIndex = curIndex + v.Span.Length + sizeLeft r
                 if insIndex > nodeEndIndex then 
                     let newSr = sr + v.Span.Length
-                    let nextIndex = nodeEndIndex + sizeLeft r
+                    let nextIndex = nodeEndIndex 
                     split <| (skew <| PT(h, sl, l, v, newSr, ins nextIndex r))
                 elif insIndex < curIndex then
                     let newSl = sl + v.Span.Length
@@ -127,7 +127,7 @@ module PieceTree =
             match node with
             | PE -> acc
             | PT(h, sl, l, v, sr, r) ->
-                let nodeEndIndex = curIndex + v.Span.Length
+                let nodeEndIndex = curIndex + v.Span.Length + sizeLeft r
                 let left = 
                     if span.Start < curIndex
                     then sub (curIndex - (pieceLength l)) l acc
@@ -142,7 +142,7 @@ module PieceTree =
 
                 let right =
                     if spanEnd > nodeEndIndex
-                    then sub (nodeEndIndex + sizeLeft r) r middle
+                    then sub nodeEndIndex r middle
                     else middle
                 right
 
@@ -154,7 +154,7 @@ module PieceTree =
             match node with
             | PE -> PE
             | PT(h, sl, l, v, sr, r) ->
-                let nodeEndIndex = curIndex + v.Span.Length
+                let nodeEndIndex = curIndex + v.Span.Length + sizeLeft r
                 let left = 
                     if span.Start < curIndex && l <> PE
                     then del (curIndex - (pieceLength l)) l
@@ -162,7 +162,7 @@ module PieceTree =
 
                 let right =
                     if spanEnd > nodeEndIndex && r <> PE
-                    then del (nodeEndIndex + sizeLeft r) r
+                    then del nodeEndIndex r
                     else r
 
                 let pos = Piece.compareWithSpan span curIndex v

@@ -11,15 +11,6 @@ module internal Piece =
     let createWithSpan span =
         { Span = span }
 
-<<<<<<< HEAD
-=======
-    /// Checks if two Pieces are consecutive (from the same buffer
-    /// and one stopping where the other starts).
-    /// Can be used to merge pieces for memory efficiency.
-    let isConsecutive a b =
-        (Span.stop a.Span) = b.Span.Start
-
->>>>>>> main
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 
     let merge a b =
@@ -27,11 +18,7 @@ module internal Piece =
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
-<<<<<<< HEAD
     let split (a: PieceType) (difference: int) =
-=======
-    let split (a: PieceType) (b: PieceType) (difference: int) curIndex insIndex =
->>>>>>> main
         let p1Length = a.Span.Start + difference
         let p1Span = Span.createWithStop a.Span.Start p1Length  
         let p1 = createWithSpan p1Span
@@ -39,25 +26,6 @@ module internal Piece =
         let span3 = Span.createWithStop (p1Length) (Span.stop a.Span)
         let p3 = createWithSpan span3
         (p1, p3)
-<<<<<<< HEAD
-=======
-
-    /// Given a search index (for example the index we want to insert at), 
-    /// a current index (keeping track of current index in a loop) 
-    /// and a piece, returns a DU telling us where we are.
-    let compareWithIndex searchIndex curIndex curPiece =
-        let endIndex = curIndex + curPiece.Span.Length
-        if searchIndex = curIndex then
-            EqualTo
-        elif searchIndex = endIndex then
-            AtEndOf
-        elif searchIndex > curIndex && searchIndex < endIndex then
-            InRangeOf
-        elif searchIndex < curIndex then
-            LessThanIndex
-        else
-            GreaterThanIndex
->>>>>>> main
 
     let compareWithSpan (span: SpanType) curIndex curPiece =
         let spanStop = Span.stop span
@@ -116,13 +84,8 @@ module internal Piece =
         Buffer.substring substrSpan table.Buffer
 
     let private textAtEnd curIndex span piece table =
-<<<<<<< HEAD
         let textStart = span.Start - curIndex + piece.Span.Start
         let textStop = Span.stop piece.Span
-=======
-        let textStop = Span.stop piece.Span
-        let textStart = span.Start - curIndex
->>>>>>> main
         let substrSpan = Span.createWithStop textStart textStop
         Buffer.substring substrSpan table.Buffer
 

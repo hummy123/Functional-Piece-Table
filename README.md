@@ -5,7 +5,7 @@ This is a purely functional Piece Table written in F#. A Piece Table is a data s
 
 For more information about the Piece Table data structure, [this repository](https://github.com/veler/Csharp-Piece-Table-Implementation) provides some helpful introductory links.
 
-This particular implementation contains a Piece Table with the Pieces stored in a linked list with a zipper which, like a splay tree, move us to the node where the last operation was performed. This lets us reach nodes local to the previous one and perform operations on them more efficiently.
+This particular implementation contains a Piece Table with the Pieces stored in a type of balanced binary tree (an AA Tree) which helps to perform insert, deletion and substring operations in O(log n) time.
 
 ## Credits
 

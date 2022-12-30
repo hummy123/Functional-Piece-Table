@@ -12,17 +12,6 @@ module Types =
     type PieceType = { Span: SpanType }
 
     [<Struct>]
-<<<<<<< HEAD
-=======
-    type CompareIndex = 
-        | EqualTo
-        | InRangeOf
-        | AtEndOf
-        | LessThanIndex
-        | GreaterThanIndex
-
-    [<Struct>]
->>>>>>> main
     type CompareSpan =
         | StartOfPieceInSpan
         | EndOfPieceInSpan
@@ -42,19 +31,13 @@ module Types =
     type Height = int
 
     type BufferTree =
-<<<<<<< HEAD
         | BE 
         | BT of Height * BufferTree * Key * Value * BufferTree
-=======
-        | E 
-        | T of Height * BufferTree * Key * UnicodeStringType * BufferTree
->>>>>>> main
 
     (* Interface type to tree storing length as well. *)
     type BufferType = { Tree: BufferTree; Length: BufferLength }
     (* ...end of type definitions for buffer. *)
 
-<<<<<<< HEAD
     (* Piece tree as an AA tree. *)
     type SizeLeft = int
     type SizeRight = int
@@ -68,13 +51,3 @@ module Types =
         { Buffer: BufferType
           Pieces: AaTree
           Length: int }
-=======
-    type ListZipperType =
-        { Focus: PieceType list
-          Path: PieceType list
-          Index: int }
-
-    type TextTableType =
-        { Buffer: BufferType
-          Pieces: ListZipperType }
->>>>>>> main

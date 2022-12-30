@@ -11,7 +11,7 @@
     <Compile Include="Span.fs" />
 	<Compile Include="Buffer.fs" />
 	<Compile Include="Piece.fs" />
-    <Compile Include="ListZipper.fs" />
+	<Compile Include="PieceTree.fs" />
 	<Compile Include="TextTable.fs" />
   </ItemGroup>
 

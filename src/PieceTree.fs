@@ -123,34 +123,55 @@ module PieceTree =
 
     let substring (start: int) (length: int) table =
         let finish = start + length
+        let inline subMid curIndex nodeEndIndex acc v =
+            if start <= curIndex && finish >= nodeEndIndex then
+                acc + Piece.text v table
+            elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
+                acc + Piece.textAtStart curIndex finish v table
+            elif start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex then
+                acc + Piece.textAtEnd curIndex start v table
+            elif start >= curIndex && finish <= nodeEndIndex then
+                acc + Piece.textInRange curIndex start finish v table
+            else
+                acc
+
         let rec sub curIndex node acc =
+            let inline subLeft lefv lefsr (l: AaTree) acc =
+                if start < curIndex
+                then sub (curIndex - lefv.Span.Length - lefsr) l acc
+                else acc
+
+            let inline subRight nodeEndIndex rightsl r acc =
+                if finish > nodeEndIndex
+                then sub (nodeEndIndex + rightsl) r acc
+                else acc
+
             match node with
             | PE -> acc
-            | PT(_, _, l, v, _, r) ->
-                let left = 
-                    if start < curIndex
-                    then sub (getLeftIndex curIndex l) l acc
-                    else acc
 
+            (* Left, Right. *)
+            | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v: PieceType, _,  (PT(_, rightsl, _, rightv, _, _) as r)) ->
+                let left = subLeft lefv lefsr l acc
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                let middle = subMid curIndex nodeEndIndex left v
+                subRight nodeEndIndex rightsl r middle
+
+            (* Left, PE. *)
+            | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v, _, PE) ->
+                let left = subLeft lefv lefsr l acc
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                subMid curIndex nodeEndIndex left v
+
+            (* PE, Right. *)
+            | PT(h: int, _, PE, v: PieceType, _, (PT(_, rightsl, _, _, _, _) as r)) ->
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                let middle = subMid curIndex nodeEndIndex acc v
+                subRight nodeEndIndex rightsl r middle
+
+            (* PE, PE. *)
+            | PT(_, _, PE, v, _, PE) ->
                 let nodeEndIndex = curIndex + v.Span.Length
-                let middle =
-                    if start <= curIndex && finish >= nodeEndIndex then
-                        left + Piece.text v table
-                    elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
-                        left + Piece.textAtStart curIndex finish v table
-                    elif start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex then
-                        left + Piece.textAtEnd curIndex start v table
-                    elif start >= curIndex && finish <= nodeEndIndex then
-                        left + Piece.textInRange curIndex start finish v table
-                    else
-                        left
-
-                let right =
-                    if finish > nodeEndIndex
-                    then sub (nodeEndIndex + sizeLeft r) r middle
-                    else middle
-
-                right
+                acc + subMid curIndex nodeEndIndex "" v
 
         sub (sizeLeft table.Pieces) table.Pieces ""
 
@@ -175,11 +196,11 @@ module PieceTree =
                 split <| (skew <| PT(h, size left, left, nodePiece, size right, right))
 
         let rec del (curIndex: int) (node: AaTree) =
-            let inline searchLeft curIndex lefv lefsr l =
+            let inline delLeft lefv lefsr l =
                 if start < curIndex
                     then del (curIndex - lefv.Span.Length - lefsr) l
                     else l
-            let inline searchRight nodeEndIndex rightsl r =
+            let inline delRight nodeEndIndex rightsl r =
                 if finish > nodeEndIndex
                     then del (nodeEndIndex + rightsl) r
                     else r
@@ -187,21 +208,21 @@ module PieceTree =
             match node: AaTree with
             (* Left, Right. *)
             | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v: PieceType, _,  (PT(_, rightsl, _, rightv, _, _) as r)) ->
-                let left = searchLeft curIndex lefv lefsr l
+                let left = delLeft lefv lefsr l
                 let nodeEndIndex: int = curIndex + v.Span.Length
-                let right = searchRight nodeEndIndex rightsl r
+                let right = delRight nodeEndIndex rightsl r
                 delMid h left right curIndex nodeEndIndex v
                 
             (* Left, PE. *)
             | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v, _, PE) ->
-                let left = searchLeft curIndex lefv lefsr l
+                let left = delLeft lefv lefsr l
                 let nodeEndIndex: int = curIndex + v.Span.Length
                 delMid h left PE curIndex nodeEndIndex v
 
             (* PE, Right. *)
-            | PT(h: int, _, PE, v: PieceType, _, (PT(_, rightsl, _, rightv, _, _) as r)) ->
+            | PT(h: int, _, PE, v: PieceType, _, (PT(_, rightsl, _, _, _, _) as r)) ->
                 let nodeEndIndex: int = curIndex + v.Span.Length
-                let right = searchRight nodeEndIndex rightsl r
+                let right = delRight nodeEndIndex rightsl r
                 delMid h PE right curIndex nodeEndIndex v
 
             (* PE, PE. *)

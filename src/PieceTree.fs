@@ -132,20 +132,19 @@ module PieceTree =
                     then sub (getLeftIndex curIndex l) l acc
                     else acc
 
-                let pieceStop = curIndex + v.Span.Length
+                let nodeEndIndex = curIndex + v.Span.Length
                 let middle =
-                    if start <= curIndex && finish >= pieceStop then
+                    if start <= curIndex && finish >= nodeEndIndex then
                         left + Piece.text v table
-                    elif start <= curIndex && finish < pieceStop && curIndex < finish then
+                    elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
                         left + Piece.textAtStart curIndex finish v table
-                    elif start > curIndex && finish >= pieceStop && start <= pieceStop then
+                    elif start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex then
                         left + Piece.textAtEnd curIndex start v table
-                    elif start >= curIndex && finish <= pieceStop then
+                    elif start >= curIndex && finish <= nodeEndIndex then
                         left + Piece.textInRange curIndex start finish v table
                     else
                         left
 
-                let nodeEndIndex = curIndex + v.Span.Length
                 let right =
                     if finish > nodeEndIndex
                     then sub (nodeEndIndex + sizeLeft r) r middle
@@ -161,36 +160,34 @@ module PieceTree =
             match node: AaTree with
             | PE -> PE
             | PT(h: int, _, l: AaTree, v: PieceType, _, r: AaTree) ->
-                let nodeEndIndex: int = curIndex + v.Span.Length
                 let left: AaTree = 
                     if start < curIndex && l <> PE
                     then del (getLeftIndex curIndex l) l
                     else l
 
+                let nodeEndIndex: int = curIndex + v.Span.Length
                 let right: AaTree =
                     if finish > nodeEndIndex && r <> PE
                     then del (nodeEndIndex + sizeLeft r) r
                     else r
 
-                let pos: CompareSpan = Piece.compareWithSpan start finish curIndex v
-                let middle: AaTree =
-                    match pos with
-                    | GreaterThanSpan 
-                    | LessThanSpan -> 
-                        split <| (skew <| PT(h, size left, left, v, size right, right))
-                    | PieceFullyInSpan ->
+                let middle = 
+                    if start <= curIndex && finish >= nodeEndIndex then
                         let newVal = Piece.create 0 0
                         PT(h, size left, left, newVal, size right, right)
-                    | SpanWithinPiece ->
+                    elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
+                        let newPiece = Piece.deleteAtStart curIndex finish v
+                        split <| (skew <| PT(h, size left, left, newPiece, size right, right))
+                    elif start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex then
+                        let newPiece = Piece.deleteAtEnd curIndex start v
+                        PT(h, size left, left, newPiece, size right, right)
+                    elif start >= curIndex && finish <= nodeEndIndex then
                         let (p1, p2) = Piece.deleteInRange curIndex start finish v
                         let newLeft = insMax p1 left
                         split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
-                    | StartOfPieceInSpan ->
-                        let newPiece = Piece.deleteAtStart curIndex finish v
-                        split <| (skew <| PT(h, size left, left, newPiece, size right, right))
-                    | EndOfPieceInSpan ->
-                        let newPiece = Piece.deleteAtEnd curIndex start v
-                        PT(h, size left, left, newPiece, size right, right)
+                    else
+                        split <| (skew <| PT(h, size left, left, v, size right, right))
+
                 middle
         del (sizeLeft tree) tree 
     

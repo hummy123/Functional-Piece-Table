@@ -11,15 +11,6 @@ module Types =
     [<Struct>]
     type PieceType = { Span: SpanType }
 
-    [<Struct>]
-    type CompareSpan =
-        | StartOfPieceInSpan
-        | EndOfPieceInSpan
-        | PieceFullyInSpan
-        | SpanWithinPiece
-        | LessThanSpan
-        | GreaterThanSpan
-
     (* Start of type definitions for buffer, represented as red black tree... *)
     (* Type abbreviations. *)
     type BufferLength = int

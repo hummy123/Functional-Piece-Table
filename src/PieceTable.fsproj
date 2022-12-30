@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="IntExtension.fs" />
     <Compile Include="UnicodeString.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Span.fs" />

@@ -18,5 +18,5 @@ module Program =
         for i in [0..100] do
             table <- table.Insert(0, "hello")
 
-        table.Delete(0, 5)
+        table.Substring(0, 20)
         0

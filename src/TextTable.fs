@@ -39,9 +39,9 @@ module TextTable =
 
         { Buffer = buffer; Pieces = pieces; Length = table.Length + str.Length }
 
-    let delete startIndex length (table: TextTableType) =
-        let span = Span.createWithLength startIndex length
-        let newPieces = PieceTree.delete span table.Pieces
+    let delete (startIndex: int) (length: int) (table: TextTableType) =
+        let span: SpanType = Span.createWithLength startIndex length
+        let newPieces: AaTree = PieceTree.delete span table.Pieces
         { Pieces = newPieces; Buffer = table.Buffer; Length = table.Length - length }
 
     let substring startIndex length table = 
@@ -53,4 +53,4 @@ module TextTable =
         member this.Insert(index, str) = insert index str this
         member this.Text() = text this
         member this.Substring(start, length) = substring start length this
-        member this.Delete(start, length) = delete start length this
+        member this.Delete(start: int, length: int) = delete start length this

@@ -84,8 +84,8 @@ module internal Piece =
         Buffer.substring substrSpan table.Buffer
 
     let private textAtEnd curIndex span piece table =
+        let textStart = span.Start - curIndex + piece.Span.Start
         let textStop = Span.stop piece.Span
-        let textStart = span.Start - curIndex
         let substrSpan = Span.createWithStop textStart textStop
         Buffer.substring substrSpan table.Buffer
 

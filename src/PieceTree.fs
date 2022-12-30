@@ -122,6 +122,7 @@ module PieceTree =
         ins (sizeLeft tree) tree
 
     let substring (span: SpanType) table =
+        let spanEnd = span.Start + span.Length
         let rec sub curIndex node acc =
             match node with
             | PE -> acc
@@ -140,8 +141,8 @@ module PieceTree =
                     | _ -> left + (Piece.textSlice pos curIndex v span table)
 
                 let right =
-                    if span.Start + span.Length > nodeEndIndex
-                    then sub (curIndex + v.Span.Length) r middle
+                    if spanEnd > nodeEndIndex
+                    then sub (nodeEndIndex + sizeLeft r) r middle
                     else middle
                 right
 
@@ -161,7 +162,7 @@ module PieceTree =
 
                 let right =
                     if spanEnd > nodeEndIndex && r <> PE
-                    then del (curIndex + v.Span.Length) r
+                    then del (nodeEndIndex + sizeLeft r) r
                     else r
 
                 let pos = Piece.compareWithSpan span curIndex v

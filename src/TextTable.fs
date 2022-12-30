@@ -41,12 +41,12 @@ module TextTable =
 
     let delete (startIndex: int) (length: int) (table: TextTableType) =
         let span: SpanType = Span.createWithLength startIndex length
-        let newPieces: AaTree = PieceTree.delete span table.Pieces
+        let newPieces: AaTree = PieceTree.delete startIndex length table.Pieces
         { Pieces = newPieces; Buffer = table.Buffer; Length = table.Length - length }
 
     let substring startIndex length table = 
         let span = Span.createWithLength startIndex length
-        PieceTree.substring span table
+        PieceTree.substring startIndex length table
 
     (* Alternative OOP API. *)
     type TextTableType with

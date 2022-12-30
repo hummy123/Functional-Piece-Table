@@ -27,72 +27,66 @@ module internal Piece =
         let p3 = createWithSpan span3
         (p1, p3)
 
-    let compareWithSpan (span: SpanType) curIndex curPiece =
-        let spanStop = Span.stop span
+    let compareWithSpan (start: int) (finish: int) (curIndex: int) curPiece =
         let pieceStop = curIndex + curPiece.Span.Length
 
-        if span.Start <= curIndex && spanStop >= pieceStop then
+        if start <= curIndex && finish >= pieceStop then
             PieceFullyInSpan
-        elif span.Start <= curIndex && spanStop < pieceStop && curIndex < spanStop then
+        elif start <= curIndex && finish < pieceStop && curIndex < finish then
             StartOfPieceInSpan
-        elif span.Start > curIndex && spanStop >= pieceStop && span.Start <= pieceStop then
+        elif start > curIndex && finish >= pieceStop && start <= pieceStop then
             EndOfPieceInSpan
-        elif span.Start >= curIndex && spanStop <= pieceStop then
+        elif start >= curIndex && finish <= pieceStop then
             SpanWithinPiece
-        elif curIndex > span.Start then
+        elif curIndex > start then
             GreaterThanSpan
         else
             LessThanSpan
 
-    let deleteInRange curIndex span piece =
-        let spanStop = Span.stop span 
-
+    let deleteInRange curIndex start finish piece =
         let p1Start = piece.Span.Start
-        let p1Length = span.Start - curIndex
+        let p1Length = start - curIndex
         let p1 = {piece with Span = Span.createWithLength p1Start p1Length}
 
-        let p2Start = spanStop - curIndex + piece.Span.Start
+        let p2Start = finish - curIndex + piece.Span.Start
         
         let p2Stop = Span.stop piece.Span
         let p2 = {piece with Span = Span.createWithStop p2Start p2Stop}
         (p1, p2)
 
-    let deleteAtStart curIndex span piece =
-        let spanStop = Span.stop span
-        let newPieceStart = piece.Span.Start + (spanStop - curIndex)
+    let deleteAtStart curIndex finish piece =
+        let newPieceStart = piece.Span.Start + (finish - curIndex)
         let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
         { piece with Span = newPieceSpan }
 
-    let deleteAtEnd curIndex span piece =
-        let newLength = span.Start - curIndex
+    let deleteAtEnd curIndex start piece =
+        let newLength = start - curIndex
         let newSpan = Span.createWithLength piece.Span.Start newLength
         { piece with Span = newSpan }
 
     let text piece table =
         Buffer.substring piece.Span table.Buffer
 
-    let private textInRange curIndex span piece table =
-        let spanStop = Span.stop span 
-        let textStart = span.Start - curIndex + piece.Span.Start
-        let textStop = spanStop - curIndex + piece.Span.Start
+    let private textInRange curIndex start finish piece table =
+        let textStart = start - curIndex + piece.Span.Start
+        let textStop = finish - curIndex + piece.Span.Start
         Buffer.substring (Span.createWithStop textStart textStop) table.Buffer
 
-    let private textAtStart curIndex span piece table =
-        let spanStop = Span.stop span
-        let textStop = piece.Span.Start + (spanStop - curIndex)
+    let private textAtStart curIndex finish piece table =
+        let textStop = piece.Span.Start + (finish - curIndex)
         let substrSpan = Span.createWithStop piece.Span.Start textStop
         Buffer.substring substrSpan table.Buffer
 
-    let private textAtEnd curIndex span piece table =
-        let textStart = span.Start - curIndex + piece.Span.Start
+    let private textAtEnd curIndex start piece table =
+        let textStart = start - curIndex + piece.Span.Start
         let textStop = Span.stop piece.Span
         let substrSpan = Span.createWithStop textStart textStop
         Buffer.substring substrSpan table.Buffer
 
-    let textSlice pos curIndex piece span table =
+    let inline textSlice pos curIndex piece start finish table =
         match pos with
         | PieceFullyInSpan -> text piece table
-        | SpanWithinPiece -> textInRange curIndex span piece table
-        | StartOfPieceInSpan -> textAtStart curIndex span piece table
-        | EndOfPieceInSpan -> textAtEnd curIndex span piece table
+        | SpanWithinPiece -> textInRange curIndex start finish piece table
+        | StartOfPieceInSpan -> textAtStart curIndex finish piece table
+        | EndOfPieceInSpan -> textAtEnd curIndex start piece table
         | _ -> failwith "unexpected Piece.textSlice case"

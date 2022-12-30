@@ -121,51 +121,51 @@ module PieceTree =
 
         ins (sizeLeft tree) tree
 
-    let substring (span: SpanType) table =
-        let spanEnd = span.Start + span.Length
+    let substring (start: int) (length: int) table =
+        let finish = start + length
         let rec sub curIndex node acc =
             match node with
             | PE -> acc
             | PT(_, _, l, v, _, r) ->
                 let left = 
-                    if span.Start < curIndex
+                    if start < curIndex
                     then sub (getLeftIndex curIndex l) l acc
                     else acc
 
-                let pos = Piece.compareWithSpan span curIndex v
+                let pos = Piece.compareWithSpan start finish curIndex v
                 let middle =
                     match pos with
                     | GreaterThanSpan
                     | LessThanSpan -> left
-                    | _ -> left + (Piece.textSlice pos curIndex v span table)
+                    | _ -> left + (Piece.textSlice pos curIndex v start finish table)
 
                 let nodeEndIndex = curIndex + v.Span.Length
                 let right =
-                    if spanEnd > nodeEndIndex
+                    if finish > nodeEndIndex
                     then sub (nodeEndIndex + sizeLeft r) r middle
                     else middle
                 right
 
         sub (sizeLeft table.Pieces) table.Pieces ""
 
-    let delete (span: SpanType) (tree: AaTree): AaTree =
-        let spanEnd: int = span.Start + span.Length
+    let delete (start: int) (length: int) (tree: AaTree): AaTree =
+        let finish: int = start + length
         let rec del (curIndex: int) (node: AaTree) =
             match node: AaTree with
             | PE -> PE
             | PT(h: int, _, l: AaTree, v: PieceType, _, r: AaTree) ->
                 let nodeEndIndex: int = curIndex + v.Span.Length
                 let left: AaTree = 
-                    if span.Start < curIndex && l <> PE
+                    if start < curIndex && l <> PE
                     then del (getLeftIndex curIndex l) l
                     else l
 
                 let right: AaTree =
-                    if spanEnd > nodeEndIndex && r <> PE
+                    if finish > nodeEndIndex && r <> PE
                     then del (nodeEndIndex + sizeLeft r) r
                     else r
 
-                let pos: CompareSpan = Piece.compareWithSpan span curIndex v
+                let pos: CompareSpan = Piece.compareWithSpan start finish curIndex v
                 let middle: AaTree =
                     match pos with
                     | GreaterThanSpan 
@@ -175,14 +175,14 @@ module PieceTree =
                         let newVal = Piece.create true 0 0
                         PT(h, size left, left, newVal, size right, right)
                     | SpanWithinPiece ->
-                        let (p1, p2) = Piece.deleteInRange curIndex span v
+                        let (p1, p2) = Piece.deleteInRange curIndex start finish v
                         let newLeft = insMax p1 left
                         split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
                     | StartOfPieceInSpan ->
-                        let newPiece = Piece.deleteAtStart curIndex span v
+                        let newPiece = Piece.deleteAtStart curIndex finish v
                         split <| (skew <| PT(h, size left, left, newPiece, size right, right))
                     | EndOfPieceInSpan ->
-                        let newPiece = Piece.deleteAtEnd curIndex span v
+                        let newPiece = Piece.deleteAtEnd curIndex start v
                         PT(h, size left, left, newPiece, size right, right)
                 middle
         del (sizeLeft tree) tree 

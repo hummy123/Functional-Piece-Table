@@ -144,20 +144,20 @@ module Buffer =
             else nodeSubstring key startPos endPos r
 
     /// Gets text in a buffer at a specific span.
-    let substring (span: SpanType) buffer = 
+    let substring start length buffer = 
         (* Calculate the buffer key we need to traverse to find the span's data. *)
-        let startKey = span.Start / MaxBufferLength
+        let startKey = start / MaxBufferLength
         let startBufferIndex = 
             if startKey = 0 
-            then span.Start
-            else span.Start % MaxBufferLength
+            then start
+            else start % MaxBufferLength
 
-        let endPos = Span.stop span
-        let endKey = endPos / MaxBufferLength
+        let finish = start + length
+        let endKey = finish / MaxBufferLength
         let endBufferIndex = 
             if endKey = 0 
-            then endPos - 1
-            else (endPos % MaxBufferLength) - 1
+            then finish - 1
+            else (finish % MaxBufferLength) - 1
         
         if startKey = endKey 
         then nodeSubstring startKey startBufferIndex endBufferIndex buffer.Tree
@@ -209,5 +209,4 @@ module Buffer =
     /// OOP API for substring method for testing, as SpanType is internal to this assembly.
     type BufferType with
         member this.Substring(index, length) = 
-            let span = Span.createWithLength index length
-            substring span this
+            substring index length this

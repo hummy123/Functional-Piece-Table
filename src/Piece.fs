@@ -4,7 +4,7 @@ open Types
 
 module internal Piece =
     /// Creates a Piece specifying the span's start and length instead of the span itself.
-    let create isOriginal start length =
+    let create start length =
         { Span = Span.createWithLength start length }
 
     /// Creates a Piece specifying its span.
@@ -65,23 +65,22 @@ module internal Piece =
         { piece with Span = newSpan }
 
     let text piece table =
-        Buffer.substring piece.Span table.Buffer
+        Buffer.substring piece.Span.Start piece.Span.Length table.Buffer
 
     let private textInRange curIndex start finish piece table =
         let textStart = start - curIndex + piece.Span.Start
-        let textStop = finish - curIndex + piece.Span.Start
-        Buffer.substring (Span.createWithStop textStart textStop) table.Buffer
+        let textLength = finish - curIndex + piece.Span.Start - textStart
+        Buffer.substring textStart textLength table.Buffer
 
     let private textAtStart curIndex finish piece table =
         let textStop = piece.Span.Start + (finish - curIndex)
         let substrSpan = Span.createWithStop piece.Span.Start textStop
-        Buffer.substring substrSpan table.Buffer
+        Buffer.substring piece.Span.Start substrSpan.Length table.Buffer
 
     let private textAtEnd curIndex start piece table =
         let textStart = start - curIndex + piece.Span.Start
         let textStop = Span.stop piece.Span
-        let substrSpan = Span.createWithStop textStart textStop
-        Buffer.substring substrSpan table.Buffer
+        Buffer.substring textStart (textStop - textStart) table.Buffer
 
     let inline textSlice pos curIndex piece start finish table =
         match pos with

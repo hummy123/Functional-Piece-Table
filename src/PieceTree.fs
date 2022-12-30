@@ -79,7 +79,7 @@ module PieceTree =
     /// Returns the text contained in the PieceTree.
     let text table = 
         let folder = (fun (acc: string) (piece: PieceType) ->
-            let text = (Buffer.substring piece.Span table.Buffer)
+            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
             acc + text
         )
         fold folder "" table.Pieces
@@ -172,7 +172,7 @@ module PieceTree =
                     | LessThanSpan -> 
                         split <| (skew <| PT(h, size left, left, v, size right, right))
                     | PieceFullyInSpan ->
-                        let newVal = Piece.create true 0 0
+                        let newVal = Piece.create 0 0
                         PT(h, size left, left, newVal, size right, right)
                     | SpanWithinPiece ->
                         let (p1, p2) = Piece.deleteInRange curIndex start finish v

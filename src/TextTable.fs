@@ -13,7 +13,7 @@ module TextTable =
             empty
         else 
             let buffer = Buffer.createWithString str
-            let piece = Piece.create true 0 str.Length
+            let piece = Piece.create 0 str.Length
             let pieces = PieceTree.insert 0 piece PieceTree.empty
             { Buffer=buffer; Pieces=pieces; Length=str.Length }
 
@@ -23,18 +23,18 @@ module TextTable =
     /// Recommended to call this in another thread: do not use it synchronously.
     let consolidate (table: TextTableType) =
         let folder = (fun (acc: BufferType) (piece: PieceType) -> 
-            let text = (Buffer.substring piece.Span table.Buffer)
+            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
             Buffer.append text acc
          )
         let buffer = PieceTree.fold folder Buffer.empty table.Pieces
-        let piece = Piece.create false 0 buffer.Length
+        let piece = Piece.create 0 buffer.Length
         let tree = PieceTree.insert 0 piece PieceTree.empty
         { Pieces = tree; Buffer = buffer; Length = buffer.Length }
 
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
         let buffer = Buffer.append str table.Buffer
-        let piece = Piece.create false (buffer.Length - str.Length) str.Length
+        let piece = Piece.create (buffer.Length - str.Length) str.Length
         let pieces = PieceTree.insert index piece table.Pieces
 
         { Buffer = buffer; Pieces = pieces; Length = table.Length + str.Length }

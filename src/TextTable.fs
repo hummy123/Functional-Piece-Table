@@ -40,7 +40,6 @@ module TextTable =
         { Buffer = buffer; Pieces = pieces; Length = table.Length + str.Length }
 
     let delete (startIndex: int) (length: int) (table: TextTableType) =
-        let span: SpanType = Span.createWithLength startIndex length
         let newPieces: AaTree = PieceTree.delete startIndex length table.Pieces
         { Pieces = newPieces; Buffer = table.Buffer; Length = table.Length - length }
 

@@ -147,6 +147,34 @@ module Buffer =
 
     /// Gets text in a buffer at a specific span.
     let substring start length buffer = 
+        let rec traverse startKey (endKey: int) startIndex endIndex node (acc: string) =
+            match node with
+            | BE -> acc
+            | BT(_, l, k, v, r) ->
+                let left = 
+                    if startKey < k
+                    then traverse startKey endKey startIndex endIndex l acc
+                    else acc
+
+                let middle = (* Handle different cases like start, end, etc. *)
+                    if k = startKey && k = endKey (* In partial range. *)
+                    then left + v[startIndex..endIndex]
+                    elif k > startKey && k < endKey (* In full range. *)
+                    then left + v.String
+                    elif k = startKey (* The range starts at this node but ends later. *)
+                    then left + v[startIndex..]
+                    elif k = endKey (* The range ends at this node but starts before. *)
+                    then left + v[..endIndex]
+                    elif startKey > k (* We are before our range. *)
+                    then left
+                    elif endKey < k (* We are after our range. *)
+                    then left
+                    else failwith "unexpected buffer substring/traverse case"
+
+                if endKey > k
+                then traverse startKey endKey startIndex endIndex r middle
+                else middle
+
         (* Calculate the buffer key we need to traverse to find the span's data. *)
         let startKey = start / MaxBufferLength
         let startBufferIndex = 
@@ -161,35 +189,7 @@ module Buffer =
             then finish - 1
             else (finish % MaxBufferLength) - 1
         
-        let rec traverse node (acc: string) =
-            match node with
-            | BE -> acc
-            | BT(_, l, k, v, r) ->
-                let left = 
-                    if startKey < k
-                    then traverse l acc
-                    else acc
-
-                let middle = (* Handle different cases like start, end, etc. *)
-                    if k = startKey && k = endKey (* In partial range. *)
-                    then left + v[startBufferIndex..endBufferIndex]
-                    elif k > startKey && k < endKey (* In full range. *)
-                    then left + v.String
-                    elif k = startKey (* The range starts at this node but ends later. *)
-                    then left + v[startBufferIndex..]
-                    elif k = endKey (* The range ends at this node but starts before. *)
-                    then left + v[..endBufferIndex]
-                    elif startKey > k (* We are before our range. *)
-                    then left
-                    elif endKey < k (* We are after our range. *)
-                    then left
-                    else failwith "unexpected buffer substring/traverse case"
-
-                if endKey > k
-                then traverse r middle
-                else middle
-
-        traverse buffer.Tree ""
+        traverse startKey endKey startBufferIndex endBufferIndex buffer.Tree ""
 
     /// Visits every node in the buffer and returns a string.
     let stringLength buffer =

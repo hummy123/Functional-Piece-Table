@@ -4,11 +4,11 @@ open Types
 
 module internal Piece =
     /// Creates a Piece specifying the span's start and length instead of the span itself.
-    let inline create start length =
+    let create start length =
         { Span = Span.createWithLength start length }
 
     /// Creates a Piece specifying its span.
-    let inline createWithSpan span =
+    let createWithSpan span =
         { Span = span }
 
     /// Merges two consecutive pieces into one.

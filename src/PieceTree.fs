@@ -35,6 +35,14 @@ module PieceTree =
                 PT(lvx + 1, size left, left, ky, size right, right)
         | t -> t
 
+    let rec private dellrg node = 
+        match node with
+        | PT(_, _, l, v, _, PE) -> (l, v)
+        | PT(h, _, l, v, sr, r) ->
+            let (newLeft, newVal) = dellrg l
+            PT(h, size newLeft, newLeft, v, sr, r), newVal
+        | _ -> failwith "unexpected dellrg case"
+
     let inline private pieceLength node = 
         match node with
         | PE -> 0
@@ -72,8 +80,7 @@ module PieceTree =
         fold folder "" table.Pieces
 
     /// O(1): Returns a boolean if tree is empty.
-    let inline isEmpty tree = 
-        match tree with
+    let isEmpty = function
         | PE -> true
         | _ -> false
 
@@ -109,7 +116,7 @@ module PieceTree =
 
         ins (sizeLeft tree) tree
 
-    let inline substring (start: int) (length: int) table =
+    let substring (start: int) (length: int) table =
         let finish = start + length
         let inline subMid curIndex nodeEndIndex acc v =
             if start <= curIndex && finish >= nodeEndIndex then

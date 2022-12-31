@@ -49,19 +49,19 @@ module internal Piece =
         { piece with Span = newSpan }
 
     let inline text piece table =
-        Buffer.substring piece.Span.Start piece.Span.Length table.Buffer.Tree
+        Buffer.substring piece.Span.Start piece.Span.Length table.Buffer
 
     let inline textInRange curIndex start finish piece table =
         let textStart = start - curIndex + piece.Span.Start
         let textLength = finish - curIndex + piece.Span.Start - textStart
-        Buffer.substring textStart textLength table.Buffer.Tree
+        Buffer.substring textStart textLength table.Buffer
 
     let inline textAtStart curIndex finish piece table =
         let textStop = piece.Span.Start + (finish - curIndex)
         let substrSpan = Span.createWithStop piece.Span.Start textStop
-        Buffer.substring piece.Span.Start substrSpan.Length table.Buffer.Tree
+        Buffer.substring piece.Span.Start substrSpan.Length table.Buffer
 
     let inline textAtEnd curIndex start piece table =
         let textStart = start - curIndex + piece.Span.Start
         let textStop = Span.stop piece.Span
-        Buffer.substring textStart (textStop - textStart) table.Buffer.Tree
+        Buffer.substring textStart (textStop - textStart) table.Buffer

@@ -175,5 +175,5 @@ type Consolidate() =
 module Main = 
     [<EntryPoint>]
     let Main _ =
-        BenchmarkRunner.Run<InsertIntoDocument>() |> ignore
+        BenchmarkRunner.Run<GetSubstring>() |> ignore
         0

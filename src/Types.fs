@@ -21,7 +21,7 @@ module Types =
     (* Buffer collection as an AA Tree. *)
     type Height = int
 
-    type Colour = R | B
+    type Colour = bool
 
     type BufferTree =
         | BE 

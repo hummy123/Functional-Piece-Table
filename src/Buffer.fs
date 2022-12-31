@@ -31,28 +31,28 @@ open System.Globalization
 module Buffer =
     let lbalance (a, b, kc, vc, d, node) =
         match a, b, kc, vc, d with
-        | B, BT(R, BT(R, a, kx, vx, b), ky, vy, c), kz, vz, d           (* Left, left *)
-        | B, BT(R, a, kx, vx, BT(R, b, ky, vy, c)), kz, vz, d           (* Left, right *)
-            -> BT(R, BT(B, a, kx, vx, b), ky, vy, BT(B, c, kz, vz, d))
+        | false, BT(true, BT(true, a, kx, vx, b), ky, vy, c), kz, vz, d           (* Left, left *)
+        | false, BT(true, a, kx, vx, BT(true, b, ky, vy, c)), kz, vz, d           (* Left, right *)
+            -> BT(true, BT(false, a, kx, vx, b), ky, vy, BT(false, c, kz, vz, d))
         | _ -> node 
 
     let rbalance (a, b, kc, vc, d, node) =
         match a, b, kc, vc, d with
-        | B, a, kx, vx, BT(R, BT(R, b, ky, vy, c), kz, vz, d)            (* Right, left *)
-        | B, a, kx, vx, BT(R, b, ky, vy, BT(R, c, kz, vz, d))            (* Right, right *)
-            -> BT(R, BT(B, a, kx, vx, b), ky, vy, BT(B, c, kz, vz, d))
+        | false, a, kx, vx, BT(true, BT(true, b, ky, vy, c), kz, vz, d)            (* Right, left *)
+        | false, a, kx, vx, BT(true, b, ky, vy, BT(true, c, kz, vz, d))            (* Right, right *)
+            -> BT(true, BT(false, a, kx, vx, b), ky, vy, BT(false, c, kz, vz, d))
         | _ -> node
 
-    let insert key item tree =
+    let insert key value tree =
         let rec ins = function
-            | BE -> BT(R, BE, key, item, BE)
+            | BE -> BT(true, BE, key, value, BE)
             | BT(c, a, ky, vy, b) as node ->
                 rbalance(c, a, ky, vy, ins b, node)
 
         (* Forcing root node to be black *)                
         match ins tree with
             | BE -> failwith "Should never return empty from an insert"
-            | BT(_, l, kx, vx, r) -> BT(B, l, kx, vx, r)
+            | BT(_, l, kx, vx, r) -> BT(false, l, kx, vx, r)
 
     (* Discriminated union for handling different append cases. *)
     [<Struct>]
@@ -93,10 +93,10 @@ module Buffer =
                 then 
                     let nextIndex = MaxBufferLength
                     let str = str[..MaxBufferLength - 1] |> UnicodeString.create
-                    let newTree = BT(R, BE, 0, str, BE)
+                    let newTree = BT(true, BE, 0, str, BE)
                     PartialAdd(newTree, 0, nextIndex)
                 else 
-                    let newTree = BT(R, BE, 0, str, BE)
+                    let newTree = BT(true, BE, 0, str, BE)
                     FullAdd(newTree)
             | BT(c, a, curKey, curVal, b) -> 
                 match b with

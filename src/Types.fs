@@ -21,9 +21,11 @@ module Types =
     (* Buffer collection as an AA Tree. *)
     type Height = int
 
+    type Colour = R | B
+
     type BufferTree =
         | BE 
-        | BT of Height * BufferTree * Key * Value * BufferTree
+        | BT of Colour * BufferTree * Key * Value * BufferTree
 
     (* Interface type to tree storing length as well. *)
     type BufferType = { Tree: BufferTree; Length: BufferLength }

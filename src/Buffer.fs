@@ -161,21 +161,33 @@ module Buffer =
             then finish - 1
             else (finish % MaxBufferLength) - 1
         
-        if startKey = endKey 
-        then nodeSubstring startKey startBufferIndex endBufferIndex buffer.Tree
-        elif startKey = endKey - 1
-        then
-            let startStr = nodeSubstring startKey startBufferIndex MaxBufferLength buffer.Tree
-            let endStr = nodeSubstring endKey 0 endBufferIndex buffer.Tree
-            startStr + endStr
-        else 
-            let startStr = nodeSubstring startKey startBufferIndex MaxBufferLength buffer.Tree
-            let endStr = nodeSubstring endKey 0 endBufferIndex buffer.Tree
-            
-            let midStrRange = [|startKey + 1..endKey - 1|]
-            let midStr = 
-                Array.fold (fun acc key -> acc + (nodeSubstring key 0 MaxBufferLength buffer.Tree)) "" midStrRange
-            startStr + midStr + endStr
+        (* Helper function to traverse tree, adding nodes together as desired. *)
+        let rec traverse node (acc: string) =
+            match node with
+            | BE -> acc
+            | BT(_, l, k, v, r) ->
+                let left =
+                    if startKey < k
+                    then traverse l acc
+                    else acc
+
+                let middle =
+                    if startKey <= k && endKey >= k (* In full range. *)
+                    then left + v.String
+                    elif startKey > k && endKey < k (* Within node *)
+                    then left + v[startBufferIndex..endBufferIndex]
+                    elif startKey = k && endKey > k (* End of node in range. *)
+                    then left + v[startBufferIndex..]
+                    elif endKey = k && startKey < k (* Start of node in range. *)
+                    then left + v[..endBufferIndex]
+                    else failwith "unexpected buffer substring traverse case"
+
+                
+                if endKey > k
+                then traverse r middle
+                else middle
+
+        traverse buffer ""
 
     /// Visits every node in the buffer and returns a string.
     let stringLength buffer =
@@ -211,4 +223,4 @@ module Buffer =
     /// OOP API for substring method for testing, as SpanType is internal to this assembly.
     type BufferType with
         member this.Substring(index, length) = 
-            substring index length this
+            substring index length this.Tree

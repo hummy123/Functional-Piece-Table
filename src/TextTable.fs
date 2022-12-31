@@ -23,7 +23,7 @@ module TextTable =
     /// Recommended to call this in another thread: do not use it synchronously.
     let consolidate (table: TextTableType) =
         let folder = (fun (acc: BufferType) (piece: PieceType) -> 
-            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
+            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer.Tree)
             Buffer.append text acc
          )
         let buffer = PieceTree.fold folder Buffer.empty table.Pieces

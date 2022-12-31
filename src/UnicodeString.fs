@@ -49,6 +49,11 @@ module UnicodeString =
                 | Plain s -> s.Substring(start, len)
                 | Unicode s -> s.SubstringByTextElements(start, len)
 
+        member inline this.String =
+            match this with
+            | Plain s -> s
+            | Unicode s -> s.String
+
     /// Creates a new UnicodeStringType instance.
     let inline create (str: string) =
         let strInfo = StringInfo str

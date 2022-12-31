@@ -74,7 +74,7 @@ module PieceTree =
     /// Returns the text contained in the PieceTree.
     let text table = 
         let folder = (fun (acc: string) (piece: PieceType) ->
-            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
+            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer.Tree)
             acc + text
         )
         fold folder "" table.Pieces

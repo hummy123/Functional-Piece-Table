@@ -19,9 +19,6 @@ module PieceTree =
         | PE -> 0
         | PT(_, _, _, _, sr, _) -> sr
  
-    (* RbTree balance. *)
-    (* ... *)
-
     let inline private skew node =
         match node with
         | PT(lvx, _, PT(lvy, _, a, ky, _, b), kx, _, c) when lvx = lvy -> 

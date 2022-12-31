@@ -28,7 +28,7 @@ module UnicodeString =
         | Plain of string
         | Unicode of StringInfo
 
-        static member (+) (first, second) =
+        static member inline (+) (first, second) =
             match first, second with
             | Plain a, Plain b -> a + b |> Plain
             | Plain a, Unicode b -> a + b.String |> StringInfo |> Unicode

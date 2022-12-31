@@ -171,7 +171,6 @@ type Consolidate() =
     member this.ConsolidateTable() =
         TextTable.consolidate this.table
 
-
 module Main = 
     [<EntryPoint>]
     let Main _ =

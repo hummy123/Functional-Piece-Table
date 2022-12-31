@@ -29,12 +29,14 @@ open System.Globalization
  *)
 
 module Buffer =
-    let private skew = function
+    let inline private skew node =
+        match node with
         | BT(lvx, BT(lvy, a, ky, vy, b), kx, vx, c) when lvx = lvy
             -> BT(lvx, a, ky, vy, BT(lvx, b, kx, vx, c))
         | t -> t
 
-    let private split = function
+    let inline private split node = 
+        match node with
         | BT(lvx, a, kx, vx, BT(lvy, b, ky, vy, BT(lvz, c, kz, vz, d))) 
             when lvx = lvy && lvy = lvz
               -> BT(lvx + 1, BT(lvx, a, kx, vx, b), ky, vy, BT(lvx, c, kz, vz, d))
@@ -63,7 +65,7 @@ module Buffer =
     /// by splitting the string and adding it to multiple buffer nodes.
     /// Asumes that the largest buffer in the tree is already filled to max buffer length.
     /// There is also no harm using this if the string is less than the max buffer length.
-    let private insertLongString (str: UnicodeStringType) maxKeyInTree tree =
+    let inline private insertLongString (str: UnicodeStringType) maxKeyInTree tree =
         let rec loop curKey loopNum start newTree =
             if start >= str.Length 
             then newTree
@@ -77,7 +79,7 @@ module Buffer =
         loop maxKeyInTree 1 0 tree
 
     /// Append a string to the buffer.
-    let private add (str: UnicodeStringType) tree =
+    let inline private add (str: UnicodeStringType) tree =
         let rec loop = function
             | BE -> (* Only ever matched if whole tree is empty. *)
                 if str.Length >= MaxBufferLength
@@ -131,7 +133,7 @@ module Buffer =
         { Tree = tree; Length = buffer.Length + str.Length }
                 
     /// Create a buffer with a string.
-    let createWithString str = append str empty
+    let inline createWithString str = append str empty
 
     /// Find the string associated with a particular key.
     let rec private nodeSubstring key startPos endPos = function

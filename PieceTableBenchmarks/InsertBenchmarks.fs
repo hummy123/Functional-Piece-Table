@@ -33,15 +33,15 @@ type InsertIntoDocument() =
             this.table <- this.table.Insert(0, "hello")
             this.docLength <- this.docLength + 5
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoTableAtStart() = 
         this.table.Insert(0, "A")
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoTableAtMiddle() =
         this.table.Insert(this.docLength / 2, "A")
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoTableAtEnd() = 
         this.table.Insert(this.docLength, "A")
 
@@ -61,15 +61,15 @@ type DeleteFromDocument() =
             this.table <- this.table.Insert(0, "hello")
             this.docLength <- this.docLength + 5
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromStartOfTable() = 
         this.table.Delete(0, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromMiddleOfTable() =
         this.table.Delete(this.docLength / 2, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromEndOfTable() = 
         this.table.Delete(this.docLength - 10, 9)
 
@@ -89,15 +89,15 @@ type GetSubstring() =
             this.table <- this.table.Insert(0, "hello")
             this.docLength <- this.docLength + 5
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtStartOfTable() = 
         this.table.Substring(0, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtMiddleOfTable() =
         this.table.Substring(this.docLength / 2, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtEndOfTable() = 
         this.table.Substring(this.docLength - 10, 9)
 
@@ -109,7 +109,7 @@ type TableOperationsWhenSetupAlwaysInsertsAtEnd() =
     member val table = TextTable.empty with get, set
     member val docLength = 0 with get, set
 
-    [<Benchmark; InvocationCount(10)>]
+    [<IterationSetup>]
     member this.CreateDocument() =
         this.table <- TextTable.empty
         this.docLength <- 0
@@ -117,42 +117,43 @@ type TableOperationsWhenSetupAlwaysInsertsAtEnd() =
             this.table <- this.table.Insert(this.docLength, "hello")
             this.docLength <- this.docLength + 5
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoTableAtStart() = 
         this.table.Insert(0, "A")
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoTableAtMiddle() =
         this.table.Insert(this.docLength / 2, "A")
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoTableAtEnd() = 
         this.table.Insert(this.docLength, "A")
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromStartOfTable() = 
         this.table.Delete(0, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromMiddleOfTable() =
         this.table.Delete(this.docLength / 2, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromEndOfTable() = 
         this.table.Delete(this.docLength - 10, 9)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtStartOfTable() = 
         this.table.Substring(0, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtMiddleOfTable() =
         this.table.Substring(this.docLength / 2, 10)
 
-    [<Benchmark; InvocationCount(10)>]
+    [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtEndOfTable() = 
         this.table.Substring(this.docLength - 10, 9)
 
+[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
 type Consolidate() =
     [<Params(100, 1_000, 10_000)>]
     member val size = 0 with get, set
@@ -174,5 +175,10 @@ type Consolidate() =
 module Main = 
     [<EntryPoint>]
     let Main _ =
+        BenchmarkRunner.Run<CreateDocument>() |> ignore
+        BenchmarkRunner.Run<InsertIntoDocument>() |> ignore
         BenchmarkRunner.Run<DeleteFromDocument>() |> ignore
+        BenchmarkRunner.Run<GetSubstring>() |> ignore
+        BenchmarkRunner.Run<Consolidate>() |> ignore
+        BenchmarkRunner.Run<TableOperationsWhenSetupAlwaysInsertsAtEnd>() |> ignore
         0

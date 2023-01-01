@@ -11,8 +11,9 @@ module TextTable =
         if str = ""
         then 
             empty
-        else 
-            let buffer = Buffer.createWithString str
+        else
+            let str = UnicodeString.create str
+            let buffer = Buffer.createWithUnicode str
             let piece = Piece.create 0 str.Length
             let pieces = PieceTree.insert 0 piece PieceTree.empty
             { Buffer=buffer; Pieces=pieces; Length=str.Length }
@@ -24,7 +25,7 @@ module TextTable =
     let consolidate (table: TextTableType) =
         let folder = (fun (acc: BufferType) (piece: PieceType) -> 
             let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
-            Buffer.append text acc
+            Buffer.appendString text acc
          )
         let buffer = PieceTree.fold folder Buffer.empty table.Pieces
         let piece = Piece.create 0 buffer.Length
@@ -33,7 +34,8 @@ module TextTable =
 
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
-        let buffer = Buffer.append str table.Buffer
+        let str = UnicodeString.create str
+        let buffer = Buffer.appendUnicode str table.Buffer
         let piece = Piece.create (buffer.Length - str.Length) str.Length
         let pieces = PieceTree.insert index piece table.Pieces
 

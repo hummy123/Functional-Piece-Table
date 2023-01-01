@@ -127,13 +127,20 @@ module Buffer =
             (* Insert the string into the tree. *)
             insertLongString str maxKey tree
 
-    let append (str: string) buffer =
+    /// Intended to be used for testing string length, etc. as it is easier to pass in a string..
+    let appendString (str: string) buffer =
         let str = UnicodeString.create str
         let tree = add str buffer.Tree
         { Tree = tree; Length = buffer.Length + str.Length }
+
+
+    let appendUnicode (str: UnicodeStringType) buffer =
+        { Tree = add str buffer.Tree; Length = buffer.Length + str.Length }
                 
-    /// Create a buffer with a string.
-    let inline createWithString str = append str empty
+    /// Create a buffer with a string, intended for testing.
+    let inline createWithString str = appendString str empty
+
+    let inline createWithUnicode str = appendUnicode str empty
 
     /// Find the string associated with a particular key.
     let rec private nodeSubstring key startPos endPos = function

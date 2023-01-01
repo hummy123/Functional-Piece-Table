@@ -62,7 +62,7 @@ let ``Adding a string to a buffer with one full node will create a buffer with t
     let expectedList: IEnumerable = stringLengthAsList expectedText
 
     let buffer = Buffer.createWithString text
-    let buffer = Buffer.append baseText buffer
+    let buffer = Buffer.appendString baseText buffer
     let bufferText = Buffer.text buffer
     let bufferList: IEnumerable = Buffer.lengthAsList buffer
     
@@ -77,7 +77,7 @@ let ``Adding a string to a buffer with one almost-full node will return a buffer
     let expectedList: IEnumerable = stringLengthAsList (text + baseText)
 
     let buffer = Buffer.createWithString text
-    let buffer = Buffer.append baseText buffer
+    let buffer = Buffer.appendString baseText buffer
     let bufferText = Buffer.text buffer
     let bufferList: IEnumerable = Buffer.lengthAsList buffer
     Assert.Equal(expectedText, bufferText)
@@ -91,7 +91,7 @@ let ``Random test inserting small strings`` () =
     for i in [0..1000] do
         let str = rnd.Next(1, 1_000_000_000).ToString()
         runningStr <- runningStr + str
-        buffer <- Buffer.append str buffer
+        buffer <- Buffer.appendString str buffer
 
         let bufferText = Buffer.text buffer
         let bufferList: IEnumerable = Buffer.lengthAsList buffer
@@ -110,7 +110,7 @@ let ``Random test inserting large strings`` () =
     for i in [0..500] do
         let str = String.replicate 100 (rnd.Next(1_000_000_000, 1_000_000_000).ToString())
         runningStr <- runningStr + str
-        buffer <- Buffer.append str buffer
+        buffer <- Buffer.appendString str buffer
 
         let bufferText = Buffer.text buffer
         Assert.Equal(runningStr, bufferText)

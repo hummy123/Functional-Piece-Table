@@ -74,12 +74,11 @@ module PieceTree =
         | _ -> failwith "unexpected adjust case"
 
     let rec private splitMax = function
-        | PT(_, _, l, v, _, PE) -> Some(l, v)
+        | PT(_, _, l, v, _, PE) -> (l, v)
         | PT(h, _, l, v, _, r) as node ->
-            match splitMax r with
-            | Some(l, v) -> Some(l, v)
-            | None -> None
-        | t -> None
+            let (r', b) = splitMax r
+            in adjust <| node, b
+        | _ -> failwith "unexpected splitMax case"
 
     let inline private pieceLength node = 
         match node with
@@ -212,10 +211,12 @@ module PieceTree =
         let finish: int = start + length
 
         let inline delMid h left right curIndex nodeEndIndex nodePiece =
-            if start <= curIndex && finish >= nodeEndIndex && right <> PE then
-                match splitMax left with
-                | Some(l, v) -> adjust <| PT(h, size l, l, v, size right, right)
-                | None -> right
+            if start <= curIndex && finish >= nodeEndIndex then
+                match left = PE with
+                | true -> right
+                | false -> 
+                    let (newLeft, newVal) = splitMax left
+                    adjust <| PT(h, size newLeft, newLeft, newVal, size right, right)
             elif start <= curIndex && finish >= nodeEndIndex then
                 right
             elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then

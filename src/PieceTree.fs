@@ -212,11 +212,11 @@ module PieceTree =
 
         let inline delMid h left right curIndex nodeEndIndex nodePiece =
             if start <= curIndex && finish >= nodeEndIndex then
-                match left = PE with
-                | true -> right
-                | false -> 
+                match left <> PE with
+                | true -> 
                     let (newLeft, newVal) = splitMax left
                     adjust <| PT(h, size newLeft, newLeft, newVal, size right, right)
+                | false -> right
             elif start <= curIndex && finish >= nodeEndIndex then
                 right
             elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then

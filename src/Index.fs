@@ -20,10 +20,10 @@ module internal Index =
     let inline minusRight (text: string) index =
         { index with RightSize = index.RightSize - text.Length }
 
-    let inline changeLeft newLeft index =
+    let inline setLeft newLeft index =
         { index with LeftSize = newLeft }
 
-    let inline changeRight newRight index =
+    let inline setRight newRight index =
         { index with RightSize = newRight }
 
     let inline size index = index.LeftSize + index.RightSize

@@ -63,7 +63,7 @@ module PieceTree =
         | PT(lt, idx, kt, rt, lvt) when lvl rt < lvt - 1 && sngl lt-> 
             skew <| PT(lt, idx, kt, rt, lvt - 1)
         | PT(PT(a, idx2, kl, PT(lb, idx3, kb, rb, lvb), lv1), idx1, kt, rt, lvt) when lvl rt < lvt - 1 ->
-            let leftIndex = Index.setRight idx3.LeftSize idx2
+            let leftIndex = Index.create idx2.LeftSize idx3.LeftSize
             let left = PT(a, leftIndex, kl, lb, lv1)
             let sizeLeft = size left
             let rightIndex = Index.create idx3.RightSize idx1.RightSize
@@ -76,19 +76,17 @@ module PieceTree =
         | PT(lt, idx1, kt, PT((PT(c, idx3, ka, d, lva) as a), idx2, kr, b, lvr), lvt) -> 
             let indexLeft = Index.setRight idx3.LeftSize idx1
             let left = PT(lt, indexLeft, kt, c, lvt - 1)
-            let sizeLeft = size left
             let indexRight = Index.setLeft idx3.RightSize idx2
             let right = split <| PT(d, indexRight, kr, b, nlvl a)
-            let sizeRight = size right
-            let outerIndex = Index.create sizeLeft sizeRight
+            let outerIndex = Index.create (size left) (size right)
             PT(left, outerIndex, ka, right, lva + 1)
         | _ -> failwith "unexpected adjust case"
 
     let rec private splitMax = function
         | PT(l, _, v, PE, _) -> (l, v)
         | PT(l, _, v, r, h) as node ->
-            match splitMax r with
-            | l, b -> adjust <| node, b
+            let (r', b) = splitMax r
+            in adjust <| node, b
         | _ -> failwith "unexpected splitMax case"
 
     let inline private pieceLength node = 
@@ -232,22 +230,23 @@ module PieceTree =
                     else 
                         let (newLeft, newVal) = splitMax left
                         let idx = Index.create (size newLeft) (size right)
-                        adjust <| PT(newLeft, idx, newVal, right, h)
+                        PT(newLeft, idx, newVal, right, h) |> adjust
                 elif startIsInRange start curIndex finish nodeEndIndex then
                     let newPiece = Piece.deleteAtStart curIndex finish v
                     let idx = Index.create (size left) (size right)
-                    split <| (skew <| PT(left, idx, newPiece, right, h))
+                    PT(left, idx, newPiece, right, h) |> skew |> split
                 elif endIsInRange start curIndex finish nodeEndIndex then
                     let newPiece = Piece.deleteAtEnd curIndex start v
                     let idx = Index.create (size left) (size right)
-                    split <| (skew <| PT(left, idx, newPiece, right, h))
+                    PT(left, idx, newPiece, right, h) |> adjust
                 elif middleIsInRange start curIndex finish nodeEndIndex then
                     let (p1, p2) = Piece.deleteInRange curIndex start finish v
                     let newLeft = insMax p1 left
                     let idx = Index.create (size newLeft) (size right)
-                    split <| (skew <| PT(newLeft, idx, p2, right, h))
+                    PT(newLeft, idx, p2, right, h) |> skew |> split
                 else
-                    split <| (skew <| node)
+                    let idx = Index.create (size left) (size right)
+                    PT(left, idx, v, right, h) |> adjust
                 
         del (sizeLeft tree) tree 
     

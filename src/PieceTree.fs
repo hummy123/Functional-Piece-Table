@@ -2,86 +2,87 @@
 
 open Types
 open Piece
+open Node
 
 module PieceTree =
     let inline private size node = 
         match node with
         | PE -> 0
-        | PT(l, index, p, r, _) -> index.LeftSize + index.RightSize + p.Span.Length
+        | PT(h, l, n, r) -> n.LeftSize + n.RightSize + n.Length
 
     let inline private sizeLeft node = 
         match node with
         | PE -> 0
-        | PT(_, index, _, _, _) -> index.LeftSize
+        | PT(_, _, n, _, _) -> n.LeftSize
 
     let inline private sizeRight node =
         match node with
         | PE -> 0
-        | PT(_, index, _, _, _) -> index.RightSize
+        | PT(_, _ , n, _, _) -> n.RightSize
  
     let inline private skew node =
         match node with
-        | PT(PT(a, idx2, ky, b, lvy), idx1, kx, c, lvx) when lvx = lvy -> 
-            let innerIdx = Index.create idx2.RightSize idx1.RightSize
-            let inner = PT(b, innerIdx, kx, c, lvy)
-            let outerIdx = Index.setRight (size inner) idx2
-            PT(a, outerIdx, ky, inner, lvx)
+        | PT(lvx, PT(lvy, a, ky, b), kx, c) when lvx = lvy ->
+            let innerIdx = Index.setLeft ky.RightSize kx.Index
+            let inner = PT(lvy, b, kx.SetIndex innerIdx, c)
+            let outerIdx = Index.setRight (size inner) ky.Index
+            PT(lvx, a, ky.SetIndex outerIdx, inner)
         | t -> t
 
     let inline private split node =
         match node with
-        | PT(a, idx1, kx, PT(b, idx2, ky, PT(c, idx3, kz, d, lvz), lvy), lvx) 
+        | PT(lvx, a, kx, PT(lvy, b, ky, PT(lvz, c, kz, d))) 
             when lvx = lvy && lvy = lvz -> 
-                let right = PT(c, idx3, kz, d, lvx)
-                let leftIdx = Index.setRight idx2.LeftSize idx1
-                let left = PT(a, leftIdx, kx, b, lvx)
-                let leftSize = Index.size leftIdx + kx.Span.Length
-                let rightSize = Index.size idx3 + kz.Span.Length
+                let right = PT(lvz, c, kz, d)
+                let leftIdx = Index.setRight ky.LeftSize kx.Index
+                let left = PT(lvx, a, kx.SetIndex leftIdx, b)
+                let leftSize = Index.size leftIdx + kx.Length
+                let rightSize = Index.size kz.Index + kz.Length
                 let newIdx = Index.create leftSize rightSize
-                PT(left, newIdx, ky, right, lvx + 1)
+                PT(lvx + 1, left, ky, right)
         | t -> t
 
     let private sngl = function
         | PE -> false
-        | PT(_, _, _, PE, _) -> true
-        | PT(_, _, _, PT(_, _, _, _, lvy), lvx) -> lvx > lvy
+        | PT(_, _, _, PE) -> true
+        | PT(lvx, _, _, PT(lvy, _, _, _)) -> lvx > lvy
 
     let private lvl = function
         | PE -> 0
-        | PT(_, _, _, _, lvt) -> lvt
+        | PT(lvt, _, _, _) -> lvt
 
     let private nlvl = function
-        | PT(_, _, _, _, lvt) as t -> 
+        | PT(lvt, _, _, _) as t -> 
             if sngl t
             then lvt
             else lvt + 1
         | _ -> failwith "unexpected nlvl case"
 
     let private adjust = function
-        | PT(lt, _, _, rt, lvt) as t when lvl lt >= lvt - 1 && lvl rt >= (lvt - 1) ->
+        | PT(lvt, lt, kt, rt) as t when lvl lt >= lvt - 1 && lvl rt >= (lvt - 1) 
             t
-        | PT(lt, idx, kt, rt, lvt) when lvl rt < lvt - 1 && sngl lt-> 
-            skew <| PT(lt, idx, kt, rt, lvt - 1)
-        | PT(PT(a, idx2, kl, PT(lb, idx3, kb, rb, lvb), lv1), idx1, kt, rt, lvt) when lvl rt < lvt - 1 ->
-            let leftIndex = Index.setRight idx3.LeftSize idx2
-            let left = PT(a, leftIndex, kl, lb, lv1)
+        | PT(lvt, lt, kt, rt) when lvl rt < lvt - 1 && sngl lt -> 
+            skew <| PT(lvt - 1, lt, kt, rt)
+        | PT(lvt, PT(lv1, a, kl, PT(lvb, lb, kb, rb)), kt, rt) when lvl rt < lvt - 1 ->
+            let leftIndex = Index.setRight kb.LeftSize kl.Index
+            let left = PT(a, kl.SetIndex leftIndex, lb, lv1)
             let sizeLeft = size left
-            let rightIndex = Index.create idx3.RightSize idx1.RightSize
-            let right = PT(rb, rightIndex, kt, rt, lvt - 1)
+            let rightIndex = Index.setLeft kb.RightSize kt.Index
+            let right = PT(lvt - 1, rb, kt.SetIndex rightIndex, rt)
             let sizeRight = size right
             let outerIndex = Index.create sizeLeft sizeRight
-            PT(left, outerIndex, kb, right, lvb + 1)
-        | PT(lt, idx, kt, rt, lvt) when lvl rt < lvt ->
-            split <| PT(lt, idx, kt, rt, lvt - 1)
-        | PT(lt, idx1, kt, PT((PT(c, idx3, ka, d, lva) as a), idx2, kr, b, lvr), lvt) -> 
-            let indexLeft = Index.setRight idx3.LeftSize idx1
-            let left = PT(lt, indexLeft, kt, c, lvt - 1)
+            PT(left, kb.SetIndex outerIndex, right, lvb + 1)
+        | PT(lvt, lt, kt, rt) when lvl rt < lvt ->
+            split <| PT(lvt - 1, lt, kt, rt)
+        | PT(lvt, lt, kt, PT(lvr, PT(lva, c, ka, d), kr, b)) -> 
+            let indexLeft = Index.setRight kr.LeftSize kt.Index
+            let left = PT(lt, kt.SetIndex indexLeft, c, lvt - 1)
             let sizeLeft = size left
-            let indexRight = Index.setLeft idx3.RightSize idx2
-            let right = split <| PT(d, indexRight, kr, b, nlvl a)
+            let indexRight = Index.setLeft ka.RightSize kr.Index
+            let right = split <| PT(d, kr.SetIndex indexRight, b, nlvl a)
             let sizeRight = size right
             let outerIndex = Index.create sizeLeft sizeRight
-            PT(left, outerIndex, ka, right, lva + 1)
+            PT(left, ka.SetIndex outerIndex, right, lva + 1)
         | _ -> failwith "unexpected adjust case"
 
     let rec private splitMax = function

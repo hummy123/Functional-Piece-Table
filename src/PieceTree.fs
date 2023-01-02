@@ -231,19 +231,21 @@ module PieceTree =
                     then right
                     else 
                         let (newLeft, newVal) = splitMax left
-                        let idx = Index.setLeft (size newLeft) idx
+                        let idx = Index.create (size newLeft) (size right)
                         adjust <| PT(newLeft, idx, newVal, right, h)
                 elif startIsInRange start curIndex finish nodeEndIndex then
                     let newPiece = Piece.deleteAtStart curIndex finish v
-                    split <| (skew <| PT(l, idx, newPiece, right, h))
+                    let idx = Index.create (size left) (size right)
+                    split <| (skew <| PT(left, idx, newPiece, right, h))
                 elif endIsInRange start curIndex finish nodeEndIndex then
                     let newPiece = Piece.deleteAtEnd curIndex start v
-                    split <| (skew <| PT(l, idx, newPiece, right, h))
+                    let idx = Index.create (size left) (size right)
+                    split <| (skew <| PT(left, idx, newPiece, right, h))
                 elif middleIsInRange start curIndex finish nodeEndIndex then
                     let (p1, p2) = Piece.deleteInRange curIndex start finish v
                     let newLeft = insMax p1 left
-                    let idx = Index.setLeft (idx.LeftSize + p1.Span.Length) idx
-                    split <| (skew <| PT(l, idx, p2, right, h))
+                    let idx = Index.create (size newLeft) (size right)
+                    split <| (skew <| PT(newLeft, idx, p2, right, h))
                 else
                     split <| (skew <| node)
                 

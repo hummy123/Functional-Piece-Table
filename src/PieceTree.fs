@@ -162,9 +162,7 @@ module PieceTree =
                     let (p1, p3) = Piece.split v (insIndex - curIndex)
                     let newLeft = insMax p1 l
                     let newRight = insMin p3 r
-                    let newIndex = 
-                        Index.plusLeft p1.Span.Length index 
-                        |> Index.plusRight p3.Span.Length
+                    let newIndex = Index.create (size newLeft) (size newRight)
                     split <| (skew <| PT(newLeft, newIndex, piece, newRight, h))
 
         ins (sizeLeft tree) tree
@@ -187,7 +185,7 @@ module PieceTree =
         let rec sub curIndex node acc =
             match node with
             | PE -> acc
-            | PT(_, _, l, v, _, r) ->
+            | PT(l, idx, v, r, h) ->
                 let left =
                     if start < curIndex
                     then sub (curIndex - pieceLength l - sizeRight l) l acc
@@ -217,7 +215,7 @@ module PieceTree =
         let rec del (curIndex: int) (node: AaTree) =
             match node: AaTree with
             | PE -> PE
-            | PT(h, _, l, v, _, r) ->
+            | PT(l, idx, v, r, h) as node ->
                 let left =
                     if start < curIndex
                     then del (curIndex - pieceLength l - sizeRight l) l
@@ -233,19 +231,21 @@ module PieceTree =
                     then right
                     else 
                         let (newLeft, newVal) = splitMax left
-                        adjust <| PT(h, size newLeft, newLeft, newVal, size right, right)
+                        let idx = Index.setLeft (size newLeft) idx
+                        adjust <| PT(newLeft, idx, newVal, right, h)
                 elif startIsInRange start curIndex finish nodeEndIndex then
                     let newPiece = Piece.deleteAtStart curIndex finish v
-                    split <| (skew <| PT(h, size left, left, newPiece, size right, right))
+                    split <| (skew <| PT(l, idx, newPiece, right, h))
                 elif endIsInRange start curIndex finish nodeEndIndex then
                     let newPiece = Piece.deleteAtEnd curIndex start v
-                    PT(h, size left, left, newPiece, size right, right)
+                    split <| (skew <| PT(l, idx, newPiece, right, h))
                 elif middleIsInRange start curIndex finish nodeEndIndex then
                     let (p1, p2) = Piece.deleteInRange curIndex start finish v
                     let newLeft = insMax p1 left
-                    split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
+                    let idx = Index.setLeft (idx.LeftSize + p1.Span.Length) idx
+                    split <| (skew <| PT(l, idx, p2, right, h))
                 else
-                    split <| (skew <| PT(h, size left, left, v, size right, right))
+                    split <| (skew <| node)
                 
         del (sizeLeft tree) tree 
     

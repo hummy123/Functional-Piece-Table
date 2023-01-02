@@ -108,7 +108,7 @@ module PieceTree =
         | PE -> PT(PE, Index.empty, piece, PE, 1)
         | PT(l, idx,  v, r, h) ->
             let idx = Index.plusRight piece.Span.Length idx
-            split <| (skew <| PT(l, idx, v, insMin piece r, h))
+            split <| (skew <| PT(l, idx, v, insMax piece r, h))
 
     let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
         match t with
@@ -144,7 +144,7 @@ module PieceTree =
             | PT(l, index, v, r, h) ->
                 let nodeEndIndex = curIndex + v.Span.Length
                 if insIndex > nodeEndIndex then 
-                    let newIndex = Index.plusRight v.Span.Length index
+                    let newIndex = Index.plusRight piece.Span.Length index
                     let nextIndex = nodeEndIndex + sizeLeft r
                     split <| (skew <| PT(l, newIndex, v, ins nextIndex r, h))
                 elif insIndex < curIndex then

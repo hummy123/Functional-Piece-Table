@@ -153,6 +153,19 @@ module PieceTree =
 
         ins (sizeLeft tree) tree
 
+    (* Repeated if-statements used in both delete and substring. *)
+    let private inRange start curIndex finish nodeEndIndex =
+        start <= curIndex && finish >= nodeEndIndex
+
+    let private startIsInRange start curIndex finish nodeEndIndex =
+        start <= curIndex && finish < nodeEndIndex && curIndex < finish
+
+    let private endIsInRange start curIndex finish nodeEndIndex =
+        start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex
+
+    let private middleIsInRange start curIndex finish nodeEndIndex =
+        start >= curIndex && finish <= nodeEndIndex
+
     let substring (start: int) (length: int) table =
         let finish = start + length
         let inline subMid curIndex nodeEndIndex acc v =
@@ -209,29 +222,6 @@ module PieceTree =
 
     let delete (start: int) (length: int) (tree: AaTree): AaTree =
         let finish: int = start + length
-
-        let inline delMid h left right curIndex nodeEndIndex nodePiece =
-            if start <= curIndex && finish >= nodeEndIndex then
-                match left <> PE with
-                | true -> 
-                    let (newLeft, newVal) = splitMax left
-                    adjust <| PT(h, size newLeft, newLeft, newVal, size right, right)
-                | false -> right
-            elif start <= curIndex && finish >= nodeEndIndex then
-                right
-            elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
-                let newPiece = Piece.deleteAtStart curIndex finish nodePiece
-                split <| (skew <| PT(h, size left, left, newPiece, size right, right))
-            elif start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex then
-                let newPiece = Piece.deleteAtEnd curIndex start nodePiece
-                PT(h, size left, left, newPiece, size right, right)
-            elif start >= curIndex && finish <= nodeEndIndex then
-                let (p1, p2) = Piece.deleteInRange curIndex start finish nodePiece
-                let newLeft = insMax p1 left
-                split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
-            else
-                split <| (skew <| PT(h, size left, left, nodePiece, size right, right))
-
         let rec del (curIndex: int) (node: AaTree) =
             match node: AaTree with
             | PE -> PE
@@ -245,7 +235,25 @@ module PieceTree =
                     if finish > nodeEndIndex
                     then del (nodeEndIndex + sizeLeft r) r
                     else r
-                delMid h left right curIndex nodeEndIndex v
+                
+                if inRange start curIndex finish nodeEndIndex then
+                    if left = PE
+                    then right
+                    else 
+                        let (newLeft, newVal) = splitMax left
+                        adjust <| PT(h, size newLeft, newLeft, newVal, size right, right)
+                elif startIsInRange start curIndex finish nodeEndIndex then
+                    let newPiece = Piece.deleteAtStart curIndex finish v
+                    split <| (skew <| PT(h, size left, left, newPiece, size right, right))
+                elif endIsInRange start curIndex finish nodeEndIndex then
+                    let newPiece = Piece.deleteAtEnd curIndex start v
+                    PT(h, size left, left, newPiece, size right, right)
+                elif middleIsInRange start curIndex finish nodeEndIndex then
+                    let (p1, p2) = Piece.deleteInRange curIndex start finish v
+                    let newLeft = insMax p1 left
+                    split <| (skew <| PT(h, size newLeft, newLeft, p2, size right, right))
+                else
+                    split <| (skew <| PT(h, size left, left, v, size right, right))
                 
         del (sizeLeft tree) tree 
     

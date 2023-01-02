@@ -85,8 +85,8 @@ module PieceTree =
         | _ -> failwith "unexpected adjust case"
 
     let rec private splitMax = function
-        | PT(_, _, l, v, _, PE) -> (l, v)
-        | PT(h, _, l, v, _, r) as node ->
+        | PT(l, _, v, PE, _) -> (l, v)
+        | PT(l, _, v, r, h) as node ->
             match splitMax r with
             | l, b -> adjust <| node, b
         | _ -> failwith "unexpected splitMax case"
@@ -94,19 +94,21 @@ module PieceTree =
     let inline private pieceLength node = 
         match node with
         | PE -> 0
-        | PT(_,_,_,piece,_,_) -> piece.Span.Length
+        | PT(_, _, piece, _, _) -> piece.Span.Length
 
     let rec private insMin piece node =
         match node with
-        | PE -> PT(0, PE, piece, 0, PE, 1)
-        | PT(h, sl, l, v, sr, r) ->
-            split <| (skew <| PT(h, sl + piece.Span.Length, insMin piece l, v, sr, r))
+        | PE -> PT(PE, Index.empty, piece, PE, 1)
+        | PT(l, idx,  v, r, h) ->
+            let idx = Index.plusLeft piece.Span.Length idx
+            split <| (skew <| PT(insMin piece l, idx, v, r, h))
 
     let rec private insMax piece node =
         match node with
-        | PE -> PT(1, 0, PE, piece, 0, PE)
-        | PT(h, sl, l, v, sr, r) ->
-            split <| (skew <| PT(h, sl, l, v, sr + piece.Span.Length, insMax piece r))
+        | PE -> PT(PE, Index.empty, piece, PE, 1)
+        | PT(l, idx,  v, r, h) ->
+            let idx = Index.plusRight piece.Span.Length idx
+            split <| (skew <| PT(l, idx, v, insMin piece r, h))
 
     let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
         match t with
@@ -138,7 +140,7 @@ module PieceTree =
     let insert insIndex piece tree =
         let rec ins curIndex node =
             match node with
-            | PE -> PT(1, 0, PE, piece, 0, PE)
+            | PE -> PT(PE, Index.empty, piece, PE, 1)
             | PT(h, sl, l, v, sr, r) ->
                 let nodeEndIndex = curIndex + v.Span.Length
                 if insIndex > nodeEndIndex then 

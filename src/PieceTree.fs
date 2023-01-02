@@ -2,119 +2,118 @@
 
 open Types
 open Piece
-open Node
 
 module PieceTree =
     let inline private size node = 
         match node with
         | PE -> 0
-        | PT(h, l, n, r) -> n.LeftSize + n.RightSize + n.Length
+        | PT(l, index, p, r, _) -> index.LeftSize + index.RightSize + p.Span.Length
 
     let inline private sizeLeft node = 
         match node with
         | PE -> 0
-        | PT(_, _, n, _) -> n.LeftSize
+        | PT(_, index, _, _, _) -> index.LeftSize
 
     let inline private sizeRight node =
         match node with
         | PE -> 0
-        | PT(_, _ , n, _) -> n.RightSize
+        | PT(_, index, _, _, _) -> index.RightSize
  
     let inline private skew node =
         match node with
-        | PT(lvx, PT(lvy, a, ky, b), kx, c) when lvx = lvy ->
-            let innerIdx = Index.setLeft ky.RightSize kx.Index
-            let inner = PT(lvy, b, kx.WithIndex innerIdx, c)
-            let outerIdx = Index.setRight (size inner) ky.Index
-            PT(lvx, a, ky.WithIndex outerIdx, inner)
+        | PT(PT(a, idx2, ky, b, lvy), idx1, kx, c, lvx) when lvx = lvy -> 
+            let innerIdx = Index.create idx2.RightSize idx1.RightSize
+            let inner = PT(b, innerIdx, kx, c, lvy)
+            let outerIdx = Index.setRight (size inner) idx2
+            PT(a, outerIdx, ky, inner, lvx)
         | t -> t
 
     let inline private split node =
         match node with
-        | PT(lvx, a, kx, PT(lvy, b, ky, PT(lvz, c, kz, d))) 
+        | PT(a, idx1, kx, PT(b, idx2, ky, PT(c, idx3, kz, d, lvz), lvy), lvx) 
             when lvx = lvy && lvy = lvz -> 
-                let right = PT(lvz, c, kz, d)
-                let leftIdx = Index.setRight ky.LeftSize kx.Index
-                let left = PT(lvx, a, kx.WithIndex leftIdx, b)
-                let leftSize = Index.size leftIdx + kx.Length
-                let rightSize = Index.size kz.Index + kz.Length
+                let right = PT(c, idx3, kz, d, lvx)
+                let leftIdx = Index.setRight idx2.LeftSize idx1
+                let left = PT(a, leftIdx, kx, b, lvx)
+                let leftSize = Index.size leftIdx + kx.Span.Length
+                let rightSize = Index.size idx3 + kz.Span.Length
                 let newIdx = Index.create leftSize rightSize
-                PT(lvx + 1, left, ky, right)
+                PT(left, newIdx, ky, right, lvx + 1)
         | t -> t
 
     let private sngl = function
         | PE -> false
-        | PT(_, _, _, PE) -> true
-        | PT(lvx, _, _, PT(lvy, _, _, _)) -> lvx > lvy
+        | PT(_, _, _, PE, _) -> true
+        | PT(_, _, _, PT(_, _, _, _, lvy), lvx) -> lvx > lvy
 
     let private lvl = function
         | PE -> 0
-        | PT(lvt, _, _, _) -> lvt
+        | PT(_, _, _, _, lvt) -> lvt
 
     let private nlvl = function
-        | PT(lvt, _, _, _) as t -> 
+        | PT(_, _, _, _, lvt) as t -> 
             if sngl t
             then lvt
             else lvt + 1
         | _ -> failwith "unexpected nlvl case"
 
     let private adjust = function
-        | PT(lvt, lt, kt, rt) as t when lvl lt >= lvt - 1 && lvl rt >= (lvt - 1) ->
+        | PT(lt, _, _, rt, lvt) as t when lvl lt >= lvt - 1 && lvl rt >= (lvt - 1) ->
             t
-        | PT(lvt, lt, kt, rt) when lvl rt < lvt - 1 && sngl lt -> 
-            PT(lvt - 1, lt, kt, rt) |> skew
-        | PT(lvt, PT(lv1, a, kl, PT(lvb, lb, kb, rb)), kt, rt) when lvl rt < lvt - 1 ->
-            let leftIndex = Index.setRight kb.LeftSize kl.Index
-            let left = PT(lv1, a, kl.WithIndex leftIndex, lb)
+        | PT(lt, idx, kt, rt, lvt) when lvl rt < lvt - 1 && sngl lt-> 
+            skew <| PT(lt, idx, kt, rt, lvt - 1)
+        | PT(PT(a, idx2, kl, PT(lb, idx3, kb, rb, lvb), lv1), idx1, kt, rt, lvt) when lvl rt < lvt - 1 ->
+            let leftIndex = Index.setRight idx3.LeftSize idx2
+            let left = PT(a, leftIndex, kl, lb, lv1)
             let sizeLeft = size left
-            let rightIndex = Index.setLeft kb.RightSize kt.Index
-            let right = PT(lvt - 1, rb, kt.WithIndex rightIndex, rt)
+            let rightIndex = Index.create idx3.RightSize idx1.RightSize
+            let right = PT(rb, rightIndex, kt, rt, lvt - 1)
             let sizeRight = size right
             let outerIndex = Index.create sizeLeft sizeRight
-            PT(lvb + 1, left, kb.WithIndex outerIndex, right)
-        | PT(lvt, lt, kt, rt) when lvl rt < lvt ->
-            PT(lvt - 1, lt, kt, rt) |> split
-        | PT(lvt, lt, kt, PT(lvr, (PT(lva, c, ka, d) as a), kr, b)) -> 
-            let indexLeft = Index.setRight kr.LeftSize kt.Index
-            let left = PT(lvt - 1, lt, kt.WithIndex indexLeft, c)
+            PT(left, outerIndex, kb, right, lvb + 1)
+        | PT(lt, idx, kt, rt, lvt) when lvl rt < lvt ->
+            split <| PT(lt, idx, kt, rt, lvt - 1)
+        | PT(lt, idx1, kt, PT((PT(c, idx3, ka, d, lva) as a), idx2, kr, b, lvr), lvt) -> 
+            let indexLeft = Index.setRight idx3.LeftSize idx1
+            let left = PT(lt, indexLeft, kt, c, lvt - 1)
             let sizeLeft = size left
-            let indexRight = Index.setLeft ka.RightSize kr.Index
-            let right = PT(nlvl a, d, kr.WithIndex indexRight, b) |> split
+            let indexRight = Index.setLeft idx3.RightSize idx2
+            let right = split <| PT(d, indexRight, kr, b, nlvl a)
             let sizeRight = size right
             let outerIndex = Index.create sizeLeft sizeRight
-            PT(lva + 1, left, ka.WithIndex outerIndex, right)
+            PT(left, outerIndex, ka, right, lva + 1)
         | _ -> failwith "unexpected adjust case"
 
     let rec private splitMax = function
-        | PT(_, l, v, PE) -> (l, v)
-        | PT(h, l, v, r) as node ->
-            let (r', b) = splitMax r
-            in adjust <| node, b
+        | PT(l, _, v, PE, _) -> (l, v)
+        | PT(l, _, v, r, h) as node ->
+            match splitMax r with
+            | l, b -> adjust <| node, b
         | _ -> failwith "unexpected splitMax case"
 
     let inline private pieceLength node = 
         match node with
         | PE -> 0
-        | PT(_, _, piece, _) -> piece.Length
+        | PT(_, _, piece, _, _) -> piece.Span.Length
 
     let rec private insMin piece node =
         match node with
-        | PE -> PT(1, PE, Node.newPiece piece, PE)
-        | PT(h, l, v, r) ->
-            let idx = Index.plusLeft piece.Span.Length v.Index
-            PT(h, insMin piece l, v.WithIndex idx, r) |> split |> skew
+        | PE -> PT(PE, Index.empty, piece, PE, 1)
+        | PT(l, idx,  v, r, h) ->
+            let idx = Index.plusLeft piece.Span.Length idx
+            split <| (skew <| PT(insMin piece l, idx, v, r, h))
 
     let rec private insMax piece node =
         match node with
-        | PE -> PT(1, PE, Node.newPiece piece, PE)
-        | PT(h, l, v, r) ->
-            let idx = Index.plusRight piece.Span.Length v.Index
-            PT(h, l, v.WithIndex idx, insMax piece r) |> split |> skew
+        | PE -> PT(PE, Index.empty, piece, PE, 1)
+        | PT(l, idx,  v, r, h) ->
+            let idx = Index.plusRight piece.Span.Length idx
+            split <| (skew <| PT(l, idx, v, insMax piece r, h))
 
     let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
         match t with
         | PE -> x
-        | PT(h, l, v, r) ->
+        | PT(l, _, v, r, _) ->
             let x = foldOpt f x l
             let x = f.Invoke(x,v)
             foldOpt f x r
@@ -124,8 +123,8 @@ module PieceTree =
 
     /// Returns the text contained in the PieceTree.
     let text table = 
-        let folder = (fun (acc: string) (node: NodeType) ->
-            let text = (Buffer.substring node.Start node.Length table.Buffer)
+        let folder = (fun (acc: string) (piece: PieceType) ->
+            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
             acc + text
         )
         fold folder "" table.Pieces
@@ -141,31 +140,30 @@ module PieceTree =
     let insert insIndex piece tree =
         let rec ins curIndex node =
             match node with
-            | PE -> PT(1, PE, Node.newPiece piece, PE)
-            | PT(h, l, v, r) ->
-                let nodeEndIndex = curIndex + v.Length
+            | PE -> PT(PE, Index.empty, piece, PE, 1)
+            | PT(l, index, v, r, h) ->
+                let nodeEndIndex = curIndex + v.Span.Length
                 if insIndex > nodeEndIndex then 
-                    let newIndex = Index.plusRight piece.Span.Length v.Index
+                    let newIndex = Index.plusRight piece.Span.Length index
                     let nextIndex = nodeEndIndex + sizeLeft r
-                    PT(h, l, v.WithIndex newIndex, ins nextIndex r) |> split |> skew
+                    split <| (skew <| PT(l, newIndex, v, ins nextIndex r, h))
                 elif insIndex < curIndex then
-                    let newIndex = Index.plusLeft piece.Span.Length v.Index
+                    let newIndex = Index.plusLeft piece.Span.Length index
                     let nextIndex = curIndex - pieceLength l - sizeRight l
-                    PT(h, ins nextIndex l, v.WithIndex newIndex, r) |> split |> skew
+                    split <| (skew <| PT(ins nextIndex l, newIndex, v, r, h))
                 elif curIndex = insIndex then
-                    let newIndex = Index.plusLeft piece.Span.Length v.Index
-                    PT(h, insMax piece l, v.WithIndex newIndex, r) |> split |> skew
+                    let newIndex = Index.plusLeft piece.Span.Length index
+                    split <| (skew <| PT(insMax piece l, newIndex, v, r, h))
                 elif insIndex = nodeEndIndex then
-                    let newPiece = Piece.merge v.Piece piece
-                    PT(h, l, v.WithPiece newPiece, r)
+                    let newPiece = Piece.merge v piece
+                    PT(l, index, newPiece, r, h)
                 else
                     // We are in range.
-                    let (p1, p3) = Piece.split v.Piece (insIndex - curIndex)
+                    let (p1, p3) = Piece.split v (insIndex - curIndex)
                     let newLeft = insMax p1 l
                     let newRight = insMin p3 r
                     let newIndex = Index.create (size newLeft) (size newRight)
-                    let node = Node.create piece newIndex
-                    PT(h, newLeft, node, newRight)
+                    split <| (skew <| PT(newLeft, newIndex, piece, newRight, h))
 
         ins (sizeLeft tree) tree
 
@@ -193,7 +191,7 @@ module PieceTree =
                     then sub (curIndex - pieceLength l - sizeRight l) l acc
                     else acc
 
-                let nodeEndIndex = curIndex + v.Length
+                let nodeEndIndex = curIndex + v.Span.Length
                 let middle = 
                     if inRange start curIndex finish nodeEndIndex then
                         left + Piece.text v table

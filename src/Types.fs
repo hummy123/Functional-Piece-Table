@@ -11,6 +11,12 @@ module Types =
     [<Struct>]
     type PieceType = { Span: SpanType }
 
+    [<Struct>]
+    type IndexType = { LeftSize: int; RightSize: int }
+
+    [<Struct>]
+    type LineType = { LeftLines: int; RightLines: int; PieceLines: int }
+
     (* Start of type definitions for buffer, represented as red black tree... *)
     (* Type abbreviations. *)
     type BufferLength = int
@@ -30,12 +36,9 @@ module Types =
     (* ...end of type definitions for buffer. *)
 
     (* Piece tree as an AA tree. *)
-    type SizeLeft = int
-    type SizeRight = int
-
     type AaTree = 
         | PE
-        | PT of int * SizeLeft * AaTree * PieceType * SizeRight * AaTree
+        | PT of AaTree * IndexType * PieceType * AaTree * int
     (* ...end of type definitions for piece tree. *)
 
     type TextTableType =

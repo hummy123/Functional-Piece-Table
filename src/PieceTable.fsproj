@@ -10,6 +10,7 @@
     <Compile Include="UnicodeString.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Span.fs" />
+    <Compile Include="Index.fs" />
 	<Compile Include="Buffer.fs" />
 	<Compile Include="Piece.fs" />
 	<Compile Include="PieceTree.fs" />

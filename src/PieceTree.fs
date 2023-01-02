@@ -7,45 +7,51 @@ module PieceTree =
     let inline private size node = 
         match node with
         | PE -> 0
-        | PT(_, sl, l, p, sr, r) -> sl + p.Span.Length + sr
+        | PT(l, index, p, r, _) -> index.LeftSize + index.RightSize + p.Span.Length
 
     let inline private sizeLeft node = 
         match node with
         | PE -> 0
-        | PT(_, sl, _, _, _, _) -> sl
+        | PT(_, index, _, _, _) -> index.LeftSize
 
     let inline private sizeRight node =
         match node with
         | PE -> 0
-        | PT(_, _, _, _, sr, _) -> sr
+        | PT(_, index, _, _, _) -> index.RightSize
  
     let inline private skew node =
         match node with
-        | PT(lvx, _, PT(lvy, _, a, ky, _, b), kx, _, c) when lvx = lvy -> 
-            let inner = PT(lvy, size b, b, kx, size c, c)
-            PT(lvx, size a, a, ky, size inner, inner)
+        | PT(PT(a, idx2, ky, b, lvy), idx1, kx, c, lvx) when lvx = lvy -> 
+            let innerIdx = Index.create idx2.RightSize idx1.RightSize
+            let inner = PT(b, innerIdx, kx, c, lvy)
+            let outerIdx = {idx2 with RightSize = size inner }
+            PT(a, outerIdx, ky, inner, lvx)
         | t -> t
 
     let inline private split node =
         match node with
-        | PT(lvx, sizeA, a, kx, sr1, PT(lvy, sizeB, b, ky, sr2, PT(lvz, sizeC, c, kz, sizeD, d))) 
+        | PT(a, idx1, kx, PT(b, idx2, ky, PT(c, idx3, kz, d, lvz), lvy), lvx) 
             when lvx = lvy && lvy = lvz -> 
-                let right = PT(lvx, sizeC, c, kz, sizeD, d)
-                let left = PT(lvx, sizeA, a, kx, sizeB, b)
-                PT(lvx + 1, size left, left, ky, size right, right)
+                let right = PT(c, idx3, kz, d, lvx)
+                let leftIdx = Index.changeRight idx2.LeftSize idx1
+                let left = PT(a, leftIdx, kx, b, lvx)
+                let leftSize = Index.size leftIdx + kx.Span.Length
+                let rightSize = Index.size idx3 + kz.Span.Length
+                let newIdx = Index.create leftSize rightSize
+                PT(left, newIdx, ky, right, lvx + 1)
         | t -> t
 
     let private sngl = function
         | PE -> false
-        | PT(_, _, _, _, _, PE) -> true
-        | PT(lvx, _, _, _, _, PT(lvy, _, _, _, _, _)) -> lvx > lvy
+        | PT(_, _, _, PE, _) -> true
+        | PT(_, _, _, PT(_, _, _, _, lvy), lvx) -> lvx > lvy
 
     let private lvl = function
         | PE -> 0
-        | PT(lvt, _, _, _, _, _) -> lvt
+        | PT(_, _, _, _, lvt) -> lvt
 
     let private nlvl = function
-        | PT(lvt, _, _, _, _, _) as t -> 
+        | PT(_, _, _, _, lvt) as t -> 
             if sngl t
             then lvt
             else lvt + 1
@@ -87,7 +93,7 @@ module PieceTree =
 
     let rec private insMin piece node =
         match node with
-        | PE -> PT(1, 0, PE, piece, 0, PE)
+        | PE -> PT(0, PE, piece, 0, PE, 1)
         | PT(h, sl, l, v, sr, r) ->
             split <| (skew <| PT(h, sl + piece.Span.Length, insMin piece l, v, sr, r))
 

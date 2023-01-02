@@ -35,13 +35,51 @@ module PieceTree =
                 PT(lvx + 1, size left, left, ky, size right, right)
         | t -> t
 
-    let rec private dellrg node = 
-        match node with
-        | PT(_, _, l, v, _, PE) -> (l, v)
-        | PT(h, _, l, v, sr, r) ->
-            let (newLeft, newVal) = dellrg l
-            PT(h, size newLeft, newLeft, v, sr, r), newVal
-        | _ -> failwith "unexpected dellrg case"
+    let private sngl = function
+        | PE -> false
+        | PT(_, _, _, _, _, PE) -> true
+        | PT(lvx, _, _, _, _, PT(lvy, _, _, _, _, _)) -> lvx > lvy
+
+    let private lvl = function
+        | PE -> 0
+        | PT(lvt, _, _, _, _, _) -> lvt
+
+    let private nlvl = function
+        | PT(lvt, _, _, _, _, _) as t -> 
+            if sngl t
+            then lvt
+            else lvt + 1
+        | _ -> failwith "unexpected nlvl case"
+
+    let private adjust = function
+        | PT(lvt, _, lt, _, _, rt) as t when lvl lt >= lvt - 1 && lvl rt >= (lvt - 1) ->
+            t
+        | PT(lvt, sl, lt, kt, sr, rt) when lvl rt < lvt - 1 && sngl lt-> 
+            skew <| PT(lvt - 1, sl, lt, kt, sr, rt)
+        | PT(lvt, sl1, PT(lv1, sl2, a, kl, sr2, PT(lvb, sl3, lb, kb, sr3, rb)), kt, sr1, rt) when lvl rt < lvt - 1 ->
+            let left = PT(lv1, sl2, a, kl, sl3, lb)
+            let sizeLeft = sl2 + kl.Span.Length + sl3
+            let right = PT(lvt - 1, sr3, rb, kt, sr1, rb)
+            let sizeRight = sr3 + kt.Span.Length + sr1
+            PT(lvb + 1, sizeLeft, left, kb, sizeRight, right)
+        | PT(lvt, sl, lt, kt, sr, rt) when lvl rt < lvt ->
+            split <| PT(lvt - 1, sl, lt, kt, sr, rt)
+        | PT(lvt, slt, lt, kt, sr1, PT(lvr, _, PT(lva, sizeC, c, ka, sizeD, d), kr, sizeB, b)) -> 
+            let a = PT(lva, sizeC, c, ka, sizeD, d)
+            let left = PT(lvt - 1, slt, lt, kt, sizeC, c)
+            let sizeLeft = slt + kt.Span.Length + sizeC
+            let right = split <| PT(nlvl a, sizeD, d, kr, sizeB, b)
+            let sizeRight = size right
+            PT(lva + 1, sizeLeft, left, ka, sizeRight, right)
+        | _ -> failwith "unexpected adjust case"
+
+    let rec private splitMax = function
+        | PT(_, _, l, v, _, PE) -> Some(l, v)
+        | PT(h, _, l, v, _, r) as node ->
+            match splitMax r with
+            | Some(l, v) -> Some(l, v)
+            | None -> None
+        | t -> None
 
     let inline private pieceLength node = 
         match node with
@@ -174,9 +212,12 @@ module PieceTree =
         let finish: int = start + length
 
         let inline delMid h left right curIndex nodeEndIndex nodePiece =
-            if start <= curIndex && finish >= nodeEndIndex then
-                let newVal = Piece.create 0 0
-                PT(h, size left, left, newVal, size right, right)
+            if start <= curIndex && finish >= nodeEndIndex && right <> PE then
+                match splitMax left with
+                | Some(l, v) -> adjust <| PT(h, size l, l, v, size right, right)
+                | None -> right
+            elif start <= curIndex && finish >= nodeEndIndex then
+                right
             elif start <= curIndex && finish < nodeEndIndex && curIndex < finish then
                 let newPiece = Piece.deleteAtStart curIndex finish nodePiece
                 split <| (skew <| PT(h, size left, left, newPiece, size right, right))

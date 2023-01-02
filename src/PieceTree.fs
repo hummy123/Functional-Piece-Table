@@ -76,8 +76,8 @@ module PieceTree =
     let rec private splitMax = function
         | PT(_, _, l, v, _, PE) -> (l, v)
         | PT(h, _, l, v, _, r) as node ->
-            let (r', b) = splitMax r
-            in adjust <| node, b
+            match splitMax r with
+            | l, b -> adjust <| node, b
         | _ -> failwith "unexpected splitMax case"
 
     let inline private pieceLength node = 

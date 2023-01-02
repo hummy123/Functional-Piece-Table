@@ -233,42 +233,19 @@ module PieceTree =
                 split <| (skew <| PT(h, size left, left, nodePiece, size right, right))
 
         let rec del (curIndex: int) (node: AaTree) =
-            let inline delLeft lefv lefsr l =
-                if start < curIndex
-                    then del (curIndex - lefv.Span.Length - lefsr) l
-                    else l
-            let inline delRight nodeEndIndex rightsl r =
-                if finish > nodeEndIndex
-                    then del (nodeEndIndex + rightsl) r
-                    else r
-
             match node: AaTree with
-            (* Left, Right. *)
-            | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v: PieceType, _,  (PT(_, rightsl, _, rightv, _, _) as r)) ->
-                let left = delLeft lefv lefsr l
-                let nodeEndIndex: int = curIndex + v.Span.Length
-                let right = delRight nodeEndIndex rightsl r
-                delMid h left right curIndex nodeEndIndex v
-                
-            (* Left, PE. *)
-            | PT(h, _, (PT(_, _, _, lefv, lefsr, _) as l), v, _, PE) ->
-                let left = delLeft lefv lefsr l
-                let nodeEndIndex: int = curIndex + v.Span.Length
-                delMid h left PE curIndex nodeEndIndex v
-
-            (* PE, Right. *)
-            | PT(h: int, _, PE, v: PieceType, _, (PT(_, rightsl, _, _, _, _) as r)) ->
-                let nodeEndIndex: int = curIndex + v.Span.Length
-                let right = delRight nodeEndIndex rightsl r
-                delMid h PE right curIndex nodeEndIndex v
-
-            (* PE, PE. *)
-            | PT(h: int, _, PE, v: PieceType, _, PE) ->
-                let nodeEndIndex: int = curIndex + v.Span.Length
-                delMid h PE PE curIndex nodeEndIndex v
-
-            (* Empty node. *)
             | PE -> PE
+            | PT(h, _, l, v, _, r) ->
+                let left =
+                    if start < curIndex
+                    then del (curIndex - pieceLength l - sizeRight l) l
+                    else l
+                let nodeEndIndex: int = curIndex + v.Span.Length
+                let right =
+                    if finish > nodeEndIndex
+                    then del (nodeEndIndex + sizeLeft r) r
+                    else r
+                delMid h left right curIndex nodeEndIndex v
                 
         del (sizeLeft tree) tree 
     

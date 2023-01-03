@@ -42,35 +42,27 @@ module internal Piece =
         let p1Start = piece.Span.Start
         let p1Length = start - curIndex
         let p1Span = Span.createWithLength p1Start p1Length
-        let p1Finish = p1Start + p1Length
-        let p1Lines =
-            if piece.Lines.Length = 0
-            then piece.Lines
-            elif p1Length < piece.Lines[0]
-            then [||]
-            else Array.filter (fun p -> p < p1Finish) piece.Lines
+        let p1Lines = Array.filter (fun p -> p < p1Length) piece.Lines
         let p1 = createWithSpan p1Span p1Lines
 
         let p2Start = finish - curIndex + piece.Span.Start
         let p2Stop = Span.stop piece.Span
         let p2Span = Span.createWithStop p2Start p2Stop
-        let p2Lines =
-            if piece.Lines.Length = 0
-            then piece.Lines
-            elif p2Start > piece.Lines[piece.Lines.Length - 1]
-            then [||]
-            else Array.filter (fun p -> p >= p2Start) piece.Lines
+        let p2Lines = Array.filter (fun p -> p >= p2Start) piece.Lines
         let p2 = createWithSpan p2Span p2Lines
         (p1, p2)
 
     let inline deleteAtStart curIndex finish piece =
-        let newPieceStart = piece.Span.Start + (finish - curIndex)
-        let newPieceSpan = Span.createWithStop newPieceStart (Span.stop piece.Span)
-        { piece with Span = newPieceSpan }
+        let difference = finish - curIndex
+        let newStart = piece.Span.Start + difference
+        let newSpan = Span.createWithStop newStart (Span.stop piece.Span)
+        let newLines = Array.filter (fun i -> i > difference) piece.Lines
+        createWithSpan newSpan newLines
 
     let inline deleteAtEnd curIndex start piece =
         let newLength = start - curIndex
         let newSpan = Span.createWithLength piece.Span.Start newLength
+        let newLines = Array.filter (fun i -> i < newLength) piece.Lines
         { piece with Span = newSpan }
 
     let inline text piece table =

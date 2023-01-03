@@ -1,6 +1,8 @@
 ﻿namespace PieceTable
 
 open UnicodeString
+open System
+open System.Runtime.CompilerServices
 
 (* My benchmarks showed that using structs for small types,
  * and for discriminated unions where applicable was slightly faster. *)
@@ -9,13 +11,13 @@ module Types =
     type SpanType = { Start: int; Length: int }
 
     [<Struct>]
-    type PieceType = { Span: SpanType }
+    type PieceType = { Span: SpanType; Lines: int array }
 
     [<Struct>]
     type IndexType = { LeftSize: int; RightSize: int }
 
     [<Struct>]
-    type LineType = { LeftLines: int; RightLines: int; PieceLines: int }
+    type LineType = { LeftLines: int; RightLines: int }
 
     (* Start of type definitions for buffer, represented as red black tree... *)
     (* Type abbreviations. *)

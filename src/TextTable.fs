@@ -14,29 +14,17 @@ module TextTable =
         else
             let str = UnicodeString.create str
             let buffer = Buffer.createWithUnicode str
-            let piece = Piece.create 0 str.Length
+            let piece = Piece.create 0 str.Length (str.GetLineBreaks())
             let pieces = PieceTree.insert 0 piece PieceTree.empty
             { Buffer=buffer; Pieces=pieces; Length=str.Length }
 
     let text table = PieceTree.text table
 
-    /// Consolidates a table into a buffer with only used characters and a single piece.
-    /// Recommended to call this in another thread: do not use it synchronously.
-    let consolidate (table: TextTableType) =
-        let folder = (fun (acc: BufferType) (piece: PieceType) -> 
-            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
-            Buffer.appendString text acc
-         )
-        let buffer = PieceTree.fold folder Buffer.empty table.Pieces
-        let piece = Piece.create 0 buffer.Length
-        let tree = PieceTree.insert 0 piece PieceTree.empty
-        { Pieces = tree; Buffer = buffer; Length = buffer.Length }
-
     /// Returns a new table with the string inserted.
     let insert index (str: string) (table: TextTableType) =
         let str = UnicodeString.create str
         let buffer = Buffer.appendUnicode str table.Buffer
-        let piece = Piece.create (buffer.Length - str.Length) str.Length
+        let piece = Piece.create (buffer.Length - str.Length) str.Length (str.GetLineBreaks())
         let pieces = PieceTree.insert index piece table.Pieces
 
         { Buffer = buffer; Pieces = pieces; Length = table.Length + str.Length }

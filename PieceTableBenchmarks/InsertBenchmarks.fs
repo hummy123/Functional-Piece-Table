@@ -153,31 +153,11 @@ type TableOperationsWhenSetupAlwaysInsertsAtEnd() =
     member this.GetSubstringAtEndOfTable() = 
         this.table.Substring(this.docLength - 10, 9)
 
-[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
-type Consolidate() =
-    [<Params(100, 1_000, 10_000)>]
-    member val size = 0 with get, set
-    member val docLength = 0 with get, set
-    member val table = TextTable.empty with get, set
-
-    [<IterationSetup>]
-    member this.createWithPieces() =
-        this.table <- TextTable.create ""
-        this.docLength <- 0
-        for i in [0..this.size] do
-            this.docLength <- this.docLength + 5
-            this.table <- this.table.Insert(0, "hello")
-
-    [<Benchmark>]
-    member this.ConsolidateTable() =
-        TextTable.consolidate this.table
-
 module Main = 
     [<EntryPoint>]
     let Main _ =
         BenchmarkRunner.Run<InsertIntoDocument>() |> ignore
         BenchmarkRunner.Run<DeleteFromDocument>() |> ignore
         BenchmarkRunner.Run<GetSubstring>() |> ignore
-        BenchmarkRunner.Run<Consolidate>() |> ignore
         BenchmarkRunner.Run<TableOperationsWhenSetupAlwaysInsertsAtEnd>() |> ignore
         0

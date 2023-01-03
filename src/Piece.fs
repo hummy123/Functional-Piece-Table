@@ -4,27 +4,38 @@ open Types
 
 module internal Piece =
     /// Creates a Piece specifying the span's start and length instead of the span itself.
-    let create start length =
-        { Span = Span.createWithLength start length }
+    let create start length lines =
+        { Span = Span.createWithLength start length; Lines = lines }
 
     /// Creates a Piece specifying its span.
-    let createWithSpan span =
-        { Span = span }
+    let createWithSpan span lines =
+        { Span = span; Lines = lines }
 
     /// Merges two consecutive pieces into one.
     /// Expects to be called only when Piece.isConsecutive returns true. 
     let inline merge a b =
-        createWithSpan <| Span.createWithLength a.Span.Start (a.Span.Length + b.Span.Length)
+        let span = Span.createWithLength a.Span.Start (a.Span.Length + b.Span.Length)
+        let lines =
+            if a.Lines.Length = 0 && b.Lines.Length = 0
+            then a.Lines
+            elif a.Lines.Length = 0
+            then b.Lines
+            elif b.Lines.Length = 0
+            then a.Lines
+            else Array.append a.Lines b.Lines
+        createWithSpan span lines
 
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a's span starts before and ends after Piece b's span.
     let inline split (a: PieceType) (difference: int) =
         let p1Length = a.Span.Start + difference
-        let p1Span = Span.createWithStop a.Span.Start p1Length  
-        let p1 = createWithSpan p1Span
+        let p1Span = Span.createWithStop a.Span.Start p1Length
+        let p1Lines = Array.filter (fun v -> v < difference) a.Lines
+        let p1 = createWithSpan p1Span p1Lines
 
         let span3 = Span.createWithStop (p1Length) (Span.stop a.Span)
-        let p3 = createWithSpan span3
+        let p3Lines = Array.filter (fun v -> v >= difference) a.Lines
+        let p3 = createWithSpan span3 p3Lines
         (p1, p3)
 
     let inline deleteInRange curIndex start finish piece =

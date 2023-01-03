@@ -54,9 +54,32 @@ module UnicodeString =
             | Plain s -> s
             | Unicode s -> s.String
 
+        member inline this.GetEnumerator() =
+            match this with
+            | Plain s -> StringInfo.GetTextElementEnumerator(s)
+            | Unicode s -> StringInfo.GetTextElementEnumerator(s.String)
+
     /// Creates a new UnicodeStringType instance.
     let inline create (str: string) =
         let strInfo = StringInfo str
         if strInfo.LengthInTextElements = str.Length
         then Plain str
         else Unicode strInfo
+
+    /// Returns an array containing the string's line breaks.
+    let rec lineBreaks (enumerator: TextElementEnumerator) (acc: ResizeArray<int>) =
+        (* Internally, we use a mutable ResizeArray for add/append performance.
+         * After processing, we convert it into an immutable array before return. *)
+         if enumerator.MoveNext() then
+            let chr = enumerator.GetTextElement()
+            if chr.Contains("\r") || chr.Contains("\n") then
+                acc.Add enumerator.ElementIndex
+                lineBreaks enumerator acc
+            else
+                lineBreaks enumerator acc
+         else
+            acc.ToArray()
+         
+    type UnicodeStringType with
+        member inline this.GetLineBreaks() = 
+            lineBreaks (this.GetEnumerator()) (ResizeArray())

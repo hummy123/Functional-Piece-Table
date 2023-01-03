@@ -7,7 +7,7 @@ module PieceTree =
     let inline private size node = 
         match node with
         | PE -> 0
-        | PT(l, index, p, r, _) -> index.LeftSize + index.RightSize + p.Span.Length
+        | PT(l, index, p, r, _) -> index.LeftSize + index.RightSize + p.Length
 
     let inline private sizeLeft node = 
         match node with
@@ -35,8 +35,8 @@ module PieceTree =
                 let right = PT(c, idx3, kz, d, lvx)
                 let leftIdx = Index.setRight idx2.LeftSize idx1
                 let left = PT(a, leftIdx, kx, b, lvx)
-                let leftSize = Index.size leftIdx + kx.Span.Length
-                let rightSize = Index.size idx3 + kz.Span.Length
+                let leftSize = Index.size leftIdx + kx.Length
+                let rightSize = Index.size idx3 + kz.Length
                 let newIdx = Index.create leftSize rightSize
                 PT(left, newIdx, ky, right, lvx + 1)
         | t -> t
@@ -92,20 +92,20 @@ module PieceTree =
     let inline private pieceLength node = 
         match node with
         | PE -> 0
-        | PT(_, _, piece, _, _) -> piece.Span.Length
+        | PT(_, _, piece, _, _) -> piece.Length
 
     let rec private insMin piece node =
         match node with
         | PE -> PT(PE, Index.empty, piece, PE, 1)
         | PT(l, idx,  v, r, h) ->
-            let idx = Index.plusLeft piece.Span.Length idx
+            let idx = Index.plusLeft piece.Length idx
             split <| (skew <| PT(insMin piece l, idx, v, r, h))
 
     let rec private insMax piece node =
         match node with
         | PE -> PT(PE, Index.empty, piece, PE, 1)
         | PT(l, idx,  v, r, h) ->
-            let idx = Index.plusRight piece.Span.Length idx
+            let idx = Index.plusRight piece.Length idx
             split <| (skew <| PT(l, idx, v, insMax piece r, h))
 
     let rec private foldOpt (f: OptimizedClosures.FSharpFunc<_,_,_>) x t =
@@ -122,7 +122,7 @@ module PieceTree =
     /// Returns the text contained in the PieceTree.
     let text table = 
         let folder = (fun (acc: string) (piece: PieceType) ->
-            let text = (Buffer.substring piece.Span.Start piece.Span.Length table.Buffer)
+            let text = (Buffer.substring piece.Start piece.Length table.Buffer)
             acc + text
         )
         fold folder "" table.Pieces
@@ -140,17 +140,17 @@ module PieceTree =
             match node with
             | PE -> PT(PE, Index.empty, piece, PE, 1)
             | PT(l, index, v, r, h) ->
-                let nodeEndIndex = curIndex + v.Span.Length
+                let nodeEndIndex = curIndex + v.Length
                 if insIndex > nodeEndIndex then 
-                    let newIndex = Index.plusRight piece.Span.Length index
+                    let newIndex = Index.plusRight piece.Length index
                     let nextIndex = nodeEndIndex + sizeLeft r
                     split <| (skew <| PT(l, newIndex, v, ins nextIndex r, h))
                 elif insIndex < curIndex then
-                    let newIndex = Index.plusLeft piece.Span.Length index
+                    let newIndex = Index.plusLeft piece.Length index
                     let nextIndex = curIndex - pieceLength l - sizeRight l
                     split <| (skew <| PT(ins nextIndex l, newIndex, v, r, h))
                 elif curIndex = insIndex then
-                    let newIndex = Index.plusLeft piece.Span.Length index
+                    let newIndex = Index.plusLeft piece.Length index
                     split <| (skew <| PT(insMax piece l, newIndex, v, r, h))
                 elif insIndex = nodeEndIndex then
                     let newPiece = Piece.merge v piece
@@ -189,7 +189,7 @@ module PieceTree =
                     then sub (curIndex - pieceLength l - sizeRight l) l acc
                     else acc
 
-                let nodeEndIndex = curIndex + v.Span.Length
+                let nodeEndIndex = curIndex + v.Length
                 let middle = 
                     if inRange start curIndex finish nodeEndIndex then
                         left + Piece.text v table
@@ -218,7 +218,7 @@ module PieceTree =
                     if start < curIndex
                     then del (curIndex - pieceLength l - sizeRight l) l
                     else l
-                let nodeEndIndex: int = curIndex + v.Span.Length
+                let nodeEndIndex: int = curIndex + v.Length
                 let right =
                     if finish > nodeEndIndex
                     then del (nodeEndIndex + sizeLeft r) r

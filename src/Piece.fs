@@ -41,12 +41,26 @@ module internal Piece =
     let inline deleteInRange curIndex start finish piece =
         let p1Start = piece.Span.Start
         let p1Length = start - curIndex
-        let p1 = {piece with Span = Span.createWithLength p1Start p1Length}
+        let p1Span = Span.createWithLength p1Start p1Length
+        let p1Finish = p1Start + p1Length
+        let p1Lines =
+            if piece.Lines.Length = 0
+            then piece.Lines
+            elif p1Length < piece.Lines[0]
+            then [||]
+            else Array.filter (fun p -> p < p1Finish) piece.Lines
+        let p1 = createWithSpan p1Span p1Lines
 
         let p2Start = finish - curIndex + piece.Span.Start
-        
         let p2Stop = Span.stop piece.Span
-        let p2 = {piece with Span = Span.createWithStop p2Start p2Stop}
+        let p2Span = Span.createWithStop p2Start p2Stop
+        let p2Lines =
+            if piece.Lines.Length = 0
+            then piece.Lines
+            elif p2Start > piece.Lines[piece.Lines.Length - 1]
+            then [||]
+            else Array.filter (fun p -> p >= p2Start) piece.Lines
+        let p2 = createWithSpan p2Span p2Lines
         (p1, p2)
 
     let inline deleteAtStart curIndex finish piece =

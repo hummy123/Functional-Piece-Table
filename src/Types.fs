@@ -42,7 +42,7 @@ module Types =
         | PE
         | PT of AaTree * IndexType * PieceType * AaTree * int
     (* ...end of type definitions for piece tree. *)
-
+    
     type TextTableType =
         { Buffer: BufferType
           Pieces: AaTree

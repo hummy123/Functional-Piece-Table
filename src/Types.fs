@@ -14,10 +14,7 @@ module Types =
     type PieceType = { Span: SpanType; Lines: int array }
 
     [<Struct>]
-    type IndexType = { LeftSize: int; RightSize: int }
-
-    [<Struct>]
-    type LineType = { LeftLines: int; RightLines: int }
+    type MetaType = { Left: int; Right: int }
 
     (* Start of type definitions for buffer, represented as red black tree... *)
     (* Type abbreviations. *)
@@ -40,7 +37,7 @@ module Types =
     (* Piece tree as an AA tree. *)
     type AaTree = 
         | PE
-        | PT of AaTree * IndexType * PieceType * AaTree * int
+        | PT of AaTree * MetaType * PieceType * AaTree * int * MetaType
     (* ...end of type definitions for piece tree. *)
     
     type TextTableType =

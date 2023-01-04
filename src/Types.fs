@@ -14,10 +14,10 @@ module Types =
     type PieceType = { Span: SpanType; Lines: int array }
 
     [<Struct>]
-    type IndexType = { LeftSize: int; RightSize: int }
+    type IndexType = { Left: int; Right: int }
 
     [<Struct>]
-    type LineType = { LeftLines: int; RightLines: int }
+    type LineType = { Left: int; Right: int }
 
     [<Struct>]
     type PieceNode = { Piece: PieceType; Index: IndexType; Lines: LineType; }
@@ -25,9 +25,15 @@ module Types =
     [<Struct>]
     type BufferNode = { Key: int; Value: UnicodeStringType }
 
-    type AaTree<'T> = 
+    [<Struct>]
+    type NodeType<'a> =
+        | Piece of p:PieceNode
+        | Buffer of b:BufferNode
+        | Other of 'a
+
+    type AaTree<'a> = 
         | E
-        | T of int * AaTree<'T> * 'T * AaTree<'T>
+        | T of int * AaTree<'a> * NodeType<'a> * AaTree<'a>
 
     (* Type abbreviations for more concise referral. *)
     type BufferTree = AaTree<BufferNode>

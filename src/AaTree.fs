@@ -2,11 +2,30 @@
 
 open Types
 
-(* Insertion and deletion not provided as that is to be implemented 
- * with different algorithms for each node type.
+(* Our structural principle is that generic functions and those involving balancing
+ * are contained here and the core domain algorithms in the Buffer/PieceTree modules.
+ * 
  * Implementation guided by following paper: https://arxiv.org/pdf/1412.4882.pdf *)
 
 module AaTree =
+    let inline size node = 
+        match node with
+        | E -> 0
+        | T(h, l, Piece n, r) -> n.Index.Left + n.Index.Right + n.Piece.Span.Length
+        | _ -> failwith "tried to call size on a non-piece node"
+
+    let inline sizeLeft node  = 
+        match node with
+        | E -> 0
+        | T(h, l,Piece  n, r) -> n.Index.Left
+        | _ -> failwith "tried to call sizeLeft on a non-piece node"
+
+    let inline sizeRight node  =
+        match node with
+        | E -> 0
+        | T(h, l,Piece  n, r) -> n.Index.Right
+        | _ -> failwith "tried to call sizeRight on a non-piece node"
+
     /// O(1): Returns a boolean if tree is empty.
     let isEmpty = function
         | E -> true
@@ -26,15 +45,36 @@ module AaTree =
         | E -> 0
         | T(lvt, _, _, _) -> lvt
 
-    let skew = function
-        | T(lvx, T(lvy, a, ky, b), kx, c) when lvx = lvy
-            -> T(lvx, a, ky, T(lvx, b, kx, c))
+    let skew (tree: AaTree<'a>) = 
+        match tree with
+        | T(lvx, T(lvy, a, ky, b), kx, c) when lvx = lvy ->
+            match ky, kx with
+            | Piece ky, Piece kx ->
+                let innerIdx = Index.create ky.Index.Right kx.Index.Right
+                let innerNode = Piece { kx with Index = innerIdx }
+                let inner = T(lvx, b, innerNode, c)
+                let outerIdx = Index.create ky.Index.Left (size inner)
+                let outerNode = Piece { ky with Index = outerIdx }
+                T(lvx, a, outerNode, inner)
+            | _ -> 
+                T(lvx, a, ky, T(lvx, b, kx, c))
         | t -> t
 
     let split = function
-        | T(lvx, a, kx, T(lvy, b, ky, T(lvz, c, kz, d))) 
-            when lvx = lvy && lvy = lvz
-              -> T(lvx + 1, T(lvx, a, kx, b), ky, T(lvx, c, kz, d))
+        | T(lvx, a, kx, T(lvy, b, ky, T(lvz, c, kz, d))) when lvx = lvy && lvy = lvz -> 
+            match kx, ky, kz with
+            | Piece kx, Piece ky, Piece kzp ->
+                let right = T(lvx, c, kz, d)
+
+                let leftIdx = Index.create kx.Index.Left ky.Index.Left
+                let leftNode = Piece {kx with Index = leftIdx}
+                let left = T(lvx, a, leftNode, b)
+
+                let outerIdx = Index.create (size left) (size right)
+                let outerNode = Piece {ky with Index = outerIdx}
+                T(lvx + 1, left, outerNode, right)
+            | _ -> 
+                T(lvx + 1, T(lvx, a, kx, b), ky, T(lvx, c, kz, d))
         | t -> t
 
     (* nlvl function fixed according to Isabelle HOL prrof below: *)
@@ -46,17 +86,46 @@ module AaTree =
             else lvt + 1
         | _ -> failwith "unexpected nlvl case"
 
-    let adjust = function
+    let adjust (tree: AaTree<'a>) =
+        match tree with
         | T(lvt, lt, kt, rt) as t when lvl lt >= lvt - 1 && lvl rt >= (lvt - 1) ->
             t
         | T(lvt, lt, kt, rt) when lvl rt < lvt - 1 && sngl lt-> 
-            skew <| T(lvt - 1, lt, kt, rt)
+            T(lvt - 1, lt, kt, rt) |> skew
         | T(lvt, T(lv1, a, kl, T(lvb, lb, kb, rb)), kt, rt) when lvl rt < lvt - 1 ->
-            T(lvb + 1, T(lv1, a, kl, lb), kb, T(lvt - 1, rb, kt, rt))
+            match kt, kb, kl with
+            | Piece ktp, Piece kbp, Piece klp -> 
+                let leftIndex = Index.create klp.Index.Left kbp.Index.Left
+                let leftNode = { klp with Index = leftIndex }
+                let left = T(lv1, a, Piece leftNode, lb)
+
+                let rightIndex = Index.create kbp.Index.Right ktp.Index.Right
+                let rightNode = { ktp with Index = rightIndex }
+                let right = T(lvt - 1, rb, Piece rightNode, rt)
+
+                let outerIndex = Index.create (size left) (size right)
+                let outerNode = { kbp with Index = outerIndex }
+                T(lvb + 1, left, Piece outerNode, right)
+            | _ ->
+                T(lvb + 1, T(lv1, a, kl, lb), kb, T(lvt - 1, rb, kt, rt))
         | T(lvt, lt, kt, rt) when lvl rt < lvt ->
-            split <| T(lvt - 1, lt, kt, rt)
-        | T(lvt, lt, kt, T(lvr, (T(lva, c, ka, d) as a), kr, b)) -> 
-            T(lva + 1, T(lvt - 1, lt, kt, c), ka, (split (T(nlvl a, d, kr, b))))
+            T(lvt - 1, lt, kt, rt) |> split
+        | T(lvt, lt, kt, T(lvr, (T(lva, c, ka, d) as a), kr, b)) ->
+            match kt, kr, ka with
+            | Piece ktp, Piece krp, Piece kap ->
+                let leftIndex = Index.create ktp.Index.Left kap.Index.Left
+                let leftNode = { ktp with Index = leftIndex }
+                let left = T(lvt - 1, lt, Piece leftNode, c)
+                
+                let rightIndex = Index.create kap.Index.Right krp.Index.Right
+                let rightNode = { krp with Index = rightIndex }
+                let right = T(nlvl a, d, Piece rightNode, b)
+
+                let outerIndex = Index.create (size left) (size right)
+                let outerNode = Piece { kap with Index = outerIndex }
+                T(lva + 1, left, outerNode, right)
+            | _ -> 
+                T(lva + 1, T(lvt - 1, lt, kt, c), ka, (split (T(nlvl a, d, kr, b))))
         | _ -> failwith "unexpected adjust case"
 
     (* splitMax fixed as in Isabelle HOL proof below: *)

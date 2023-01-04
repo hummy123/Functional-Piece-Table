@@ -14,34 +14,36 @@ module Types =
     type PieceType = { Span: SpanType; Lines: int array }
 
     [<Struct>]
-    type IndexType = { Left: int; Right: int }
+    type IndexType = { LeftSize: int; RightSize: int }
 
     [<Struct>]
-    type LineType = { Left: int; Right: int }
+    type LineType = { LeftLines: int; RightLines: int }
 
-    [<Struct>]
-    type PieceNode = { Piece: PieceType; Index: IndexType; Lines: LineType; }
+    (* Start of type definitions for buffer, represented as red black tree... *)
+    (* Type abbreviations. *)
+    type BufferLength = int
+    type InsertedLength = int
+    type Key = int (* The node's index (0, 1, 2, 3, etc.). *)
+    type Value = UnicodeStringType
 
-    [<Struct>]
-    type BufferNode = { Key: int; Value: UnicodeStringType }
+    (* Buffer collection as an AA Tree. *)
+    type Height = int
 
-    [<Struct>]
-    type NodeType<'a> =
-        | Piece of p:PieceNode
-        | Buffer of b:BufferNode
-        | Other of 'a
+    type BufferTree =
+        | BE 
+        | BT of Height * BufferTree * Key * Value * BufferTree
 
-    type AaTree<'a> = 
-        | E
-        | T of int * AaTree<'a> * NodeType<'a> * AaTree<'a>
+    (* Interface type to tree storing length as well. *)
+    type BufferType = { Tree: BufferTree; Length: BufferLength }
+    (* ...end of type definitions for buffer. *)
 
-    (* Type abbreviations for more concise referral. *)
-    type BufferTree = AaTree<BufferNode>
-    type PieceTree = AaTree<PieceNode>
-
-    type BufferType = { Tree: AaTree<BufferNode>; Length: int }
+    (* Piece tree as an AA tree. *)
+    type AaTree = 
+        | PE
+        | PT of AaTree * IndexType * PieceType * AaTree * int
+    (* ...end of type definitions for piece tree. *)
     
     type TextTableType =
         { Buffer: BufferType
-          Pieces: PieceTree
+          Pieces: AaTree
           Length: int }

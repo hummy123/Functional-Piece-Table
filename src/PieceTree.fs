@@ -208,10 +208,10 @@ module PieceTree =
 
         sub (sizeLeft table.Pieces) table.Pieces ""
 
-    let delete (start: int) (length: int) (tree: AaTree): AaTree =
+    let delete (start: int) (length: int) (tree: PieceTree): PieceTree =
         let finish: int = start + length
-        let rec del (curIndex: int) (node: AaTree) =
-            match node: AaTree with
+        let rec del (curIndex: int) (node: PieceTree) =
+            match node: PieceTree with
             | PE -> PE
             | PT(l, idx, v, r, h) as node ->
                 let left =

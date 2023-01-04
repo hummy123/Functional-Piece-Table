@@ -28,38 +28,29 @@ open System.Globalization
  * http://github.com/hummy123/functional-aa-Tree/
  *)
 
+ open AaTree
+
 module Buffer =
-    let inline private skew node =
-        match node with
-        | BT(lvx, BT(lvy, a, ky, vy, b), kx, vx, c) when lvx = lvy
-            -> BT(lvx, a, ky, vy, BT(lvx, b, kx, vx, c))
-        | t -> t
+    let private createNode key str = { Key = key; Value = str }
 
-    let inline private split node = 
-        match node with
-        | BT(lvx, a, kx, vx, BT(lvy, b, ky, vy, BT(lvz, c, kz, vz, d))) 
-            when lvx = lvy && lvy = lvz
-              -> BT(lvx + 1, BT(lvx, a, kx, vx, b), ky, vy, BT(lvx, c, kz, vz, d))
-        | t -> t
-
-    let rec insert key value = function
-        | BE -> BT(1, BE, key, value, BE)
-        | BT(h, l, k, v, r) as node ->
-            split <| (skew <| BT(h, l, k, v, insert key value r))
+    let rec insert (item: BufferNode) = function
+        | E -> T(1, E, item, E)
+        | T(h, l, v, r) ->
+            split <| (skew <| T(h, l, v, insert item r))
 
     (* Discriminated union for handling different append cases. *)
     [<Struct>]
     type private AppendResult =
-        | FullAdd of faTree:BufferTree
-        | PartialAdd of paTree:BufferTree * paKey:Key * insLength:InsertedLength
-        | BufferWasFull of bufFullKey:Key
+        | FullAdd of faTree:AaTree<BufferNode>
+        | PartialAdd of paTree:BufferTree * paKey:int * insLength:int
+        | BufferWasFull of bufFullKey:int
 
     (* The maximum numbeEcharacters permitted in a buffer, before we create a new one. *)
     [<Literal>]
     let MaxBufferLength = 1024
 
     /// An empty buffer.
-    let empty = {Tree = BE; Length = 0}
+    let empty = {Tree = E; Length = 0}
 
     /// Inserts a long string (greater than the max buffer length) into a tree,
     /// by splitting the string and adding it to multiple buffer nodes.
@@ -72,8 +63,9 @@ module Buffer =
             else
                 let subStr = str[start..(loopNum * MaxBufferLength) - 1] |> UnicodeString.create
                 let nextKey = curKey + 1
+                let node = { Key = nextKey; Value = subStr }
                 let nextLoopNum = loopNum + 1
-                let nextTree = insert nextKey subStr newTree
+                let nextTree = insert node newTree
                 let nextStart = start + MaxBufferLength
                 loop nextKey nextLoopNum nextStart nextTree
         loop maxKeyInTree 1 0 tree
@@ -81,33 +73,37 @@ module Buffer =
     /// Append a string to the buffer.
     let inline private add (str: UnicodeStringType) tree =
         let rec loop = function
-            | BE -> (* Only ever matched if whole tree is empty. *)
+            | E -> (* Only ever matched if whole tree is empty. *)
                 if str.Length >= MaxBufferLength
                 then 
                     let nextIndex = MaxBufferLength
                     let str = str[..MaxBufferLength - 1] |> UnicodeString.create
-                    let newTree = BT(1, BE, 0, str, BE)
+                    let node = createNode 0 str
+                    let newTree = leaf node
                     PartialAdd(newTree, 0, nextIndex)
                 else 
-                    let newTree = BT(1, BE, 0, str, BE)
+                    let node = createNode 0 str
+                    let newTree = leaf node
                     FullAdd(newTree)
-            | BT(c, a, curKey, curVal, b) -> 
+            | T(c, a, (curNode: BufferNode), b) -> 
                 match b with
-                | BE ->
-                    if curVal.Length + str.Length <= MaxBufferLength
-                    then 
-                        let newTree = BT(c, a, curKey, curVal + str, b)
+                | E ->
+                    if curNode.Value.Length + str.Length <= MaxBufferLength
+                    then
+                        let node = { curNode with Value = curNode.Value + str }
+                        let newTree = T(c, a, node, b)
                         FullAdd(newTree)
-                    elif curVal.Length = MaxBufferLength
-                    then BufferWasFull(curKey)
-                    elif curVal.Length < MaxBufferLength && curVal.Length + str.Length > MaxBufferLength
+                    elif curNode.Value.Length = MaxBufferLength
+                    then BufferWasFull(curNode.Key)
+                    elif curNode.Value.Length < MaxBufferLength && curNode.Value.Length + str.Length > MaxBufferLength
                     then 
-                        let remainingBufferLength = MaxBufferLength - curVal.Length
+                        let remainingBufferLength = MaxBufferLength - curNode.Value.Length
                         let fitString = str[0..remainingBufferLength - 1] |> UnicodeString.create
-                        let newTree = BT(c, a, curKey, curVal + fitString, b)
-                        PartialAdd(newTree, curKey, fitString.Length)
+                        let node = { curNode with Value = curNode.Value + fitString }
+                        let newTree = T(c, a, node, b)
+                        PartialAdd(newTree, node.Key, fitString.Length)
                     else failwith "unexpected Buffer.tryAppend case"
-                | BT(_, _, _, _, _) ->
+                | T(_, _, _, _) ->
                     match loop b with
                     | FullAdd newRight ->
                         let reconstructTree = BT(c, a, curKey, curVal, newRight)
@@ -133,7 +129,6 @@ module Buffer =
         let tree = add str buffer.Tree
         { Tree = tree; Length = buffer.Length + str.Length }
 
-
     let appendUnicode (str: UnicodeStringType) buffer =
         { Tree = add str buffer.Tree; Length = buffer.Length + str.Length }
                 
@@ -142,43 +137,33 @@ module Buffer =
 
     let inline createWithUnicode str = appendUnicode str empty
 
-    /// Find the string associated with a particular key.
-    let rec private nodeSubstring key startPos endPos = function
-        | BE -> ""
-        | BT(_, l, curKey, value, r) ->
-            if key = curKey 
-            then value[startPos..endPos] (* Returns valid substring even if end is out of bounds. *)
-            elif key < curKey 
-            then nodeSubstring key startPos endPos l
-            else nodeSubstring key startPos endPos r
-
     /// Gets text in a buffer at a specific span.
     let substring start length buffer = 
         let rec traverse startKey (endKey: int) startIndex endIndex node (acc: string) =
             match node with
-            | BE -> acc
-            | BT(_, l, k, v, r) ->
+            | E -> acc
+            | T(_, l, node, r) ->
                 let left = 
-                    if startKey < k
+                    if startKey < node.Key
                     then traverse startKey endKey startIndex endIndex l acc
                     else acc
 
                 let middle = (* Handle different cases like start, end, etc. *)
-                    if k = startKey && k = endKey (* In partial range. *)
-                    then left + v[startIndex..endIndex]
-                    elif k > startKey && k < endKey (* In full range. *)
-                    then left + v.String
-                    elif k = startKey (* The range starts at this node but ends later. *)
-                    then left + v[startIndex..]
-                    elif k = endKey (* The range ends at this node but starts before. *)
-                    then left + v[..endIndex]
-                    elif startKey > k (* We are before our range. *)
+                    if node.Key = startKey && node.Key = endKey (* In partial range. *)
+                    then left + node.Value[startIndex..endIndex]
+                    elif node.Key > startKey && node.Key < endKey (* In full range. *)
+                    then left + node.Value.String
+                    elif node.Key = startKey (* The range starts at this node but ends later. *)
+                    then left + node.Value[startIndex..]
+                    elif node.Key = endKey (* The range ends at this node but starts before. *)
+                    then left + node.Value[..endIndex]
+                    elif startKey > node.Key (* We are before our range. *)
                     then left
-                    elif endKey < k (* We are after our range. *)
+                    elif endKey < node.Key (* We are after our range. *)
                     then left
                     else failwith "unexpected buffer substring/traverse case"
 
-                if endKey > k
+                if endKey > node.Key
                 then traverse startKey endKey startIndex endIndex r middle
                 else middle
 
@@ -198,36 +183,17 @@ module Buffer =
         
         traverse startKey endKey startBufferIndex endBufferIndex buffer.Tree ""
 
-    /// Visits every node in the buffer and returns a string.
-    let stringLength buffer =
-        let rec traverse tree (acc: int) =
-            match tree with
-            | BE -> acc
-            | BT(_, l, _, v, r) ->
-                (traverse l acc) + v.Length |> traverse r
-        traverse buffer.Tree 0
-
     /// For testing/debugging purposes. 
     /// Performs an in-order travesal of the buffer's tree and adds each node's length to a list.
     /// Returns a list of ints representing the length of each buffer chronologically.
     let lengthAsList buffer =
-        let rec traverse tree (accList: int list) =
-            match tree with
-            | BE -> accList
-            | BT(_,l,_,v,r) ->
-                (traverse l accList) @ [v.Length] |> traverse r
-        traverse buffer.Tree []
+        fold (fun acc (node: BufferNode) -> acc @ [node.Value.String.Length]) [] buffer.Tree
 
     /// For testing/debugging purposes, returns all text in a buffer through an in-order traversal.
     /// Highly recommended not to use this in an application as it takes O(n) time and is therefore slow.
     /// Instead, use the Buffer.textInSpan method to get a section of text from the buffer.
-    let text buffer =
-        let rec traverse tree accText =
-            match tree with
-            | BE -> accText
-            | BT(_,l,_,v,r) ->
-                (traverse l accText) + v[0..v.Length] |> traverse r
-        traverse buffer.Tree ""
+    let text buffer = 
+        fold (fun acc node -> acc + node.Value.String) "" buffer.Tree
 
     /// OOP API for substring method for testing, as SpanType is internal to this assembly.
     type BufferType with

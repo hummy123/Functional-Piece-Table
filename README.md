@@ -1,8 +1,8 @@
 # Purely Functional Piece Table in F#
 
-## Deprecation notice
+## 🛑 Deprecation notice 
 
-This repository has been deprecated (in favour of a Rope implementation)[https://github.com/hummy123/FSharp-Rope] that is both simpler and more performant.
+This repository has been deprecated [in favour of a Rope implementation](https://github.com/hummy123/FSharp-Rope) that is both simpler and more performant.
 
 ## Introduction
 
